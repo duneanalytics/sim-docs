@@ -1,0 +1,39 @@
+---
+title: Persistence
+excerpt: Define a table to persist data from schemas
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+  pages:
+    - type: basic
+      slug: api
+      title: API
+---
+# Summary
+
+The Persistence component defines a table to persist data from a schema. Tables can be queried and used as a backend for APIs.
+
+# Inputs
+
+1. **Table name:** Enter a table name, which must be unique per org.
+
+# Interactions
+
+Using the three-dot menu, you can delete or duplicate a persistence component. Deleting a persistence will delete the table and its data.
+
+After being connected to a schema, the persistence can be set.
+
+# Allowed edges
+
+## Incoming
+
+* Schema. A persistence is used to persist data from a schema.
+
+## Outgoing
+
+* API (optional): In APIs (and queries), you can query against any table from your org, as well as all @sim core tables, regardless of the canvases in which they were created. In some cases where we're querying a persistence we created in the same canvas, we like to add an edge between the two to make the data origin clear, but these edges are purely cosmetic.

@@ -1,0 +1,29 @@
+---
+title: '@sim.basenames_expiries'
+excerpt: Expiries of Basename registrations
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+| Column Name       | Data Type  |
+| :---------------- | :--------- |
+| block\_number     | long       |
+| txn\_hash         | string     |
+| global\_counter   | bigDecimal |
+| labelhash         | string     |
+| expiry\_timestamp | long       |
+
+# Source
+
+This table was built in sim's [Basenames](https://studio.sim.io/sim/canvases/f636b313-2561-477e-ba37-e335e811579b) canvas.
+
+# Usage Notes
+
+* Usually used in conjunction with @sim.basenames\_primary\_names and @sim.basenames\_texts.

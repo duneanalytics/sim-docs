@@ -1,0 +1,315 @@
+---
+title: '@sim.traces'
+excerpt: Traces for all transactions (including internal)
+deprecated: false
+hidden: true
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+<Table align={["left","left","left"]}>
+  <thead>
+    <tr>
+      <th style={{ textAlign: "left" }}>
+        Column name
+      </th>
+
+      <th style={{ textAlign: "left" }}>
+        Data type
+      </th>
+
+      <th style={{ textAlign: "left" }}>
+        Notes
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        chain\_id
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        block\_number
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        block\_timestamp
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        txn\_hash
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        txn\_success
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BOOL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        txn\_index
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        global\_counter
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BIGDECIMAL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        [https://docs.sim.io/docs/global-counter](https://docs.sim.io/docs/global-counter)
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        call\_depth
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        caller
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        callee
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        function\_signature
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        value
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BIGDECIMAL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        data
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        call\_type
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        0: CREATE, 1: CREATE2, 2: CALL, 3: DELEGATECALL, 4: STATICCALL, 5:CALLCODE, 6: DEPLOYMENT
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        status
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        LONG
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        0: SUCCESS, 1: FAILURE, 2: REVERT, 3: OUT_OF_GAS. See more 
+
+        [here](https://docs.sim.io/reference/simtransactionstatus)
+
+        .
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        delegator
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        delegatee
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        STRING
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        gas
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BIGDECIMAL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        gas\_used
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BIGDECIMAL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        gas\_left
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BIGDECIMAL
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+  </tbody>
+</Table>

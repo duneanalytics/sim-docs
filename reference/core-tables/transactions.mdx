@@ -1,0 +1,46 @@
+---
+title: '@sim.transactions'
+excerpt: Txn summaries
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+| Column Name                  | Data Type  |
+| :--------------------------- | :--------- |
+| chain\_id                    | Int        |
+| txn\_hash                    | Hex string |
+| block\_number                | Long       |
+| block\_timestamp             | Long       |
+| txn\_index                   | Int        |
+| from\_address                | Hex string |
+| to\_address                  | Hex string |
+| nonce                        | Long       |
+| sighash                      | string     |
+| txn\_data                    | Hex string |
+| success                      | Int        |
+| failure\_reason              | String     |
+| gas\_used                    | Long       |
+| gas\_limit                   | Long       |
+| total\_txn\_fees             | bigDecimal |
+| burned\_amount               | bigDecimal |
+| txn\_savings                 | bigDecimal |
+| value                        | bigDecimal |
+| gas\_price                   | bigDecimal |
+| base\_fee\_per\_gas          | bigDecimal |
+| max\_priority\_fee\_per\_gas | bigDecimal |
+| max\_fee\_per\_gas           | bigDecimal |
+
+# Coverage
+
+Includes Ethereum (1), Base (8453) and Arbitrum (42161).
+
+# Usage notes
+
+The table contains only one row per `(block_number, txn_hash)` pair, reorg'd data is discarded.

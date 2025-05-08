@@ -1,0 +1,90 @@
+---
+title: getOwnersForERC721Contract
+excerpt: Returns the owners for a given ERC721 contract
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Parameters
+
+1. `chain_id` (uint64, default: 1)
+2. `token_address` (address as hex string, default: 0xd3d9ddd0cf0a5f0bfb8f7fceae075df687eaebab)
+   1. The contract for which we want to check its owners.
+3. `block_number` (uint64, default:  0)
+   1. Optional. Can be used to view owner at a particular block. If unset, defaults to `0` and returns latest.
+4. `limit` (uint32, default: 100)
+   1. Number of records you want returned.
+5. `offset` (uint32, default: 0)
+   1. For pagination. If you're showing ten records per page, choose offset = 9 for the second page.
+
+# Returns
+
+Array with the following fields:
+
+1. `owner` (address as hex string)
+   1. The addresses that own at least one token in the contract.
+2. `token_id` (int256 as decimal string)
+   1. The token\_id owned by the address.
+3. `txn_last_changed` (address as hex string)
+   1. The most recent transaction that impacted the token\_id.
+4. `block_last_changed` (int64)
+   1. The most recent block that impacted the token\_id.
+
+# Query
+
+```sql
+WITH latest_block_number AS (
+  SELECT token_address_id_hash,
+    chain_id,
+    MAX(block_number) AS latest_block_number
+  FROM @sim.erc721_owner_changes_block
+  WHERE token_address_id_hash IN (
+      SELECT DISTINCT token_address_id_hash
+      FROM @sim.erc721_owner_changes_block
+      WHERE token_address = lower($token_address)
+        AND (
+          chain_id = $chain_id
+          OR $chain_id = 0
+        )
+        AND (
+          block_number <= $block_number
+          OR $block_number = 0
+        )
+    )
+    AND chain_id IN (
+      SELECT DISTINCT chain_id
+      FROM @sim.erc721_owner_changes_block
+      WHERE token_address = lower($token_address)
+        AND (
+          chain_id = $chain_id
+          OR $chain_id = 0
+        )
+        AND (
+          block_number <= $block_number
+          OR $block_number = 0
+        )
+    )
+    AND (
+      block_number <= $block_number
+      OR $block_number = 0
+    )
+  GROUP BY token_address_id_hash,
+    chain_id
+)
+SELECT b.owner,
+  b.token_id,
+  b.txn_hash AS txn_last_changed,
+  b.block_number as block_last_changed
+FROM @sim.erc721_owner_changes_block b
+  INNER JOIN latest_block_number lbn ON b.token_address_id_hash = lbn.token_address_id_hash
+  AND b.chain_id = lbn.chain_id
+  AND b.block_number = lbn.latest_block_number
+WHERE b.token_address = lower($token_address)
+ORDER BY block_last_changed DESC
+LIMIT $limit OFFSET $offset
+```

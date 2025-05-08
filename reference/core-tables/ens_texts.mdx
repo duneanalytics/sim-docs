@@ -1,0 +1,31 @@
+---
+title: '@sim.ens_texts'
+excerpt: Texts for ENS registrations
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+| Column Name     | Data Type  |
+| :-------------- | :--------- |
+| block\_number   | long       |
+| txn\_hash       | string     |
+| global\_counter | bigDecimal |
+| resolver        | string     |
+| node            | string     |
+| text\_key       | string     |
+| text            | string     |
+
+# Source
+
+This table was built in sim's [ENS](https://studio.sim.io/canvases/ad066093-0995-4523-af13-9f8d8cff081d) canvas.
+
+# Usage Notes
+
+* Often used in conjunction with @sim.ens\_expiries and @sim.primary\_names.

@@ -1,0 +1,62 @@
+---
+title: getERC20Allowance
+excerpt: Returns the allowance for a given ERC20 token, owner, and spender
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Parameters
+
+1. `chain_id` (uint64, default: 1)
+2. `token_address` (address as hex string, default: 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)
+3. `owner` (address as hex string, default: 0x48D004a6C175dB331E99BeAf64423b3098357Ae7)
+4. `spender`(address as hex string, default: 0x39AA39c021dfbaE8faC545936693aC917d5E7563)
+5. `block_number` (uint64, default: 0)
+   1. Optional. Can be used to view allowances at a particular block. If unset, defaults to `0` and returns latest.
+
+# Returns
+
+1. `amount` (int256 as decimal string)
+   1. The amount of the allowance normalized with token\_decimals. Note that many contracts treat the max value of uint256 (\~1.1579×10^77) as an unlimited allowance that doesn't decrement when the spender uses it.
+2. `txn_last_changed` (address as hex string)
+   1. The most recent transaction that impacted the balance.
+3. `block_last_changed` (int64)
+   1. The most recent block that impacted the balance.
+
+# Query
+
+```sql
+WITH latest_block_number AS (
+  SELECT token_address,
+    owner,
+    spender,
+    MAX(block_number) AS latest_block_number
+  FROM @sim.erc20_allowance_changes_block
+  WHERE chain_id = $chain_id
+    AND token_address = lower($token_address)
+    AND owner = lower($owner)
+    AND spender = lower($spender)
+    AND (
+      block_number <= $block_number
+      OR $block_number = 0
+    )
+  GROUP BY token_address,
+    owner,
+    spender,
+    chain_id
+)
+SELECT (1.0 * a.allowance / POWER(10, a.token_decimals)) AS allowance,
+  a.txn_hash as txn_last_changed,
+  a.block_number as block_last_changed
+FROM @sim.erc20_allowance_changes_block a
+  INNER JOIN latest_block_number lbn ON a.block_number = lbn.latest_block_number
+WHERE a.token_address = lower($token_address)
+  AND a.owner = lower($owner)
+  AND a.spender = lower($spender)
+  AND a.chain_id = $chain_id
+```

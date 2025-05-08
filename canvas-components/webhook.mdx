@@ -1,0 +1,48 @@
+---
+title: Webhook
+excerpt: Route messages directly to your server
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+  pages:
+    - type: basic
+      slug: external-trigger
+      title: External trigger
+---
+# Summary
+
+The `Webhook` component creates a service that routes messages to your own server. Each message emitted from an `EVM Lambda` or `Patch` through a `Schema` you've connected to a `Webhook` instance will be routed to your server and delivered in realtime.  
+
+![](https://files.readme.io/7e28606-image.png)
+
+# Inputs
+
+1. **Path:** The path to your server (must be `https` enabled).
+2. **Secret**A string that will be used to verify the authenticity of messages received on your server. (must be a `base64` string prefixed by `whsec_`).
+3. **Fields:** The list of fields from the `Schema` node connected to this `Webhook` node to propagate in the messages that will be sent to your server.
+
+   ![](https://files.readme.io/a52fade-image.png)
+4. **Rate limit** The maximum number of messages that are allowed to be sent in 1 second to your server. Messages throttled by this limit will be queued and sent when possible.
+
+# Interactions
+
+Using the three-dot menu, you can delete or duplicate a `Webhook` component.
+
+Using the toggle, a `Webhook` can be disabled/enabled.
+
+Once set, you can send a test message to your server.
+
+# Allowed edges
+
+## Incoming
+
+* `Schema`: a `Webhook` can have an incoming connection from a `Schema`. Once connected and active, each message of that `Schema` emitted from a `EVM Lambda` node will be routed through the `Webhook` to your server.
+
+## Outgoing
+
+* None
