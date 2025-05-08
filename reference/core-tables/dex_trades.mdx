@@ -1,0 +1,108 @@
+---
+title: '@sim.dex_trades'
+excerpt: Trades on decentralized exchanges
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+| Column Name           | Data Type     |
+| :-------------------- | :------------ |
+| chain\_id             | LONG          |
+| txn\_hash             | STRING        |
+| block\_number         | LONG          |
+| block\_timestamp      | LONG          |
+| global\_counter       | BIG_DECIMAL   |
+| dex                   | STRING        |
+| from\_token           | STRING        |
+| from\_token\_amt      | BIG_DECIMAL   |
+| from\_token\_name     | STRING        |
+| from\_token\_symbol   | STRING        |
+| from\_token\_dec      | BIG_DECIMAL   |
+| from\_token\_to\_weth | BIG_DECIMAL   |
+| from\_token\_to\_weth\_dec | BIG_DECIMAL |
+| to\_token             | STRING        |
+| to\_token\_amt        | BIG_DECIMAL   |
+| to\_token\_name       | STRING        |
+| to\_token\_symbol     | STRING        |
+| to\_token\_dec        | BIG_DECIMAL   |
+| to\_token\_to\_weth   | BIG_DECIMAL   |
+| to\_token\_to\_weth\_dec | BIG_DECIMAL |
+| weth\_to\_usdc        | BIG_DECIMAL   |
+| usdc\_dec             | BIG_DECIMAL   |
+| recipient             | STRING        |
+| liquidity\_pool       | STRING        |
+| txn\_originator       | STRING        |
+
+# Coverage
+
+| DEX                  | Ethereum | Base |
+| -------------------- | -------- | ---- |
+| 1inch LOP            | ✓        | ✓    |
+| Ambient (CrocSwap)   | ✓        |      |
+| Balancer V2          | ✓        | ✓    |
+| Bancor Carbon        | ✓        |      |
+| CoW Protocol         | ✓        |      |
+| Curve.fi             | ✓        | ✓    |
+| DODO V2              | ✓        | ✓    |
+| KyberSwap LOP        | ✓        | ✓    |
+| Maker PSM            | ✓        |      |
+| Maverick V1          | ✓        | ✓    |
+| Maverick V2          | ✓        | ✓    |
+| PancakeSwap V2       | ✓        | ✓    |
+| PancakeSwap V3       | ✓        | ✓    |
+| ShibaSwap V2         | ✓        |      |
+| SushiSwap V2         | ✓        | ✓    |
+| SushiSwap V3         | ✓        | ✓    |
+| Swaap V2             | ✓        | ✓    |
+| Uniswap V2           | ✓        | ✓    |
+| Uniswap V3           | ✓        | ✓    |
+| UniswapX             | ✓        | ✓    |
+| Aerodrome            |          | ✓    |
+| Aerodrome Slipstream |          | ✓    |
+| BaseSwap             |          | ✓    |
+| BaseX                |          | ✓    |
+| Infusion             |          | ✓    |
+| RocketSwap           |          | ✓    |
+| WooFi                |          | ✓    |
+
+If there's another DEX on a sim-supported chain that you'd like to see covered, please reach out [on Telegram](https://t.me/+c0fPe4sYCKMwNzYx).
+
+# Source
+
+This table was built in sim's [DEX Trades](https://studio.sim.io/sim/canvases/3055274a-46be-4e6b-94bc-91f81500969b) canvas.
+
+# Usage Notes
+
+* USD prices are fetched from Chainlink's on-chain Price Feeds. In case one side of the trade doesn't have a price feed available, the `x_token_usd` and `x_token_usd_dec` will both be `0`.
+
+# Sample Queries
+
+## 1. Get the N largest trades across all DEXs
+
+```mysql N Largest Trades
+select
+    txn_hash,
+    dex,
+    from_token,
+    from_token_name,
+    (1.0 * from_token_amt / POWER(10, from_token_dec)) from_normalized_amt,
+    to_token,
+    to_token_name,
+    to_token_amt,
+    (1.0 * to_token_amt / POWER(10, to_token_dec)) to_normalized_amt,
+    CASE
+        WHEN 1.0 * from_token_usd > 0 THEN (1.0 * from_token_amt / POWER(10, from_token_dec)) * (1.0 * from_token_usd / POWER(10, from_token_usd_dec))
+        WHEN 1.0 * to_token_usd > 0 THEN (1.0 * to_token_amt / POWER(10, to_token_dec)) * (1.0 * to_token_usd / POWER(10, to_token_usd_dec))
+        ELSE 0
+    END AS trade_volume
+from @sim.dex_trades
+order by trade_volume desc
+limit 100;
+```

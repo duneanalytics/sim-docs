@@ -1,0 +1,61 @@
+---
+title: Patch
+excerpt: Patch an existing on-chain contract to modify its code
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+  pages:
+    - type: basic
+      slug: schema
+      title: Schema
+---
+<Embed url="https://www.youtube.com/watch?v=4UoeYkV1qPY" title="sim's Patch" favicon="https://www.google.com/favicon.ico" image="https://i.ytimg.com/vi/4UoeYkV1qPY/hqdefault.jpg" provider="youtube.com" href="https://www.youtube.com/watch?v=4UoeYkV1qPY" typeOfEmbed="youtube" html="%3Ciframe%20class%3D%22embedly-embed%22%20src%3D%22%2F%2Fcdn.embedly.com%2Fwidgets%2Fmedia.html%3Fsrc%3Dhttps%253A%252F%252Fwww.youtube.com%252Fembed%252F4UoeYkV1qPY%253Ffeature%253Doembed%26display_name%3DYouTube%26url%3Dhttps%253A%252F%252Fwww.youtube.com%252Fwatch%253Fv%253D4UoeYkV1qPY%26image%3Dhttps%253A%252F%252Fi.ytimg.com%252Fvi%252F4UoeYkV1qPY%252Fhqdefault.jpg%26key%3D7788cb384c9f4d5dbbdbeffd9fe4b92f%26type%3Dtext%252Fhtml%26schema%3Dyoutube%22%20width%3D%22640%22%20height%3D%22480%22%20scrolling%3D%22no%22%20title%3D%22YouTube%20embed%22%20frameborder%3D%220%22%20allow%3D%22autoplay%3B%20fullscreen%3B%20encrypted-media%3B%20picture-in-picture%3B%22%20allowfullscreen%3D%22true%22%3E%3C%2Fiframe%3E" />
+
+# Summary
+
+Customize blockchain executions by directly modifying an existing contract with the **Patch** component. **Patch** complements the **EVM Lambda** component, in which you define the code you want to execute on-chain as well as hooks that determine when that code executes. With a patched contract, whenever execution would have involved the contract that you patched, we swap in your patched contract instead. 
+
+When you choose which contract you want to patch, we automatically flatten all of the source code, similarly to the [evm.codes contract viewer](https://www.evm.codes/contract?address=0xcbcdf9626bc03e24f779434178a73a0b4bad62ed). As you make edits, toggle on `Show diff` to see the diff between the patched contract and the original. Test in the IDE and deploy a backfill via connecting to a data source, just like the Lambda. 
+
+![](https://files.readme.io/1e3e48a-image.png)
+
+# Patch or Lambda
+
+For many purposes, from emitting a little extra data to performing complex simulations, either component can be used. For both, state is reset at the end of the block (more on that below!) to enable parallelization for lightning-fast backfills. So which should you use?
+
+1. **Lambdas are more flexible**: You can insert execution across many contracts (e.g., that share an ABI), or upon each transaction, or each storage write, or each block, etc. None of these is possible with **Patch**.
+2. **Patch puts you within the contract**: If you're interested in a single contract, and particularly if you'd like to emit transient values from it, **Patch** is very powerful.
+
+Obviously the choice of interface is also a matter of preference.
+
+# Modifying libraries within contracts
+
+Currently when you patch a contract, only that contract gets redeployed. If you edit a library in the flattened contract, whether those edits will apply depends on whether the library is statically or dynamically linked. In the former case, the library is included in the bytecode of the deployed contract, so changes you make will apply. In the latter case, the library is deployed at a separate address, so changes you make to the library within the contract that uses it won't have an impact. 
+
+The solution to this is quite simple: you can mark the library functions you want to use as `internal` so that they get pulled into the bytecode of the contract you're editing.
+
+Here's [an example canvas](https://studio.sim.io/canvases/0c553aca-d761-49bc-b85e-9adeab8ed707) showing changes to the `LiquidationLogic` library. To get the change included, we simply make the `executeLiquidationCall` function we want to modify `internal`.
+
+# FAQ
+
+1. Can a patch be used across chains?
+   1. A patch modifies the contract at a specific address on a specific chain. If you want to patch related contracts across 2+ chains, patch each of them individually, copying over any reusable logic.
+2. Can I call contracts from my patch?
+   1. Absolutely! Patches behave similarly to normal contracts and can call other contracts just like a normal contract. They're also augmented with special simFunctions, which allow you to read, alter and decode the storage of other contracts; get the transaction hash; and much more. We keep adding simFunctions: [https://docs.sim.io/reference/](https://docs.sim.io/reference/). With patches you need to prefix simFunctions with Sim., e.g., Sim.simTransactionHash().
+3. Can I patch a Vyper contract?
+   1. Not yet, but we’ll add Vyper support based on demand. If you need it, let us know!
+4. Can I define new storage variables in my patch?
+   1. Yes, you can! You can save variables in your patch's ephemeral storage and modify or use them within your patch.
+5. For how long will a patch's ephemeral storage be persisted?
+   1. By default, they are stateful only within the block, and reset between blocks. We did recently introduce stateful lambdas. While still experimental, these let you define variables in a separate Store contract that will persist across blocks. If you want to give it a try, reach out or read more: [https://docs.sim.io/docs/evm-lambda#stateful-lambdas](https://docs.sim.io/docs/evm-lambda#stateful-lambdas)
+6. How do patches work with proxies? What happens with upgrades?
+   1. If you patch a proxy, it will continue to work as the implementation is upgraded/replaced. If you patch an implementation, once an associated proxy points to a new implementation, you’ll have to create a new patch for it. This is true both within the context of backfills and at the tip: you need to create one patch per implementation and run each over the block range the implementation was active.
+7. What happens if I patch a factory contract?
+   1. Each patch is applied against only the specified contract. Contracts deployed by a factory contract will not be impacted by a patch on the factory contract. For now, patch each contract you’re interested in separately. If you need to patch all contracts deployed by the same factory and there are many, consider using a Lambda with ABI hooks, or reach out to us on TG: [https://t.me/+c0fPe4sYCKMwNzYx](https://t.me/+c0fPe4sYCKMwNzYx)
+8. What if I want to emit an array, or some other type that isn't supported in the schema?
+   1. You can define custom types! Read more [here](https://docs.sim.io/docs/custom-types).

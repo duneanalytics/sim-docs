@@ -1,0 +1,55 @@
+---
+title: External trigger
+excerpt: Kick-off executions programmatically via an external endpoint
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+  pages:
+    - type: basic
+      slug: comment
+      title: Comment
+---
+# Summary
+
+The `External trigger` component creates an endpoint that can be hit externally in order to kick-off execution of a `Canvas`. Data can be passed to the `Canvas` in the body of the request.  
+
+![](https://files.readme.io/36a7f54-image.png)
+
+Once saved, the component's associated details will be available:
+
+![](https://files.readme.io/d647a85-image.png)
+
+<br />
+
+# Inputs
+
+1. **Path:** The path that needs to be included in requests to the external trigger endpoint in order to kick off this specific flow in the `Canvas`.
+2. **Fields**A list of fields that can be passed in requests to the external trigger endpoint and whose values will be available in the `env` object of the `EVM Lambda` that executes as a result of the request. 
+
+# Interactions
+
+Using the three-dot menu, you can delete or duplicate an `External Trigger` component. You can also copy a `cURL` request to your external trigger endpoint for testing.
+
+Using the toggle, an `External Trigger` can be disabled/enabled.
+
+# Sync or async
+
+When you call the API for your External Trigger, you must pass one of two`call_type` parameters:
+
+* `sync`(default): The results of the execution are returned in the response to your call to the external trigger.
+* `async`: The results of the execution are piped downstream through schemas to any persistence, webhook, or schema mirrors.
+
+# Allowed edges
+
+## Incoming
+
+* None
+
+## Outgoing
+
+* `EVM Lambda`: an `External Trigger` must be connected to some `EVM Lambda` component in order to kick-off anything when hit.

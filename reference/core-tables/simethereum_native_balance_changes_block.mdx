@@ -1,0 +1,131 @@
+---
+title: '@sim.ethereum_native_balance_changes_block'
+excerpt: >-
+  Native asset balance new values by account aggregated at the block level. For
+  a given block, it contains the new balance of the account that experienced a
+  change of balance.
+deprecated: false
+hidden: true
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+<Table align={["left","left","left"]}>
+  <thead>
+    <tr>
+      <th style={{ textAlign: "left" }}>
+        Column Name
+      </th>
+
+      <th style={{ textAlign: "left" }}>
+        Data type
+      </th>
+
+      <th style={{ textAlign: "left" }}>
+        Description
+      </th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        block\_number
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        Long
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        block\_timestamp
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        Long
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        account\_address
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        Hex string
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td style={{ textAlign: "left" }}>
+        value
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        BigDecimal
+      </td>
+
+      <td style={{ textAlign: "left" }}>
+        The value of the new balance, in ETH
+      </td>
+    </tr>
+  </tbody>
+</Table>
+
+# Usage notes
+
+The table contains only one row per `(block_number, account_address)` pair, reorg'd data is discarded.
+
+# Sample Queries
+
+## Current balance for an account
+
+```sql sql
+WITH latest_balance AS (
+  SELECT max(block_number) AS max_block_number
+    FROM @sim.ethereum_native_balance_changes_block
+   WHERE account_address = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'
+)
+SELECT b.value
+  FROM @sim.ethereum_native_balance_changes_block b
+  JOIN latest_balance lb
+    ON lb.max_block_number = b.block_number
+ WHERE b.account_address = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'
+```
+
+<br />
+
+## Historical balance for an account
+
+```sql
+WITH latest_balance AS (
+  SELECT max(block_number) AS max_block_number
+    FROM @sim.ethereum_native_balance_changes_block
+   WHERE account_address = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'
+     AND block_number <= 18000000
+)
+SELECT b.value
+  FROM @sim.ethereum_native_balance_changes_block b
+  JOIN latest_balance lb
+    ON lb.max_block_number = b.block_number
+ WHERE b.account_address = '0xd8da6bf26964af9d7eed9e03e53415d37aa96045'
+```

@@ -1,0 +1,38 @@
+---
+title: API templates
+sidebarTitle: Overview
+excerpt: ''
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# ERC20
+
+* [getERC20Allowance](/reference/api-templates/geterc20allowance): Returns the allowance for a given ERC20 token, owner, and spender
+* [getERC20Allowances](/reference/api-templates/geterc20allowances): Returns all allowances for a given owner
+* [getERC20Balances](/reference/api-templates/geterc20balances): Returns ERC20 token balances for all tokens in which the given address has ever held a position
+
+# ERC721
+
+* [getERC721ApprovalsForOwner](/reference/api-templates/geterc721approvalsforowner): Returns the approvals (standard and operator) for all ERC721 tokens owned by a given address
+* [getERC721ContractsForOwner](/reference/api-templates/geterc721contractsforowner): Returns all the contracts for which the owner owns at least one token
+* [getERC721TokensForOwner](/reference/api-templates/geterc721tokensforowner): Returns the ERC721 portfolio for a given address
+* [getOwnerForERC721Token](/reference/api-templates/getownerforerc721token): Returns the owner for a given ERC721 token
+* [getOwnersForERC721Contract](/reference/api-templates/getownersforerc721contract): Returns the owners for a given ERC721 contract
+* [isHolderOfERC721Contract](/reference/api-templates/isholderoferc721contract): Returns if any token in a given ERC721 is held by a given address
+
+# ERC1155
+
+* [getAddressesForERC1155](/reference/api-templates/getaddressesforerc1155contract): Returns the addresses that hold any token within a given ERC1155 contract
+* [getERC1155Balances](/reference/api-templates/geterc1155balances): Returns ERC1155 token balances for all tokens in which the given address has ever held a position
+
+# Other
+
+* [getENSForAddress](/reference/api-templates/getensforaddress): Returns the latest ENS registration for an address
+* [getPriceFromUniswapV3](/reference/api-templates/getpricefromuniswapv3): Returns the price of any token (denominated in any other) using Uniswap V3
+* [getFOIA](/reference/api-templates/getfoia): Returns all instances where contracts' storage mappings include a given address, in the spirit of the FOIA (Freedom of Information Act)

@@ -1,0 +1,91 @@
+---
+title: getERC20Allowances
+excerpt: Returns all allowances for a given owner
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Parameters
+
+1. `address` (address as hex string, default: 0x000e7be03f9adbc5065396a09e1b6ddc9da5a8bf)
+2. `chain_id` (uint64, default: 0)
+   1. Optional. Can be used to view balances from a certain chain. If unset, defaults to `0` and returns results from all chains.
+3. `token_address` (address as hex string, default: 0x0000000000000000000000000000000000000000)
+   1. Optional. Can be used to filter results to a specific token. If unset, defaults to `address(0)` and all tokens are checked.
+4. `block_number` (uint64, default: 0)
+   1. Optional. Can be used to view allowances at a particular block. If unset, defaults to `0` and returns latest.
+5. `limit` (uint32, default: 100)
+   1. Number of records you want returned.
+6. `offset` (uint32, default: 0)
+   1. For pagination. If you're showing ten records per page, choose offset = 9 for the second page.
+
+# Returns
+
+Array with the following fields (in descending order of `block_last_changed`):
+
+1. `chain_id` (int64)
+   1. The chain for the token
+2. `token_address` (address as hex string)
+   1. The address of the token.
+3. `token_name` (string)
+   1. The name of the token.
+4. `token_symbol` (string)
+   1. The symbol of the token.
+5. `spender` (address as hex string)
+   1. The address that is permitted to spend
+6. `allowance` (int256 as decimal string)
+   1. The amount of the allowance normalized by token\_decimals. Note that many contracts treat the max value of uint256 (\~1.1579×10^77) as an unlimited allowance that doesn't decrement when the spender uses it.
+7. `txn_last_changed` (address as hex string)
+   1. The most recent transaction that impacted the balance.
+8. `block_last_changed` (int64)
+   1. The most recent block that impacted the balance.
+
+# Query
+
+```sql
+WITH latest_block_number AS (
+  SELECT token_address,
+    spender,
+    chain_id,
+    MAX(block_number) AS latest_block_number
+  FROM @sim.erc20_allowance_changes_block
+  WHERE owner = lower($address)
+    AND (
+      chain_id = $chain_id
+      OR $chain_id = 0 
+    )
+    AND (
+      token_address = lower($token_address)
+      OR $token_address = '0x0000000000000000000000000000000000000000'
+    )
+    AND (
+      block_number <= $block_number
+      OR $block_number = 0
+    )
+  GROUP BY token_address,
+    owner,
+    spender,
+    chain_id
+)
+SELECT a.chain_id,
+  a.token_address,
+  a.token_name,
+  a.token_symbol,
+  a.spender,
+  (1.0 * a.allowance / POWER(10, a.token_decimals)) AS allowance,
+  a.txn_hash as txn_last_changed,
+  a.block_number as block_last_changed
+FROM @sim.erc20_allowance_changes_block a
+  INNER JOIN latest_block_number lbn ON a.block_number = lbn.latest_block_number
+  AND a.token_address = lbn.token_address
+  AND a.spender = lbn.spender
+  AND a.chain_id = lbn.chain_id
+WHERE a.owner = lower($address)
+ORDER BY block_last_changed desc
+LIMIT $limit OFFSET $offset
+```

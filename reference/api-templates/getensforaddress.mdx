@@ -1,0 +1,112 @@
+---
+title: getENSForAddress
+excerpt: Returns the latest ENS registration for an address
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Parameters
+
+1. `address` (address as hex string, default: 0x48D004a6C175dB331E99BeAf64423b3098357Ae7)
+
+# Returns
+
+1. `name_claim_block` (int64)
+2. `account_address` (address as hex string)
+3. `name` (string)
+4. `text_key` (string)
+5. `name_expiry_timestamp` (int64)
+
+# Query
+
+```sql
+WITH latest_block_numbers AS (
+  SELECT 
+    account_address,
+    labelhash,
+    node,
+    MAX(block_number) AS latest_block_number
+  FROM 
+    @sim.ens_primary_names
+  WHERE 
+    account_address = LOWER($address)
+  GROUP BY 
+    account_address, 
+    labelhash, 
+    node
+  ORDER BY 
+    latest_block_number DESC
+  LIMIT 1
+),
+latest_expiries AS (
+  SELECT 
+    labelhash,
+    MAX(expiry_timestamp) AS name_expiry_timestamp
+  FROM 
+    @sim.ens_expiries
+  WHERE 
+    labelhash IN (
+      SELECT DISTINCT labelhash
+      FROM latest_block_numbers
+    )
+  GROUP BY 
+    labelhash
+),
+latest_text_keys AS (
+  SELECT 
+    text_key,
+    node,
+    MAX(block_number) AS latest_bn
+  FROM 
+    @sim.ens_texts
+  WHERE 
+    node IN (
+      SELECT DISTINCT node
+      FROM latest_block_numbers
+    )
+  GROUP BY 
+    text_key, 
+    node
+),
+latest_texts AS (
+  SELECT 
+    text_key,
+    text,
+    node
+  FROM 
+    @sim.ens_texts
+  WHERE 
+    text_key IN (
+      SELECT DISTINCT text_key
+      FROM latest_text_keys
+    )
+    AND node IN (
+      SELECT DISTINCT node
+      FROM latest_text_keys
+    )
+    AND block_number IN (
+      SELECT DISTINCT latest_bn
+      FROM latest_text_keys
+    )
+)
+SELECT DISTINCT 
+  e.block_number AS name_claim_block,
+  e.account_address,
+  e.name,
+  t.text_key,
+  t.text,
+  x.name_expiry_timestamp
+FROM 
+  @sim.ens_primary_names e
+  INNER JOIN latest_block_numbers lbs ON lbs.latest_block_number = e.block_number
+  INNER JOIN latest_expiries x ON x.labelhash = e.labelhash
+  LEFT JOIN latest_texts t ON t.node = e.node
+WHERE 
+  e.account_address = LOWER($address)
+  AND e.is_forward_resolved = TRUE;
+```

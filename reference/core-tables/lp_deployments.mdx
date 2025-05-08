@@ -1,0 +1,41 @@
+---
+title: '@sim.lp_deployments'
+excerpt: Deployments of liquidity pools
+deprecated: false
+hidden: false
+metadata:
+  title: ''
+  description: ''
+  robots: index
+next:
+  description: ''
+---
+# Schema
+
+| Column Name      | Data Type  |
+| :--------------- | :--------- |
+| chain\_id        | Long       |
+| txn\_hash        | String     |
+| block\_number    | Long       |
+| block\_timestamp | Long       |
+| pair\_address    | String     |
+| project          | String     |
+| protocol         | String     |
+| token0           | String     |
+| token0\_name     | String     |
+| token0\_symbol   | String     |
+| token0\_dec      | BigDecimal |
+| token1           | String     |
+| token1\_name     | String     |
+| token1\_symbol   | String     |
+| token1\_dec      | BigDecimal |
+| is\_complex      | Bool       |
+| tokens           | JSON       |
+
+# Coverage
+
+Includes Ethereum (1) and Base (8453).
+
+# Canvas
+
+[https://studio.sim.io/sim/canvases/135daeed-c94f-4e12-91b0-319330be8af4](https://studio.sim.io/sim/canvases/135daeed-c94f-4e12-91b0-319330be8af4)
