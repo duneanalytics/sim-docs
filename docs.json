@@ -9,177 +9,42 @@
     "dark": "#F4603E"
   },
   "navigation": {
-    "tabs": [
+    "groups": [
       {
-        "tab": "idx",
+        "group": "sim APIs",
         "pages": [
           "index",
-          {
-            "group": "Getting Started",
-            "pages": [
-              "getting-started/account-setup",
-              "getting-started/querying-data",
-              "getting-started/hello-lambda",
-              "getting-started/a-simple-api"
-            ]
-          },
-          {
-            "group": "Canvas Components",
-            "pages": [
-              "canvas-components/api",
-              "canvas-components/comment",
-              "canvas-components/data-source",
-              "canvas-components/evm-lambda",
-              "canvas-components/external-trigger",
-              "canvas-components/patch",
-              "canvas-components/persistence",
-              "canvas-components/schema-mirror",
-              "canvas-components/schema",
-              "canvas-components/webhook"
-            ]
-          },
-          {
-            "group": "Example Canvases",
-            "pages": [
-              "example-canvases/explorer-homepage",
-              "example-canvases/tracking-erc721-transfers",
-              "example-canvases/partydao-crowdfund-statuses",
-              "example-canvases/flash-swaps-on-uniswapv2",
-              "example-canvases/monitor-and-activate-makers-esm",
-              "example-canvases/on-chain-prices",
-              "example-canvases/powering-bots-with-webhooks"
-            ]
-          },
-          {
-            "group": "More Details",
-            "pages": [
-              "more-details/custom-types",
-              "more-details/global-counter",
-              "more-details/hook-ctx-and-simfunctions",
-              "more-details/querying-and-data-types-faq",
-              "more-details/storage-hooks",
-              "reference/simfunctions/index"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              {
-                "group": "API templates",
-                "pages": [
-                  "reference/api-templates/getensforaddress",
-                  "reference/api-templates/getpricefromuniswapv3",
-                  "reference/api-templates/geterc20allowance",
-                  "reference/api-templates/geterc20allowances",
-                  "reference/api-templates/geterc20balances",
-                  "reference/api-templates/geterc721approvalsforowner",
-                  "reference/api-templates/geterc721contractsforowner",
-                  "reference/api-templates/geterc721tokensforowner",
-                  "reference/api-templates/getownerforerc721token",
-                  "reference/api-templates/getownersforerc721contract",
-                  "reference/api-templates/getaddressesforerc1155contract",
-                  "reference/api-templates/isholderoferc721contract",
-                  "reference/api-templates/getfoia",
-                  "reference/api-templates/geterc1155balances"
-                ]
-              },
-              {
-                "group": "Core tables",
-                "root": "reference/core-tables/index",
-                "pages": [
-                  "reference/core-tables/transactions",
-                  "reference/core-tables/lp_deployments",
-                  "reference/core-tables/liquidations",
-                  "reference/core-tables/uniswap_v3_prices",
-                  "reference/core-tables/basenames_expiries",
-                  "reference/core-tables/basenames_primary_names",
-                  "reference/core-tables/basenames_texts",
-                  "reference/core-tables/basenames_payments",
-                  "reference/core-tables/basenames_reserved",
-                  "reference/core-tables/blocks",
-                  "reference/core-tables/contract_deployments",
-                  "reference/core-tables/dex_trades",
-                  "reference/core-tables/ens_expiries",
-                  "reference/core-tables/ens_primary_names",
-                  "reference/core-tables/ens_texts",
-                  "reference/core-tables/mapping_storage_writes",
-                  "reference/core-tables/erc20_balance_changes_block",
-                  "reference/core-tables/erc20_allowance_changes_block",
-                  "reference/core-tables/erc721_owner_changes_block",
-                  "reference/core-tables/erc721_approval_changes_block",
-                  "reference/core-tables/erc1155_balance_changes_block"
-                ]
-              },
-              {
-                "group": "simFunctions",
-                "root": "reference/simfunctions/index",
-                "pages": [
-                  "reference/simfunctions/simaddressnonce",
-                  "reference/simfunctions/simcalldata",
-                  "reference/simfunctions/simcalldepth",
-                  "reference/simfunctions/simcallkind",
-                  "reference/simfunctions/simcodeaddress",
-                  "reference/simfunctions/simcreatedcontract",
-                  "reference/simfunctions/simemitslog",
-                  "reference/simfunctions/simfrom",
-                  "reference/simfunctions/simgas",
-                  "reference/simfunctions/simgasleft",
-                  "reference/simfunctions/simimplementsfunction",
-                  "reference/simfunctions/simlogaddress",
-                  "reference/simfunctions/simlogdata",
-                  "reference/simfunctions/simlogtopic",
-                  "reference/simfunctions/simlogtopicsize",
-                  "reference/simfunctions/simparentcodeaddress",
-                  "reference/simfunctions/simreadstorage",
-                  "reference/simfunctions/simreturnedvalue",
-                  "reference/simfunctions/simsalt",
-                  "reference/simfunctions/simsetbalance",
-                  "reference/simfunctions/simsetstorage",
-                  "reference/simfunctions/simstorageaddress",
-                  "reference/simfunctions/simstoragekey",
-                  "reference/simfunctions/simstoragevalue",
-                  "reference/simfunctions/simto",
-                  "reference/simfunctions/simtostring",
-                  "reference/simfunctions/simtransactiongaslimit",
-                  "reference/simfunctions/simtransactionhash",
-                  "reference/simfunctions/simtransactionindex",
-                  "reference/simfunctions/simtransactionstatus",
-                  "reference/simfunctions/simvalue"
-                ]
-              }
-            ]
-          }
+          "quickstart",
+          "authentication",
+          "testing-errors"
         ]
       },
       {
-        "tab": "APIs",
-        "groups": [
+        "group": "EVM",
+        "pages": [
+          "evm/overview",
           {
-            "group": "sim APIs",
+            "group": "Guides",
+            "icon": "books",
             "pages": [
-              "overview",
-              {
-                "group": "EVM",
-                "pages": [
-                  "evm/balances",
-                  "evm/balances-chains",
-                  "evm/transactions",
-                  "evm/transactions-chains",
-                  "evm/tokens",
-                  "evm/activity"
-                ]
-              },
-              {
-                "group": "SVM",
-                "pages": [
-                  "svm/balances",
-                  "svm/transactions"
-                ]
-              },
-              "hooks",
-              "proxy"
+              "evm/guide-1",
+              "evm/guide-2",
+              "evm/guide-3"
             ]
-          }
+          },
+          "evm/activity",
+          "evm/tokens",
+          "evm/transactions",
+          "evm/balances",
+          "evm/balances-chains"
+        ]
+      },
+      {
+        "group": "SVM",
+        "pages": [
+          "svm/overview",
+          "svm/balances",
+          "svm/transactions"
         ]
       }
     ]
