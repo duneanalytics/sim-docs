@@ -5,40 +5,118 @@ description: "Take your first steps with the sim APIs"
 icon: "bolt-lightning"
 ---
 
-sim APIs makes building multi-chain application seamless. We've worked hard to offer incredible multichain support (50+ networks in a single call)
-with one of the industry's lowest latencies. These APIs power several of the best teams building on crypto.
+sim APIs power wallets and onchain apps with fast, reliable access to real-time blockchain activity and ownership data.
+Access data from 60+ chains with a single request.
 
-## Available APIs:
+This guide will help you make your first API call to retrieve multichain token balances for an address;
 
-### EVM
+## Authentication
 
-1. [Token Balances](./evm/balances): Access accurate and fast real time balances of native and ERC20 tokens of accounts on EVM blockchains.
-2. [Transactions](./evm/transactions): Access transactions for accounts in real time across EVM blockchains.
-3. [Tokens (Beta)](./evm/tokens): Metadata and realtime pricing for native and ERC20 tokens on EVM blockchains.
-4. [Activity (Beta)](./evm/activity): Real-time feed of on-chain activity for any EVM address including transfers and contract interactions.
+sim APIs use API keys to authenticate requests.
+You can create and manage your API keys in your [Dune Dashboard](https://dune.com/settings/api).
 
-### SVM
+<Frame caption="To generate a new API key, visit Settings -> API -> create new API key.">
+  <img src="/images/get-dune-api-key.png" />
+</Frame>
 
-1. [Token Balances (Beta)](./svm/balances): Access accurate and fast real time balances of native, SPL and SPL-2022 tokens of accounts on SVM blockchains.
-2. [Transactions (Beta)](./svm/transactions): Access transactions for accounts in real time across SVM blockchains.
+To authenticate, include your API key in the `X-Dune-Api-Key` header for every request.
 
-## Getting started
+```bash
+curl --request GET \
+  --header "X-Dune-Api-Key: YOUR_API_KEY"
+```
 
-In order to get started, all you need is a Dune API key. See [here](https://docs.dune.com/api-reference/overview/authentication#generate-an-api-key) how to generate one.
-The API key should always be sent in the header `x-dune-api-key`.
+All API requests must be made over HTTPS.
+Calls made over plain HTTP will fail.
+API requests without authentication will also fail.
 
-## Pricing & Rate limits
+<Note>
+Your API keys carry many privileges, so be sure to keep them secure.
+Do not share your secret API keys in public places like GitHub, client-side code, and so on.
+</Note>
 
-All Dune users have access to sim APIs' free plan, irregardless of their account status on Dune. By default, all users are limited to 10 requests per second.
-If you need a higher request rate, please get in touch by DMing [mewwts](https://x.com/mewwts).
+## Your First Request
 
-We offer custom plans with high rate limits and monthly request quotas, and can easily support thousands of RPS and millions of monthly requests.
+Let's make your first request. We'll retrieve token balances for `vitalik.eth` across multiple EVM chains using the [Token Balances](#) endpoint.
+This single call replaces numerous requests you might make to block exporers or node providers for each chain.
 
-## React hooks
+Here's how to make the API call:
 
-Do you have a React app that needs token balances or transaction data?
-Get started by using the `useTokenBalances` and `useTransactions` React hooks from our [@duneanalytics/hooks](https://www.npmjs.com/package/@duneanalytics/hooks) package.
+<CodeGroup>
 
-## Building with AI
+```bash cURL
+curl -X GET "https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045" \
+     -H "X-Dune-Api-Key: YOUR_API_KEY"
+```
 
-Mention LLMs.txt, Copy Page, Copy Markdown, `.cursorrules`, and the `openapi.json` spec directly.
+```javascript JavaScript
+const options = {method: 'GET', headers: {'X-Dune-Api-Key': 'YOUR_API_KEY'}};
+
+fetch('https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', options)
+  .then(response => response.json())
+  .then(response => console.log(response))
+  .catch(err => console.error(err));
+```
+
+```python Python
+import requests
+
+url = "https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+
+headers = {"X-Dune-Api-Key": "YOUR_API_KEY"}
+
+response = requests.request("GET", url, headers=headers)
+
+print(response.text)
+```
+</CodeGroup>
+
+<Note>
+Replace `YOUR_API_KEY` with your actual API key from the Dune Dashboard.
+</Note>
+
+The API will return a JSON response containing an array of `balances`.
+Each object in the array represents a token balance for the specified address on one of the chains, including various details.
+
+```json Response (JSON) [expandable]
+{
+  "balances": [
+    {
+      "address": "native",
+      "amount": "605371497350928252303",
+      "chain": "ethereum",
+      "decimals": 18,
+      "price_usd": 3042.816964922323,
+      "symbol": "ETH",
+      "value_usd": 1842034.6622198338
+    }
+  ],
+  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg",
+  "request_time": "2023-11-07T05:31:56Z",
+  "response_time": "2023-11-07T05:31:56Z",
+  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+}
+```
+
+With a single API request you get normalized, realtime data with enriched metadata and pricing.
+
+## Next Steps
+
+You just made your first successful API call to sim APIs!
+You've seen how easily you can retrieve comprehensive, multichain data.
+But this is just the beginning what's possible.
+
+Are you ready to learn more?
+Here are a few paths you can explore:
+
+<CardGroup cols={2}>
+  <Card icon="ethereum" title="Explore EVM Endpoints" href="/evm/overview">
+    See all available EVM API endpoints. Learn how to fetch transaction histories, token metadata, and more detailed onchain activity.
+  </Card>
+  <Card icon="books" title="Build Real App Features" href="/evm/guide-1">
+    Follow our practical guides to build fully-functional features like token portfolio displays, real-time activity feeds, and more for your onchain apps.
+  </Card>
+  <Card icon="microchip-ai" title="LLM-friendly Resources" href="/build-with-ai">
+    Speed up your development using sim APIs with our LLM-friendly resources.
+  </Card>
+</CardGroup>

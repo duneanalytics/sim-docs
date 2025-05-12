@@ -14,7 +14,6 @@
         "group": "sim APIs",
         "pages": [
           "index",
-          "build-with-ai",
           "why-sim-apis"
         ]
       },
@@ -26,7 +25,7 @@
             "group": "Guides",
             "icon": "books",
             "pages": [
-              "evm/guide-1",
+              "evm/wallet-dashboard",
               "evm/guide-2",
               "evm/guide-3"
             ]
@@ -47,13 +46,28 @@
         ]
       },
       {
+        "group": "Resources",
+        "pages": [
+          "build-with-ai",
+          "hooks",
+          "proxy"
+        ]
+      },
+      {
         "group": "Get Help",
         "pages": [
-          "errors",
           "support",
-          "rate-limits"
+          "errors",
+          "enterprise-plans"
         ]
       }
+    ]
+  },
+  "contextual": {
+    "options": [
+      "chatgpt",
+      "view",
+      "copy"
     ]
   },
   "logo": {
@@ -69,7 +83,7 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Get Started",
+      "label": "Start Building",
       "href": "https://sim.dune.com/signup"
     }
   },
