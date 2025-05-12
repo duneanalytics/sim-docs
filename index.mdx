@@ -8,12 +8,12 @@ icon: "bolt-lightning"
 sim APIs power wallets and onchain apps with fast, reliable access to real-time blockchain activity and ownership data.
 Access data from 60+ chains with a single request.
 
-This guide will help you make your first API call to retrieve multichain token balances for an address;
+This guide will help you make your first API call to retrieve multichain token balances for an address.
 
 ## Authentication
 
 sim APIs use API keys to authenticate requests.
-You can create and manage your API keys in your [Dune Dashboard](https://dune.com/settings/api).
+You can create and manage your API keys in your [sim Dashboard](https://dune.com/settings/api).
 
 <Frame caption="To generate a new API key, visit Settings -> API -> create new API key.">
   <img src="/images/get-dune-api-key.png" />
@@ -37,8 +37,7 @@ Do not share your secret API keys in public places like GitHub, client-side code
 
 ## Your First Request
 
-Let's make your first request. We'll retrieve token balances for `vitalik.eth` across multiple EVM chains using the [Token Balances](#) endpoint.
-This single call replaces numerous requests you might make to block exporers or node providers for each chain.
+Let's make your first request. We'll retrieve token balances for `0xd8da6bf26964af9d7eed9e03e53415d37aa96045` (Vitalik's wallet) across multiple EVM chains using the [Token Balances](/evm/balances) endpoint.
 
 Here's how to make the API call:
 
@@ -72,7 +71,7 @@ print(response.text)
 </CodeGroup>
 
 <Note>
-Replace `YOUR_API_KEY` with your actual API key from the Dune Dashboard.
+Replace `YOUR_API_KEY` with your actual API key from the sim Dashboard.
 </Note>
 
 The API will return a JSON response containing an array of `balances`.
@@ -113,10 +112,10 @@ Here are a few paths you can explore:
   <Card icon="ethereum" title="Explore EVM Endpoints" href="/evm/overview">
     See all available EVM API endpoints. Learn how to fetch transaction histories, token metadata, and more detailed onchain activity.
   </Card>
-  <Card icon="books" title="Build Real App Features" href="/evm/guide-1">
+  <Card icon="books" title="Build Real App Features" href="/evm/wallet-ui">
     Follow our practical guides to build fully-functional features like token portfolio displays, real-time activity feeds, and more for your onchain apps.
   </Card>
-  <Card icon="microchip-ai" title="LLM-friendly Resources" href="/build-with-ai">
+  <Card icon="microchip-ai" title="Build with AI" href="/build-with-ai">
     Speed up your development using sim APIs with our LLM-friendly resources.
   </Card>
 </CardGroup>

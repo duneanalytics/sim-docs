@@ -25,7 +25,7 @@
             "group": "Guides",
             "icon": "books",
             "pages": [
-              "evm/wallet-dashboard",
+              "evm/wallet-ui",
               "evm/guide-2",
               "evm/guide-3"
             ]
@@ -57,17 +57,16 @@
         "group": "Get Help",
         "pages": [
           "support",
-          "errors",
-          "enterprise-plans"
+          "errors"
         ]
       }
     ]
   },
   "contextual": {
     "options": [
-      "chatgpt",
+      "copy",
       "view",
-      "copy"
+      "chatgpt"
     ]
   },
   "logo": {
