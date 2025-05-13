@@ -1,19 +1,97 @@
 ---
 title: 'Build a Real-Time Wallet UI in Minutes with sim APIs'
+description: "Create a cross-chain wallet that displays real-time balances, transactions, and NFTs using Dune's sim APIs and Express.js"
 sidebarTitle: 'Real-Time Wallet UI'
 icon: "wallet"
 ---
 
-## Introduction
+<Frame caption="The final UI we'll build together in this guide">
+    <img src="/images/wallet-ui.png" />
+</Frame>
+
+In this guide, we'll create a simple yet powerful wallet UI using Dune's sim APIs, which provide a unified interface for accessing cross-chain wallet data.
+
+We'll build a simple Node.js app that displays token balances, transaction history, and NFT collections across major EVM chains.
+By the end of this guide, you'll have a functional wallet UI that you can extend for your own projects.
+
+<CardGroup cols={2}>
+<Card horizontal icon="github" title="Want to skip ahead?" href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui">
+Check out the [complete code on GitHub](https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui).
+</Card>
+<Card horizontal icon="globe" title="See the live version" href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui">
+Check out the [live website](https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui).
+</Card>
+</CardGroup>
 
 ## Why sim APIs?
 
 ## Prerequisites
 
+Before we begin, make sure you have:
+
+- Node.js >= 18.0.0 installed
+- A Dune API key
+- Basic familiarity with JavaScript and Express.js
+
+<Card horizontal icon="lock" title="Get your API Key" href="/#authentication">
+Learn how to obtain your API key to properly authenticate requests.
+</Card>
+
 ## The Wallet UI We'll Build
 
-- A screenshot that showcases the final build of the app.
-- The next sections are approaching it piece meal.
+<Frame caption="The final UI we'll build together in this guide">
+    <img src="/images/wallet-ui.png" />
+</Frame>
+
+We'll create a wallet dashboard with three main features:
+1. Token balances with real-time USD values across all EVM chains
+2. Recent wallet activity showing transfers and interactions
+3. NFT collection display with metadata and images
+
+Let's start by setting up our project:
+
+```bash
+# Create project directory
+mkdir wallet-ui
+cd wallet-ui
+
+# Initialize project
+npm init -y
+
+# Install dependencies
+npm install express ejs dotenv
+
+# Create necessary files
+touch index.js
+cp .env.template .env  # We'll create this template next
+```
+
+Create a `.env.template` file:
+
+```plaintext:.env.template
+# Required - Get your API key from dune.com
+DUNE_API_KEY=your_api_key_here
+
+# Optional - defaults to 3000
+PORT=3000
+```
+
+And set up the basic project structure:
+
+```bash
+wallet-ui/
+├── index.js           # Main application file
+├── package.json       # Project configuration
+├── .env              # Your environment variables (don't commit!)
+├── .env.template     # Template for environment variables
+├── public/           # Static assets
+│   └── css/
+│       └── style.css
+└── views/            # EJS templates
+    └── index.ejs
+```
+
+This scaffold provides everything we need to start building our wallet interface. In the following sections, we'll implement each feature step by step, starting with token balances.
 
 ## Display EVM-Wide Token Balances
 
