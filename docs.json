@@ -70,8 +70,8 @@
     ]
   },
   "logo": {
-    "light": "/logo/dune-logo-light.png",
-    "dark": "/logo/dune-logo-dark.png"
+    "light": "/logo/sim-logo-light.png",
+    "dark": "/logo/sim-logo-dark.png"
   },
   "navbar": {
     "links": [
