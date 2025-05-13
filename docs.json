@@ -4,8 +4,8 @@
   "name": "sim APIs",
   "favicon": "/dune.png",
   "colors": {
-    "primary": "#F4603E",
-    "light": "#4B468D",
+    "primary": "#000000",
+    "light": "#FFFFFF",
     "dark": "#9CA1A5"
   },
   "navigation": {
