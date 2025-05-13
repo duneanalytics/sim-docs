@@ -1,0 +1,30 @@
+/* Primary header CTA button */
+#topbar-cta-button > a > span {
+    border-radius: 4px;
+    background-color: #000;
+}
+
+/* Primary header CTA button - Dark mode */
+html.dark #topbar-cta-button > a > span {
+    background-color: #FFF;
+}
+
+/* Primary header CTA button text */
+#topbar-cta-button > a > span + div > span {
+    color: #FFF;
+}
+
+/* Primary header CTA button text - Dark mode */
+html.dark #topbar-cta-button > a > span + div > span {
+    color: #000;
+}
+
+/* Primary header CTA button icon - Dark mode */
+html.dark #topbar-cta-button > a > span + div > svg {
+    color: #000;
+}
+
+/* Hide the Mintlify link in the footer */
+#footer .sm\:flex > a {
+    display: none !important;
+}
