@@ -6,7 +6,7 @@
   "colors": {
     "primary": "#000000",
     "light": "#FFFFFF",
-    "dark": "#9CA1A5"
+    "dark": "#000000"
   },
   "navigation": {
     "groups": [
