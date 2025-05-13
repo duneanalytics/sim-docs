@@ -1,8 +1,16 @@
 ---
-title: 'Activity'
-description: Get a real-time feed of on-chain activity for any EVM address.
-openapi: '/openapi-manual.json GET /echo/beta/activity/evm/{address}'
+title: "Activity"
+description: "Get a real-time feed of on-chain activity for any EVM address."
+openapi: "/openapi-manual.json GET /echo/beta/activity/evm/{address}"
 ---
+
+<img
+  src="/images/activity.svg"
+  alt="Activity"
+  title="Activity"
+  className="mr-auto"
+  style={{ width:"49%" }}
+/>
 
 The Activity endpoint provides a real-time feed of on-chain activity for any EVM address. Activity is returned in chronological order (newest first) and includes:
 
@@ -12,5 +20,5 @@ The Activity endpoint provides a real-time feed of on-chain activity for any EVM
 - Contract interactions with decoded function calls
 
 <Note>
-This endpoint is currently in beta and requires authentication using a normal Dune API key.
+  This endpoint is currently in beta and requires authentication using a normal Dune API key.
 </Note>
