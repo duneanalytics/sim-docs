@@ -7,16 +7,16 @@ icon: "wallet"
 
 <Frame caption="The final UI we'll build together in this guide">
   <img
-    src="/images/wallet-ui.png"
+    src="/images/wallet-ui/wallet-ui.png"
     className="mx-auto"
     style={{ width:"97%" }}
   />
 </Frame>
 
-In this guide, we'll create a simple yet powerful wallet UI using Dune's sim APIs, which provide a unified interface for accessing cross-chain wallet data.
+In this guide, we'll build a simple yet powerful multichain wallet using Dune's sim APIs.
 
-We'll build a simple Node.js app that displays token balances, transaction history, and NFT collections across major EVM chains.
-By the end of this guide, you'll have a functional wallet UI that you can extend for your own projects.
+It'll be a Node.js app that displays token balances, transaction history, and NFT collections across major EVM chains.
+By the end, you'll have a fully-functional wallet that you can extend for your own projects.
 
 <CardGroup cols={2}>
   <Card title="Want to skip ahead?" icon="github" horizontal href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui">
@@ -33,7 +33,7 @@ By the end of this guide, you'll have a functional wallet UI that you can extend
 
 Before we begin, make sure you have:
 
-- Node.js \>= 18.0.0 installed
+- Node.js >= 18.0.0 installed
 - A Dune API key
 - Basic familiarity with JavaScript and Express.js
 
@@ -41,64 +41,419 @@ Before we begin, make sure you have:
   Learn how to obtain your API key to properly authenticate requests.
 </Card>
 
+<Note>
+This project deliberately does not use frameworks like React to give you a sense of how simple integrating sim APIs is into your project.
+That being said, we have a [React Hooks](/hooks) package that you can use.
+</Note>
+
 ## The Wallet UI We'll Build
 
 <Frame caption="The final UI we'll build together in this guide">
-  ![](/images/wallet-ui.png)
+  ![](/images/wallet-ui/wallet-ui.png)
 </Frame>
 
-We'll create a wallet dashboard with three main features:
+Our wallet UI will includes 4 main features:
 
-1. Token balances with real-time USD values across all EVM chains
-2. Recent wallet activity showing transfers and interactions
-3. NFT collection display with metadata and images
+1. **Token Balances**: Real-time balance tracking with USD values across all EVM chains
+2. **Totla Portfolio Value**: Aggregated USD value calculation combining all token balances across chains for a complete portfolio valuation
+3. **Wallet Activity**: Comprehensive transaction history showing transfers and contract interactions
+4. **NFT Collections**: Visual display of owned NFTs with metadata and images
 
-Let's start by setting up our project:
+We'll build this wallet piece by piece, tackling each feature individually.
+Along the way, we'll explore the nuances of the sim APIs and talk about best practices for each endpoint.
+This approach will help you understand not just how to build a wallet, but also how to make the most of the APIs for the next app you build.
 
-```bash
-# Create project directory
-mkdir wallet-ui
-cd wallet-ui
+## Project Setup
 
-# Initialize project
-npm init -y
+Let's start by setting up our project.
+We'll create the project's structure and install all necessary dependencies.
 
-# Install dependencies
-npm install express ejs dotenv
+<Steps>
+  <Step title="Create Your Project Directory">
+    Open your terminal and create a new directory for the project:
+    
+    ```bash
+    mkdir wallet-ui
+    cd wallet-ui
+    ```
+  </Step>
 
-# Create necessary files
-touch index.js
-cp .env.template .env  # We'll create this template next
+  <Step title="Initialize Node.js Project">
+    Initialize a new Node.js project with npm:
+    
+    ```bash
+    npm init -y
+    npm pkg set type="module"
+    ```
+    
+    This creates a `package.json` file with default values and configures it to use ES modules.
+
+    <Info>
+    We'll use ES modules in our `index.js` file to better organize our code and take advantage of modern JavaScript features.
+    </Info>
+
+  </Step>
+
+  <Step title="Install Dependencies">
+    Install the required packages for our wallet UI:
+    
+    ```bash
+    npm install express ejs dotenv
+    ```
+
+    We're using three main technologies for this project:
+    - **Express.js**: A minimal web framework for creating our server and API endpoints
+    - **EJS**: A simple templating engine that lets us generate dynamic HTML
+    - **dotenv**: A zero-dependency module to load environment variables from a `.env` file
+  </Step>
+
+  <Step title="Configure Environment Variables">
+    Create a new `.env` file in your project root:
+    
+    ```bash
+    touch .env
+    ```
+    
+    Open the `.env` file in your code editor and add your Dune API key:
+    
+    ```plaintext:.env
+    # Your Dune API key (required)
+    DUNE_API_KEY=your_api_key_here
+    ```
+
+    <Warning>
+    Never commit your `.env` file to version control! If you're using Git, add it to `.gitignore`.
+    </Warning>
+  </Step>
+
+  <Step title="Create Application Entry Point">
+    Create the main server file and view template:
+    
+    ```bash
+    touch server.js
+    mkdir views
+    touch views/wallet.ejs
+    ```
+
+    We're creating two main files where most of the code will live.
+    We'll populate these files with code the next section.
+  </Step>
+
+  <Step title="Verify Project Structure">
+    Run `ls` in your terminal. You should see these files in your project:
+    
+    ```bash
+    wallet-ui/
+    ├── server.js           # Main application file (empty for now)
+    ├── package.json       # Project configuration
+    ├── package-lock.json  # Dependency lock file
+    ├── node_modules/      # Installed packages
+    └── .env              # Your environment variables
+    ```
+  </Step>
+</Steps>
+
+Now that we have our project structure set up, we're ready to start building our wallet interface.
+In the next section, we'll create our Express server and implement our first API endpoint.
+
+## Scaffold Your App
+
+The wallet will be built using two main files: `server.js` and `wallet.ejs`.
+The `server.js` file will handle our server logic and sim API interactions, while `wallet.ejs` will manage the wallet's UI using HTML and CSS.
+We're using this traditional server-rendered approach to demonstrate the simplicity of working with sim APIs without the complexity of modern frontend frameworks.
+
+<Note>
+If you prefer using React or other modern frameworks, check out our [React Hooks package](/hooks) which provides ready-to-use components for sim API integration.
+</Note>
+
+### Setting up `server.js`
+
+Let's build our Express server piece by piece, starting with the basic setup in `server.js`.
+
+First, let's import all the packages we installed:
+
+```javascript server.js (Import Dependencies)
+import express from 'express';
+import ejs from 'ejs';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 ```
 
-Create a `.env.template` file:
+We're grouping our imports by purpose: Express and EJS for our server functionality, dotenv for environment variables, and the built-in Node.js utilities (`path` and `fileURLToPath`) that we'll need for file handling in ES modules.
 
-```plaintext:.env.template
-# Required - Get your API key from dune.com
-DUNE_API_KEY=your_api_key_here
+Next, let's load our environment variables and set up our API key:
 
-# Optional - defaults to 3000
-PORT=3000
+```javascript server.js (Environment Configuration)
+dotenv.config();
+
+const DUNE_API_KEY = process.env.DUNE_API_KEY;
+
+if (!DUNE_API_KEY) {
+    console.error("FATAL ERROR: DUNE_API_KEY is not set in your environment variables.");
+    process.exit(1);
+}
 ```
 
-And set up the basic project structure:
+This ensures our API key is properly loaded from the `.env` file we created earlier. If the key isn't found, the application will exit immediately rather than running with missing credentials.
 
-```bash
-wallet-ui/
-├── index.js           # Main application file
-├── package.json       # Project configuration
-├── .env              # Your environment variables (don't commit!)
-├── .env.template     # Template for environment variables
-├── public/           # Static assets
-│   └── css/
-│       └── style.css
-└── views/            # EJS templates
-    └── index.ejs
+Now let's set up our Express application:
+
+```javascript server.js (Express Configuration)
+// Set up __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Initialize Express
+const app = express();
+
+// Configure Express settings
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Add our home route
+app.get('/', (req, res) => {
+    res.render('wallet');
+});
+
+// Start the server
+app.listen(3001, () => {
+    console.log(`Server running at http://localhost:3001`);
+});
 ```
 
-This scaffold provides everything we need to start building our wallet interface. In the following sections, we'll implement each feature step by step, starting with token balances.
+Since we're using ES modules, we need to create our own `__dirname` variable (Node.js doesn't provide it in ES modules). This lets us properly set up our views and static file directories.
+
+Before we continue, let's create the directories our server needs:
+
+### Setting Up `views/wallet.ejs`
+
+Add this starter HTML to `views/index.ejs`.
+
+```ejs index.ejs (Basic Template)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Dashboard</title>
+</head>
+<body>
+    <h1>Wallet Dashboard</h1>
+    <p>Ready to start building!</p>
+</body>
+</html>
+```
+
+### Start the server 
+
+This gives us a basic template that we'll expand in the following sections as we add our wallet features.
+
+Let's make sure everything is working:
+
+```bash Starting the Server
+node server.js
+```
+
+If everything is set up correctly, you should:
+1. See a message in the terminal: `Server running at http://localhost:3000`
+2. Be able to visit `http://localhost:3000` in your browser
+3. See a blank page that says, "Hello, Wallet!" (we'll add the UI in the next sections)
+
+<Frame caption="You should see the following message in your browser.">
+  <img src="/images/wallet-ui/set-up-wallet-ejs.png" />
+</Frame>
+
+<Note>
+If you see any errors, double-check that:
+- Your `.env` file contains a valid API key
+- All dependencies are installed
+- The `views` directory exists
+- You've added `"type": "module"` to your `package.json`
+</Note>
+
+In the next section, we'll start building our wallet features, beginning with displaying token balances.
+
+Visit `http://localhost:3000` in your browser. You'll see a blank page for now, but your server is running and ready for the features we'll add in the following sections.
+
+<Note>
+Remember that we're using ES modules, which is why we used `import` instead of `require`. This modern approach will help us better organize our code as we add more features.
+</Note>
 
 ## Display EVM-Wide Token Balances
+
+Let's start by creating a function to fetch token balances for any wallet address. We'll begin with a basic implementation and gradually enhance it.
+
+### Fetching Token Balances
+
+First, let's add a simple function to fetch token balances:
+
+```javascript server.js (Basic Balance Fetching)
+async function getWalletBalances(walletAddress) {
+    try {
+        const response = await fetch(
+            `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}`,
+            {
+                headers: {
+                    'X-Dune-Api-Key': `${DUNE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.balances;
+    } catch (error) {
+        console.error("Error fetching wallet balances:", error);
+        return [];
+    }
+}
+```
+
+<Note>
+For specifics on the URL endpoint and how to set up your API Key, check out the [EVM Balances](/evm/balances) page.
+</Note>
+
+### Displaying Token Data
+
+Let's modify our home route to use this function:
+
+```javascript server.js (Home Route)
+app.get('/', async (req, res) => {
+    const { walletAddress } = req.query;
+    
+    if (!walletAddress) {
+        return res.render('wallet', { 
+            balances: [],
+            error: 'Please provide a wallet address'
+        });
+    }
+
+    const balances = await getWalletBalances(walletAddress);
+    res.render('wallet', { balances, error: null });
+});
+```
+
+Now update `wallet.ejs` to display the tokens:
+
+```ejs views/wallet.ejs (Basic Token Display)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Wallet Dashboard</title>
+</head>
+<body>
+    <h1>Wallet Dashboard</h1>
+
+    <% if (balances && balances.length > 0) { %>
+        <h2>Token Balances</h2>
+        <ul>
+        <% balances.forEach(balance => { %>
+            <li>
+                <%= balance.symbol %>: <%= balance.amount %>
+            </li>
+        <% }); %>
+        </ul>
+    <% } else if (error) { %>
+        <p><%= error %></p>
+    <% } else { %>
+        <p>No token balances found</p>
+    <% } %>
+</body>
+</html>
+```
+
+But because we added the walletAddress query parameter if you modify it, and add a valid EVM wallet address, it'll render all the token balances for that specific wallet.
+Let's use `vitalik.eth`'s wallet for testing purposes which is `0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045`.
+This will render a huge list of token balances owned by Vitalik.
+
+<Frame caption="Rendering token balances list">
+  <img src="/images/wallet-ui/token-balances-list-unformatted.png" />
+</Frame>
+
+<Warning>
+If you visit `localhost:3001` without the `walletAddress` query parameter, of if it's an invalud wallet address, it will render an error.
+</Warning>
+
+## Adding some Pizzazz
+
+We're successfully rendering a wallet. But, it's just a plain unstyled list of unformatted token balances.
+Let's format the token balances list and make our app like an actual wallet with some CSS:
+
+```bash
+mkdir public
+touch public/styles.css
+```
+
+This will create a new folder called `public` along with a CSS file called `styles.css`.
+We'll include all assets in that folder.
+
+Now let's add the following CSS into the file:
+
+```css public/styles.css (Basic Styling)
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+form {
+    margin: 20px 0;
+}
+
+input {
+    padding: 8px;
+    width: 300px;
+}
+
+button {
+    padding: 8px 16px;
+    background: #0066ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    padding: 12px;
+    border: 1px solid #eee;
+    margin: 8px 0;
+    border-radius: 4px;
+}
+```
+
+Update the `<head>` section in `wallet.ejs`:
+
+```ejs views/wallet.ejs (Add Stylesheet)
+<head>
+    <title>Wallet Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+```
+
+Now your wallet dashboard should look like this:
+
+<Frame caption="Token balances with basic styling">
+  <img src="/images/wallet-ui/styled-token-list.png" />
+</Frame>
+
+<Note>
+In the next section, we'll enhance our token display by:
+- Adding token metadata (logos and URLs)
+- Filtering out spam tokens
+- Increasing the token limit
+- Calculating total portfolio value
+</Note>
 
 ## Track Real-Time Wallet Activity
 

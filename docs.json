@@ -32,8 +32,8 @@
           },
           "evm/activity",
           "evm/tokens",
-          "evm/transactions",
           "evm/balances",
+          "evm/transactions",
           "evm/balances-chains"
         ]
       },
