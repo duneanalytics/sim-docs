@@ -9,7 +9,7 @@ icon: "wallet"
   <img
     src="/images/wallet-ui/wallet-ui.png"
     className="mx-auto"
-    style={{ width:"97%" }}
+    style={{ width:"100%" }}
   />
 </Frame>
 
@@ -393,52 +393,104 @@ We'll include all assets in that folder.
 
 Now let's add the following CSS into the file:
 
-```css public/styles.css (Basic Styling)
+```css public/styles.css (Basic Styling) [expandable]
+:root {
+    /* Core colors */
+    --color-bg: #0b0e1f;
+    --color-text: #e0e0e0;
+    --color-accent: #50e3c2;
+    --color-border: #2c3040;
+}
+
 body {
     font-family: system-ui, -apple-system, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+    line-height: 1.5;
 }
 
-form {
-    margin: 20px 0;
+.wallet-container {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--color-border);
 }
 
-input {
-    padding: 8px;
-    width: 300px;
+.total-balance {
+    font-size: 2em;
+    color: var(--color-accent);
+    margin-bottom: 1em;
+    text-align: center;
 }
 
-button {
-    padding: 8px 16px;
-    background: #0066ff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-ul {
+.token-list {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
-li {
-    padding: 12px;
-    border: 1px solid #eee;
-    margin: 8px 0;
-    border-radius: 4px;
+.token-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.token-item:last-child {
+    border-bottom: none;
+}
+
+.token-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.token-symbol {
+    font-weight: bold;
+    color: var(--color-accent);
+}
+
+.token-amount {
+    color: var(--color-text);
+    font-family: monospace;
 }
 ```
 
-Update the `<head>` section in `wallet.ejs`:
+Update the `wallet.ejs` to include the new `styles.css` and the updated markup with the appropriate classes:
 
 ```ejs views/wallet.ejs (Add Stylesheet)
+<!DOCTYPE html>
+<html>
 <head>
     <title>Wallet Dashboard</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
 </head>
+<body>
+    <div class="wallet-container">
+        <h1>Wallet Dashboard</h1>
+        
+        <ul class="token-list">
+            <% balances.forEach(token => { %>
+                <li class="token-item">
+                    <div class="token-info">
+                        <span class="token-symbol"><%= token.symbol %></span>
+                        <span class="token-amount"><%= token.amount %></span>
+                    </div>
+                    <div class="token-value">
+                        $<%= token.usdValue %>
+                    </div>
+                </li>
+            <% }); %>
+        </ul>
+    </div>
+</body>
+</html>
 ```
 
 Now your wallet dashboard should look like this:
