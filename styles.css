@@ -1,11 +1,11 @@
 /* Primary header CTA button */
 #topbar-cta-button > a > span {
-    border-radius: .8rem;
+    border-radius: .5rem;
     background-color: #000;
 }
 
 a.rounded-xl {
-  border-radius: .8rem;
+  border-radius: .5rem;
 }
 
 /* Primary header CTA button - Dark mode */
