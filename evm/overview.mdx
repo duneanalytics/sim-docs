@@ -3,3 +3,60 @@ title: "EVM Overview"
 sidebarTitle: "Overview"
 icon: "ethereum"
 ---
+
+import ActivityIcon from '/snippets/icons/icon--activity.mdx';
+import TransactionsIcon from '/snippets/icons/icon--transactions.mdx';
+import TokenLeaderIcon from '/snippets/icons/icon--token-leader.mdx';
+import CollectiblesIcon from '/snippets/icons/icon--collectibles.mdx';
+import TokenMetaIcon from '/snippets/icons/icon--token-meta.mdx';
+import TokenBalancesIcon from '/snippets/icons/icon--token-balances.mdx';
+
+<CardGroup cols={3}>
+  <Card
+    title="Activity"
+    icon={ActivityIcon}
+    href="/evm/activity"
+  >
+    Real-time feed of on-chain activity including native token transfers, ERC20 transfers, NFT transfers, and decoded contract interactions.
+  </Card>
+  
+  <Card
+    title="Token Balances"
+    icon={TokenBalancesIcon}
+    href="/evm/balances"
+  >
+    Get comprehensive token balances for any address across multiple EVM chains, including native tokens and ERC20 tokens.
+  </Card>
+
+  <Card
+    title="Token Data"
+    icon={TokenMetaIcon}
+    href="/evm/tokens"
+  >
+    Access detailed token information and real-time price data for any ERC20 token or native chain asset.
+  </Card>
+
+  <Card
+    title="Token Analytics"
+    icon={TokenLeaderIcon}
+    href="/evm/analytics"
+  >
+    Advanced analytics and insights for token performance, including market data and historical trends.
+  </Card>
+
+  <Card
+    title="NFT Collections"
+    icon={CollectiblesIcon}
+    href="/evm/nft"
+  >
+    Track and analyze NFT collections, transfers, and ownership across supported EVM chains.
+  </Card>
+
+  <Card
+    title="Transaction History"
+    icon={TransactionsIcon}
+    href="/evm/transactions"
+  >
+    Detailed transaction history with full decoded data for any address across supported EVM networks.
+  </Card>
+</CardGroup>
