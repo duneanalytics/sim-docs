@@ -1,9 +1,11 @@
 ---
-title: 'Supported Chains'
-openapi: 'GET /echo/v1/balances/evm/chains'
+title: "Supported Chains"
+openapi: "GET /echo/v1/balances/evm/chains"
 ---
 
 The chains endpoint lists the supported EVM blockchains for the Token Balances endpoint.
+
+![Chains Sv](/images/Chains.svg)
 
 ## Chain List
 
@@ -13,9 +15,9 @@ import { Chains } from "/snippets/echo/chains.mdx";
 
 ## Column Descriptions
 
-| Column                    | Description                                        | Type                |
-|---------------------------|----------------------------------------------------|---------------------|
-| name                      | Canonical blockchain name                          | string              |
-| id                        | Chainid of blockchain                              | integer             |
-| supported_assets          | The supported asset types                          | []string            |
-| default                   | Whether the chain is in the list of default chains | bool                |
+| Column           | Description                                        | Type     |
+| ---------------- | -------------------------------------------------- | -------- |
+| name             | Canonical blockchain name                          | string   |
+| id               | Chainid of blockchain                              | integer  |
+| supported_assets | The supported asset types                          | []string |
+| default          | Whether the chain is in the list of default chains | bool     |
