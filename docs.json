@@ -23,18 +23,17 @@
           "evm/overview",
           {
             "group": "Guides",
-            "icon": "books",
             "pages": [
               "evm/wallet-ui",
               "evm/ai-crypto-chatbot",
               "evm/guide-3"
             ]
           },
-          "evm/activity",
+          "evm/balances-chains",
           "evm/tokens",
+          "evm/activity",
           "evm/balances",
-          "evm/transactions",
-          "evm/balances-chains"
+          "evm/transactions"
         ]
       },
       {

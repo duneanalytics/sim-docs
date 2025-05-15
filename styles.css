@@ -32,3 +32,27 @@ html.dark #topbar-cta-button > a > span + div > svg {
 #footer .sm\:flex > a {
     display: none !important;
 }
+
+/* Divider for EVM activity section */
+#\/evm\/balances-chains {
+    border-top: 1px solid rgb(var(--gray-400)/0.2);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+/* Divider for SVM balances section in dark mode */
+html.dark #\/evm\/balances-chains {
+    border-top-color: rgb(var(--gray-600)/0.3);
+}
+
+/* Divider for SVM balances section */
+#\/svm\/balances {
+    border-top: 1px solid rgb(var(--gray-400)/0.2);
+    margin-top: 8px;
+    padding-top: 8px;
+}
+
+/* Divider for SVM balances section in dark mode */
+html.dark #\/svm\/balances {
+    border-top-color: rgb(var(--gray-600)/0.3);
+}
