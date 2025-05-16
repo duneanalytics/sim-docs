@@ -31,7 +31,9 @@
           "evm/tokens",
           "evm/activity",
           "evm/balances",
-          "evm/transactions"
+          "evm/transactions",
+          "evm/token-holders",
+          "evm/collectibles"
         ]
       },
       {
