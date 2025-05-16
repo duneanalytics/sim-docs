@@ -28,12 +28,13 @@
               "evm/wallet-collections"
             ]
           },
-          "evm/tokens",
-          "evm/activity",
           "evm/balances",
+          "evm/activity",
+          "evm/collectibles",
           "evm/transactions",
+          "evm/tokens",
           "evm/token-holders",
-          "evm/balances-chains"
+          "evm/supported-chains"
         ]
       },
       {
