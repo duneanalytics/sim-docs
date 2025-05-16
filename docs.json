@@ -13,8 +13,7 @@
       {
         "group": "sim APIs",
         "pages": [
-          "index",
-          "why-sim-apis"
+          "index"
         ]
       },
       {
@@ -25,8 +24,7 @@
             "group": "Guides",
             "pages": [
               "evm/wallet-ui",
-              "evm/ai-crypto-chatbot",
-              "evm/guide-3"
+              "evm/ai-crypto-chatbot"
             ]
           },
           "evm/balances-chains",
