@@ -32,7 +32,7 @@
           "evm/activity",
           "evm/collectibles",
           "evm/transactions",
-          "evm/tokens",
+          "evm/token-info",
           "evm/token-holders",
           "evm/supported-chains"
         ]

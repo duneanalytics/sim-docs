@@ -12,19 +12,35 @@ import TokenBalancesIcon from '/snippets/icons/icon--token-balances.mdx';
 
 <CardGroup cols={3}>
   <Card
-    title="Activity"
-    icon={ActivityIcon}
-    href="/evm/activity"
-  >
-    Real-time feed of on-chain activity including native token transfers, ERC20 transfers, NFT transfers, and decoded contract interactions.
-  </Card>
-  
-  <Card
     title="Balances"
     icon={TokenBalancesIcon}
     href="/evm/balances"
   >
-    Get comprehensive token balances for any address across multiple EVM chains, including native tokens and ERC20 tokens.
+    Access realtime token balances across 60+ EVM chains. Get comprehensive details about native tokens and ERC20 holdings, including token metadata and USD valuations.
+  </Card>
+
+  <Card
+    title="Activity"
+    icon={ActivityIcon}
+    href="/evm/activity"
+  >
+    Track onchain activity for any EVM address with our realtime feed. View chronologically ordered transactions including native transfers, ERC20 movements, NFT transfers, and decoded contract interactions.
+  </Card>
+
+    <Card
+    title="Collectibles"
+    icon={CollectiblesIcon}
+    href="/evm/collectibles"
+  >
+    Discover and analyze NFTs (ERC721 and ERC1155 tokens) for any EVM address across 60+ supported chains. Get collection metadata, token IDs, ownership history, and asset valuation in an easily accessible format.
+  </Card>
+
+    <Card
+    title="Transactions"
+    icon={TransactionsIcon}
+    href="/evm/transactions"
+  >
+    Retrieve granular transaction details including block information, gas data, transaction types, and raw transaction values for any EVM address.
   </Card>
 
   <Card
@@ -32,7 +48,7 @@ import TokenBalancesIcon from '/snippets/icons/icon--token-balances.mdx';
     icon={TokenMetaIcon}
     href="/evm/tokens"
   >
-    Access detailed token information and real-time price data for any ERC20 token or native chain asset.
+    Get detailed metadata and realtime price information for any native asset or ERC20 token across 60+ supported EVM chains. Access symbol, name, decimals, supply information, USD pricing from the most liquid pools, and logo URLs.
   </Card>
 
   <Card
@@ -40,22 +56,6 @@ import TokenBalancesIcon from '/snippets/icons/icon--token-balances.mdx';
     icon={TokenLeaderIcon}
     href="/evm/balances-chains"
   >
-    Advanced analytics and insights for token performance, including market data and historical trends.
-  </Card>
-
-  <Card
-    title="Collectibles"
-    icon={CollectiblesIcon}
-    href="/evm/collectibles"
-  >
-    Track and analyze NFT collections, transfers, and ownership across supported EVM chains.
-  </Card>
-
-  <Card
-    title="Transactions"
-    icon={TransactionsIcon}
-    href="/evm/transactions"
-  >
-    Detailed transaction history with full decoded data for any address across supported EVM networks.
+    Analyze token distribution by identifying all holders of a specific ERC20 or ERC721 token on any supported EVM chain.
   </Card>
 </CardGroup>
