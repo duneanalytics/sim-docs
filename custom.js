@@ -75,6 +75,11 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
         '<rect x="2.4375" y="9.22546" width="3.7079" height="4.5634" stroke="currentColor"></rect><rect x="9.85278" y="2.76648" width="3.7079" height="11.0225" stroke="currentColor"></rect><rect x="6.14551" y="7.35376" width="3.7079" height="6.43558" stroke="currentColor"></rect>',
     },
     {
+      selectorId: "/evm/token-holders",
+      innerHTML:
+        '<path d="M7.99969 1.31665L2.21179 4.65907V11.342L7.99969 14.6839L13.7876 11.342V4.65907L7.99969 1.31665Z" stroke="currentColor"></path><circle cx="7.99914" cy="8.00036" r="3.46887" stroke="currentColor"></circle>',
+    },
+    {
       selectorId: "/evm/transactions",
       innerHTML:
         '<path d="M10.7178 13.9106L13.8047 10.8237L10.7178 7.73684" stroke="currentColor" stroke-linecap="square"></path><path d="M13.8047 10.8237L1.45718 10.8237" stroke="currentColor"></path><path d="M5.28001 2.08932L2.19312 5.17621L5.28001 8.2631" stroke="currentColor" stroke-linecap="square"></path><path d="M2.19312 5.17621L14.5406 5.17621" stroke="currentColor"></path>',
@@ -93,26 +98,42 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
     xmlns: "http://www.w3.org/2000/svg"
   };
 
-  iconConfigs.forEach(config => {
-    // Construct the full selector. Note the quotes around the ID value.
-    const selector = `li[id="${config.selectorId}"] > a > svg`;
-    const svgElement = document.querySelector(selector);
-
-    if (svgElement) {
-      // Set common attributes
-      for (const attrName in commonAttributes) {
-        if (commonAttributes.hasOwnProperty(attrName)) {
-          svgElement.setAttribute(attrName, commonAttributes[attrName]);
-        }
-      }
-
-      // Set style (using cssText to ensure !important is applied if needed)
-      svgElement.style.cssText = "background: none !important;";
+  // Function to apply replacements within a given parent element
+  function applyReplacements(parentElement) {
+    console.log("Applying replacements within:", parentElement === document ? "document" : parentElement);
+    iconConfigs.forEach(config => {
+      // Construct the full selector. Note the quotes around the ID value.
+      const selector = `li[id="${config.selectorId}"] > a > svg`;
+      const svgElement = parentElement.querySelector(selector); // Use parentElement here
       
-      // Replace inner HTML of the SVG
-      svgElement.innerHTML = config.innerHTML;
-    } else {
-      console.warn(`SVG element not found for selector: ${selector}`);
-    }
-  });
+      if (svgElement) {
+        console.log(`Found SVG for ${config.selectorId} in`, parentElement === document ? "document" : "dialog");
+        // Set common attributes
+        for (const attrName in commonAttributes) {
+          if (commonAttributes.hasOwnProperty(attrName)) {
+            svgElement.setAttribute(attrName, commonAttributes[attrName]);
+          }
+        }
+
+        // Set style (using cssText to ensure !important is applied if needed)
+        svgElement.style.cssText = "background: none !important;";
+        
+        // Replace inner HTML of the SVG
+        svgElement.innerHTML = config.innerHTML;
+      } else {
+        console.warn(`SVG element not found for selector: ${selector} in`, parentElement === document ? "document" : "dialog");
+      }
+    });
+  }
+
+  // Determine the search context
+  const dialogElement = document.querySelector("[role='dialog']");
+  
+  if (dialogElement) {
+    console.log("Dialog element found. Scoping replacements to dialog.");
+    applyReplacements(dialogElement);
+  } else {
+    console.log("No dialog element found. Scoping replacements to document.");
+    applyReplacements(document);
+  }
 })();

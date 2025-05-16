@@ -23,15 +23,17 @@
           {
             "group": "Guides",
             "pages": [
-              "evm/wallet-ui",
-              "evm/ai-crypto-chatbot"
+              "evm/wallet-balances",
+              "evm/wallet-activity",
+              "evm/wallet-collections"
             ]
           },
-          "evm/balances-chains",
           "evm/tokens",
           "evm/activity",
           "evm/balances",
-          "evm/transactions"
+          "evm/transactions",
+          "evm/token-holders",
+          "evm/balances-chains"
         ]
       },
       {
