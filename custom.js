@@ -70,12 +70,12 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
         '<circle cx="10.2307" cy="10.749" r="2.04108" stroke="currentColor"></circle><path d="M13.6334 13.9085L11.7822 12.0574" stroke="currentColor" stroke-linecap="square"></path><path d="M7.09657 2.72034L9.43914 6.53684H4.754L7.09657 2.72034Z" stroke="currentColor"></path><rect x="2.1355" y="8.70831" width="4.08216" height="4.08216" stroke="currentColor"></rect>',
     },
     {
-      selectorId: "/evm/balances-chains",
+      selectorId: "/evm/token-holders",
       innerHTML:
         '<rect x="2.4375" y="9.22546" width="3.7079" height="4.5634" stroke="currentColor"></rect><rect x="9.85278" y="2.76648" width="3.7079" height="11.0225" stroke="currentColor"></rect><rect x="6.14551" y="7.35376" width="3.7079" height="6.43558" stroke="currentColor"></rect>',
     },
     {
-      selectorId: "/evm/token-holders",
+      selectorId: "/evm/collectibles",
       innerHTML:
         '<path d="M7.99969 1.31665L2.21179 4.65907V11.342L7.99969 14.6839L13.7876 11.342V4.65907L7.99969 1.31665Z" stroke="currentColor"></path><circle cx="7.99914" cy="8.00036" r="3.46887" stroke="currentColor"></circle>',
     },
