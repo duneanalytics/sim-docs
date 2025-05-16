@@ -23,9 +23,9 @@
           {
             "group": "Guides",
             "pages": [
-              "evm/wallet-balances",
-              "evm/wallet-activity",
-              "evm/wallet-collections"
+              "evm/build-a-realtime-wallet",
+              "evm/add-account-activity",
+              "evm/show-nfts-collectibles"
             ]
           },
           "evm/balances",
