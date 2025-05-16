@@ -36,8 +36,12 @@ html.dark #topbar-cta-button > a > span + div > svg {
 #navigation-items > div:not(:last-child) {
     border-bottom: 1px solid rgb(var(--gray-400)/0.2);
     padding-bottom: 1rem;
-  }
+}
 
 html.dark #navigation-items > div:not(:last-child) {
     border-top-color: rgb(var(--gray-600)/0.3);
+}
+
+#navigation-items > div:not(:first-child) {
+    margin-top: 1rem;
 }
