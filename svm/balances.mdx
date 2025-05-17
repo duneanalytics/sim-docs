@@ -1,43 +1,62 @@
 ---
 title: 'Balances'
 sidebarTitle: 'Balances API'
-openapi: 'GET /echo/beta/balances/svm/{address}'
+openapi: 'GET /echo/beta2/balances/svm/{address}'
 icon: "btc"
 ---
 
 The Token Balances API provides accurate and fast real time balances of the native, SPL and SPL-2022 tokens of accounts on supported SVM blockchains.
-Data is typically available within 100 ms since a block was propagated to nodes. We currently support Solana and Eclipse.
+We currently support Solana and Eclipse.
 
 <Note>
   - These endpoints are authenticated with a normal Dune API key.
   - As we are in beta there might be changes. Please reach out to us using [this form](https://forms.gle/8qmnUZ6ZwzRFC2VY6) if you use this API.
   - Specify `?chains=all` to fetch balances for all supported chains.
   - Specify `?chains=solana,eclipse` to fetch balances only for select chains.
-  - Birdeye is used for price information
-  - Token metadata, such as symbols and decimals, are fetched from Birdeye using Jupiter's list of verified tokens.
+  - Token metadata includes symbols, decimals, and price information when available.
 </Note>
 
 
-# Column Descriptions
+# Response Structure
 
-| Column                          | Description                                                   | Type          |
-|---------------------------------|---------------------------------------------------------------|---------------|
-| request_time                    | Time of request                                               | timestamp     |
-| response_time                   | Time of response                                              | timestamp     |
-| wallet_address                  | Wallet address                                                | string        |
-| chain                           | Name of blockchain of token                                   | string        |
-| address                         | ERC20 contract address or blockchain name for native token    | string        |
-| amount                          | Amount of token owned in WEI                                  | double        |
-| symbol                          | Symbol of token, if avilable                                  | string        |
-| decimals                        | Decimals of token, if available                               | double        |
-| price_usd                       | Current price of token, if available                          | double        |
-| value_usd                       | Current value of token owned, if available                    | double        |
+The API returns a JSON object with the following top-level fields:
+
+| Field                          | Description                                                   | Type          |
+|--------------------------------|---------------------------------------------------------------|---------------|
+| processing_time_ms             | Time taken to process the request in milliseconds             | number        |
+| wallet_address                 | The queried wallet address                                    | string        |
+| next_offset                    | Pagination token for the next page of results                 | string/null   |
+| balances_count                 | Total number of balances returned                             | number        |
+| balances                       | Array of token balance objects                                | array         |
+
+# Balance Object Fields
+
+Each item in the `balances` array contains the following fields:
+
+| Field                          | Description                                                   | Type          |
+|--------------------------------|---------------------------------------------------------------|---------------|
+| chain                          | Name of blockchain of token                                   | string        |
+| address                        | Token contract address or blockchain name for native token    | string        |
+| amount                         | Amount of token owned in smallest unit                        | string        |
+| balance                        | Formatted amount with decimals applied                        | string        |
+| value_usd                      | Current value of token owned, if available                    | number        |
+| program_id                     | Program ID of the token (for SPL tokens)                      | string        |
+| decimals                       | Decimals of token                                             | number        |
+| total_supply                   | Total supply of the token                                     | string        |
+| name                           | Name of token                                                 | string        |
+| symbol                         | Symbol of token                                               | string        |
+| uri                            | URI to token metadata                                         | string        |
+| price_usd                      | Current price of token, if available                          | number        |
+| liquidity_usd                  | Liquidity in USD, if available                                | number/null   |
+| pool_type                      | Type of liquidity pool, if available                          | string/null   |
+| pool_address                   | Address of liquidity pool, if available                       | string/null   |
+| mint_authority                 | Mint authority address, if available                          | string/null   |
 
 
 # Pagination
 
 This endpoint is using cursor based pagination. You can use the `limit` parameter to define the maximum page size.
 Results might at times be less than the maximum page size.
-The `next_offset` value is passed back by the initial response and can be used to fetch the next page of results, by passing it as the `offet` query parameter in the next request.
+The `next_offset` value is passed back by the initial response and can be used to fetch the next page of results, by passing it as the `offset` query parameter in the next request.
 
 <Warning>You can only use the value from `next_offset` to set the `offset` parameter of the next page of results. Using your own `offset` value will not have any effect.</Warning>
