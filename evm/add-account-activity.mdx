@@ -227,21 +227,24 @@ Replace that entire `div` with the following EJS code:
 ```
 
 This EJS transforms the raw data from the Activity API into an intuitive and visual transaction history.
-Here's what is happening:
+Here's a breakdown of how it processes each activity item:
 
-For every `activity` item, the template generates a list entry visually representing the transaction's nature.
-An arrow icon indicates the direction (receive ↓, send ↑) or type (contract call ⇆).
-It uses the activity.type (and activity.function.name for contract calls) to dynamically construct a descriptive title.
-The transaction's `block_time` is converted to a local date/time string, and the `chain_id` is shown, offering multichain context.
+* A **list entry** is generated for each transaction.
+* An **icon** visually indicates the transaction's nature: receive (↓), send (↑), or contract call (⇆).
+* A **descriptive title** is dynamically constructed using the `activity.type` (and `activity.function.name` for contract calls).
+* The transaction's **timestamp** (`block_time`) is converted to a readable local date/time string.
+* The **chain ID** (`chain_id`) is displayed, providing important multichain context.
 
-Next, the template logic, using the `decimals` property from `token_metadata`, converts the raw transaction value into a standard decimal representation (e.g., "1.5 ETH").
-If the activity involves an NFT, it shows the token ID if a standard decimal value isn't applicable.
-Finally, if the API provides a `value_usd` for the transaction, this is formatted to two decimal places and displayed, giving a sense of the transaction's monetary worth.
+Beyond these descriptive elements, the template also focuses on presenting the value and financial aspects of each transaction:
+
+* The **transaction amount** (raw `value`) is converted into a user-friendly decimal format (e.g., "1.5 ETH"). This conversion utilizes the `decimals` property from `token_metadata`.
+* For **NFTs**, if a standard decimal value isn't applicable, the template displays the `token_id`.
+* The **USD value** (`value_usd`), if provided by the API, is formatted to two decimal places and shown, giving a sense of the transaction's monetary worth.
 
 ***
 
 Restart your server by running `node server.js` and refresh the app in the browser.
-When you click on the "Activity" tab, you should now see a list of the latest transactions, similar to the screenshot at the beginning of this guide.
+When you click on the _Activity_ tab, you should now see a list of the latest transactions, similar to the screenshot at the beginning of this guide.
 
 ## Conclusion
 
