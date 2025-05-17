@@ -80,10 +80,10 @@
         "href": "https://docs.sim.dune.com/support"
       }
     ],
-    "primary": {
+      "primary": {
       "type": "button",
       "label": "Start Building",
-      "href": "https://sim.dune.com/signup"
+      "href": "https://sim.dune.com"
     }
   },
   "footer": {
