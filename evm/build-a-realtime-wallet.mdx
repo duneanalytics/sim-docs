@@ -150,11 +150,11 @@ This initial setup will provide a basic Express.js server and frontend templates
         let activities = []; // For Guide 2
         let collectibles = []; // For Guide 3
 
-        // In future steps, we will replace empty arrays with API calls
+        // In later steps, these arrays will be populated with API data.
         res.render('wallet', {
             walletAddress: walletAddress,
             currentTab: tab,
-            totalWalletUSDValue: '$0.00', // Will be calculated in the next section
+            totalWalletUSDValue: '$0.00', // Will be calculated later in this guide.
             tokens: tokens,
             activities: activities,
             collectibles: collectibles
@@ -664,7 +664,7 @@ app.get('/', async (req, res) => {
 We've updated the route to:
 
 1. Call `getWalletBalances` if a `walletAddress` is provided.
-2. Pass the retreived `balances` to the `wallet.ejs` template.
+2. Pass the retrieved `balances` to the `wallet.ejs` template.
 
 The `views/wallet.ejs` file you created earlier is already set up to display these tokens.
 Restart your server with `node server.js` and refresh your browser, providing a `walletAddress` in the URL.
@@ -733,14 +733,14 @@ Now, each token object returned by `getWalletBalances` will include a `balanceFo
 
 Restart the server and refresh the browser. You will now see formatted balances.
 
-<Frame caption="Wallet displaying properly formatted token balances with logos and total USD value.">
+<Frame caption="Wallet displaying properly formatted token balances with logos.">
   <img src="/images/wallet-ui/wallet-balances-formatted.png" className="mx-auto" style={{ width:"100%" }} />
 </Frame>
 
 ## Calculate Total Portfolio Value
 
 The wallet's total value at the top of the UI still says `$0.00`.
-Let's calculate the total USD value of the wallet properly show it.
+Let's calculate the total USD value of the wallet and properly show it.
 
 The Balances API provides a `value_usd` field with each token.
 This field represents the total U.S. dollar value of the wallet's entire holding for that specific token.

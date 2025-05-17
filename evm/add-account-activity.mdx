@@ -1,17 +1,249 @@
 ---
-title: "Add Acount Activity"
+title: "Add Account Activity"
 sidebarTitle: "Add Account Activity"
-description: "Expand your crypto wallet by integrating a dynamic feed of chain activity."
+description: "Expand your realtime crypto wallet by integrating a dynamic feed of onchain activity."
 ---
 
-<Frame caption="Show all onchain activity for a wallet address in the 'Activity' tab of our app">
-    <img src="/images/wallet-ui/wallet-with-activity.png" />
+<Frame caption="Show all onchain activity for a wallet address in the 'Activity' tab of our app.">
+    <img src="/images/wallet-ui/wallet-activity-final.png" className="mx-auto" style={{ width:"100%" }} />
 </Frame>
 
-Now that you have a wallet capable of showing realtime token balances, let's enhance it with an account activity tab.
-In this second guide, you'll provide users with a clear list of their onchain interactions.
-We'll integrate the [Activity API](/evm/activity) to make it happen.
+Now that you have a wallet capable of showing realtime token balances and total portfolio value, let's enhance it by adding an _Activity_ tab.
+
+A key feature for any wallet is the ability to view past transaction activity.
+This includes native currency transfers, ERC20 token movements, NFT transfers, and decoded interactions with smart contracts.
+The [Activity API](/evm/activity) provides a comprehensive, realtime feed of this onchain activity, letting you implement this functionality with a single API request across 60+ EVM chains.
 
 <Note>
-This guide assumes you've completed the first guide, [Create a Realtime Wallet](/evm/build-a-realtime-wallet), to display token balances.
+This guide assumes you've completed the first guide, [Build a Realtime Wallet](/evm/build-a-realtime-wallet).
+Your project should already be set up to fetch and display token balances.
 </Note>
+
+## Fetch Wallet Activity
+
+Let's start by adding a new `getWalletActivity` async function to our `server.js` file to fetch activity data from sim APIs.
+
+```javascript server.js (getWalletActivity)
+async function getWalletActivity(walletAddress, limit = 25) { // Default to fetching 25 activities
+    if (!walletAddress) return [];
+
+    // The Activity API is currently in beta.
+    // We add a 'limit' query parameter to control how many activities are returned.
+    const url = `https://api.dune.com/api/echo/beta/activity/evm/${walletAddress}?limit=${limit}`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Dune-Api-Key': DUNE_API_KEY, // Your API key from .env
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Activity API request failed with status ${response.status}: ${response.statusText}`, errorBody);
+            throw new Error(`Activity API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        // The API returns activity items in the 'activity' key of the JSON response.
+        return data.activity || []; 
+    } catch (error) {
+        console.error("Error fetching wallet activity:", error.message);
+        return []; // Return empty array on error
+    }
+}
+```
+
+The function constructs the request URL for the `/echo/beta/activity/evm/{address}` endpoint, appending the `limit` as a query parameter.
+The [Activity API](/evm/activity) conveniently packages the transaction data within an `activity` array in the response.
+The array provides rich context for each event, such as `block_time`, `transaction_hash`, `from` and `to` addresses, `value`, `value_usd`, and more.
+
+<Note>
+The [Activity API](/evm/activity) supports pagination via `offset` and `limit` query parameters. For a production wallet, you might implement infinite scrolling or "Load More" buttons to fetch subsequent pages of activity.
+</Note>
+
+## Add Activity into the Server Route
+
+Next, modify the `app.get('/')` route handler, add a call to `getWalletActivity`, and include its results in the data passed to `res.render`.
+
+```javascript server.js (app.get('/') updated for activity) {15, 17, 39}
+app.get('/', async (req, res) => {
+    const { 
+        walletAddress = '',
+        tab = 'tokens'
+    } = req.query;
+
+    let tokens = [];
+    let activities = []; // Initialize activities array
+    let totalWalletUSDValue = 0;
+    let errorMessage = null; // Renamed for clarity from Guide 1
+
+    if (walletAddress) {
+        try {
+            // Fetch balances and activities concurrently for better performance
+            [tokens, activities] = await Promise.all([
+                getWalletBalances(walletAddress),
+                getWalletActivity(walletAddress, 25) // Fetching 25 recent activities
+            ]);
+            
+            // Calculate total portfolio value from tokens (as in Guide 1)
+            if (tokens && tokens.length > 0) {
+                totalWalletUSDValue = tokens.reduce((sum, token) => {
+                    const value = parseFloat(token.value_usd);
+                    return sum + (isNaN(value) ? 0 : value);
+                }, 0);
+            }
+        } catch (error) {
+            console.error("Error in route handler fetching data:", error);
+            errorMessage = "Failed to fetch wallet data. Please try again.";
+            // tokens and activities will remain empty, totalWalletUSDValue will be 0
+        }
+    }
+    
+    res.render('wallet', {
+        walletAddress: walletAddress,
+        currentTab: tab,
+        totalWalletUSDValue: `$${totalWalletUSDValue.toFixed(2)}`,
+        tokens: tokens,
+        activities: activities, // Pass activities to the template
+        collectibles: [], // Placeholder for Guide 3
+        errorMessage: errorMessage
+    });
+});
+```
+
+Our updated `app.get('/')` route handler now handles fetching of both token balances and wallet activity.
+Both the `tokens` and the newly fetched `activities` arrays are then passed to the `res.render` method.
+This makes the complete dataset available to our `wallet.ejs` template, enabling it to populate both the "Tokens" and "Activity" tabs with relevant, realtime onchain information.
+
+## Show Activity in the Frontend
+
+The final step is to update our `views/wallet.ejs` template to render the fetched activity data within the "Activity" tab.
+
+CTRL+F for `id="activity"` and locate the section for the _Activity_ tab.
+It currently contains a placeholder paragraph.
+Replace that entire `div` with the following EJS code:
+
+```ejs views/wallet.ejs (Activity tab content) [expandable]
+<!-- Activity Tab Pane -->
+<div id="activity" class="tab-pane <%= currentTab === 'activity' ? 'active' : '' %>">
+    <% if (activities && activities.length > 0) { %>
+        <% activities.forEach(activity => { %>
+            <div class="list-item">
+                <div class="item-icon-placeholder">
+                    <% if (activity.type === 'receive') { %>
+                        ↓
+                    <% } else if (activity.type === 'send') { %>
+                        ↑
+                    <% } else if (activity.type === 'call') { %>
+                        ⇆ <!-- Icon for contract call -->
+                    <% } else { %>
+                        ✓ <!-- Generic icon for other types -->
+                    <% } %>
+                </div>
+                <div class="item-info">
+                    <% 
+                        let activityTitle = activity.type.charAt(0).toUpperCase() + activity.type.slice(1);
+                        let activityColorClass = activity.type; // Used for potential CSS styling
+
+                        if (activity.type === 'call' && activity.function && activity.function.name) {
+                            activityTitle = `Call: ${activity.function.name}`;
+                            activityColorClass = 'call';
+                        } else if (activity.type === 'receive' || activity.type === 'send') {
+                            const tokenSymbol = activity.token_metadata?.symbol || 
+                                                (activity.asset_type === 'native' ? 
+                                                    (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'Native') : 
+                                                    'Token');
+                            activityTitle = `${activity.type === 'receive' ? 'Received' : 'Sent'} ${tokenSymbol}`;
+                        }
+                    %>
+                    <p class="item-name activity-direction <%= activityColorClass %>"><%= activityTitle %></p>
+                    
+                    <p class="activity-address">
+                        <% let partyLabel = '', partyAddress = ''; %>
+                        <% if (activity.type === 'receive') { partyLabel = 'From'; partyAddress = activity.from; } %>
+                        <% else if (activity.type === 'send') { partyLabel = 'To'; partyAddress = activity.to; } %>
+                        <% else if (activity.type === 'call') { partyLabel = 'Contract'; partyAddress = activity.to; } %>
+                        <% else { partyLabel = 'With'; partyAddress = activity.to || activity.from || 'Unknown'; } %>
+                        
+                        <% if (partyAddress && partyAddress !== 'Unknown') { %>
+                            <%= partyLabel %>: 
+                            <span class="mono">
+                                <%= partyAddress.substring(0, 6) %>...<%= partyAddress.substring(partyAddress.length - 4) %>
+                            </span>
+                        <% } else { %>
+                            Interaction
+                        <% } %>
+                    </p>
+                    
+                    <p class="activity-timestamp">
+                        <span class="mono"><%= new Date(activity.block_time).toLocaleString() %></span>
+                         on <span class="mono"><%= activity.chain_id %></span> <!-- Consider mapping chain_id to name -->
+                    </p>
+                </div>
+                <div class="item-value-right">
+                    <% if (activity.type === 'call') { %>
+                        <p class="activity-amount-right <%= activityColorClass %>" style="font-family: var(--font-primary);">
+                           Interaction
+                        </p>
+                    <% } else if (activity.value) { %>
+                        <p class="activity-amount-right <%= activityColorClass %>">
+                            <% if (activity.type === 'receive') { %>+<% } else if (activity.type === 'send') { %>-<% } %>
+                            <% 
+                            let amountDisplay = '0';
+                            const decimals = activity.token_metadata?.decimals ?? (activity.asset_type === 'native' ? 18 : null);
+                            if (activity.value && decimals !== null) {
+                                const divisor = BigInt(10) ** BigInt(decimals);
+                                const rawAmount = BigInt(activity.value);
+                                // Basic formatting, for more complex needs, use a library
+                                amountDisplay = (Number(rawAmount) / Number(divisor)).toFixed(4); 
+                            } else if (activity.value) { // For assets without decimal info, show raw value or NFT ID
+                                amountDisplay = activity.id || activity.value; // E.g. token_id for ERC721/1155
+                            }
+                            %>
+                            <%= amountDisplay %> 
+                            <span class="mono"><%= activity.token_metadata?.symbol || (activity.asset_type === 'native' ? (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'NTV') : (activity.id ? '' : 'Tokens')) %></span>
+                        </p>
+                    <% } %>
+                    <p class="item-sub-info">
+                        <span class="mono">
+                            <% if (typeof activity.value_usd !== 'undefined' && activity.value_usd !== null) { %>
+                                $<%= parseFloat(activity.value_usd).toFixed(2) %>
+                            <% } else { %>
+                                <!-- No USD value or N/A -->
+                            <% } %>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        <% }); %>
+    <% } else if (walletAddress) { %>
+        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">No activity found for this wallet.</p>
+    <% } else { %>
+        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address to see activity.</p>
+    <% } %>
+</div>
+```
+
+This EJS transforms the raw data from the Activity API into an intuitive and visual transaction history.
+Here's what is happening:
+
+For every `activity` item, the template generates a list entry visually representing the transaction's nature.
+An arrow icon indicates the direction (receive ↓, send ↑) or type (contract call ⇆).
+It uses the activity.type (and activity.function.name for contract calls) to dynamically construct a descriptive title.
+The transaction's `block_time` is converted to a local date/time string, and the `chain_id` is shown, offering multichain context.
+
+Next, the template logic, using the `decimals` property from `token_metadata`, converts the raw transaction value into a standard decimal representation (e.g., "1.5 ETH").
+If the activity involves an NFT, it shows the token ID if a standard decimal value isn't applicable.
+Finally, if the API provides a `value_usd` for the transaction, this is formatted to two decimal places and displayed, giving a sense of the transaction's monetary worth.
+
+***
+
+Restart your server by running `node server.js` and refresh the app in the browser.
+When you click on the "Activity" tab, you should now see a list of the latest transactions, similar to the screenshot at the beginning of this guide.
+
+## Conclusion
+
+You successfully added a realtime, fully functional activity feed to your multichain wallet with a single API request.
+In the next and final guide of this series, [Display NFTs & Collectibles](evm/show-nfts-collectibles), we will complete the wallet by adding support for viewing NFT collections.
