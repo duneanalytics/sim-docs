@@ -44,14 +44,14 @@ Here's how to make the API call:
 <CodeGroup>
 
 ```bash cURL
-curl -X GET "https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045" \
+curl -X GET "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045" \
      -H "X-Dune-Api-Key: YOUR_API_KEY"
 ```
 
 ```javascript JavaScript
 const options = {method: 'GET', headers: {'X-Dune-Api-Key': 'YOUR_API_KEY'}};
 
-fetch('https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', options)
+fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', options)
   .then(response => response.json())
   .then(response => console.log(response))
   .catch(err => console.error(err));
@@ -60,7 +60,7 @@ fetch('https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e
 ```python Python
 import requests
 
-url = "https://api.dune.com/api/echo/v1/balances/evm/0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+url = "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
 
 headers = {"X-Dune-Api-Key": "YOUR_API_KEY"}
 
