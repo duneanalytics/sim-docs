@@ -1,29 +1,19 @@
 ---
 title: "Build a Realtime Wallet"
 description: "Create a multichain wallet that displays realtime balances, transactions, and NFTs using Dune's sim APIs and Express.js"
-sidebarTitle: "Build a Realtime Wallet"
 ---
 
 <Frame caption="The final UI we'll build together in this guide">
   <img
-    src="/images/wallet-ui/wallet-ui.png"
+    src="/images/wallet-ui/wallet-balances-final.png"
     className="mx-auto"
     style={{ width:"100%" }}
   />
 </Frame>
 
-In this guide, we'll build a simple multichain wallet.
-It'll be a Node.js app that displays token balances, transaction history, and NFT collections across 60+ EVM chains.
-By the end, you'll have a fully functional wallet that you can extend for your own projects.
-
-<CardGroup cols={2}>
-  <Card title="Want to skip ahead?" icon="github" horizontal href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui">
-    Check out the [complete code on GitHub](https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui).
-  </Card>
-  <Card title="See the live version" icon="globe" horizontal href="https://sim-guides.vercel.app/?walletAddress=0x48b546F9F5E438662C6C8c44fac62ccbb7255CB8">
-    Check out the [live website](https://sim-guides.vercel.app/?walletAddress=0x48b546F9F5E438662C6C8c44fac62ccbb7255CB8).
-  </Card>
-</CardGroup>
+This is the first guide in our series on building a realtime, multichain wallet using Dune's sim APIs.
+In this one, we will lay the foundation for our wallet.
+You will set up a Node project with Express.js, fetch and display token balances from 60+ EVM chains using the Balances API, and calculate the wallet's total portfolio value in USD.
 
 ## Prerequisites
 
@@ -36,22 +26,23 @@ Before we begin, make sure you have:
   Learn how to obtain your API key to properly authenticate requests.
 </Card>
 
-## The UI
+## Features
 
-<Frame caption="The final UI we'll build together in this guide">
-  ![](/images/wallet-ui/wallet-ui.png)
-</Frame>
+By the end of this series, our wallet will have four main features:
 
-Our wallet UI will have 4 features:
+1. **Token Balances**: Realtime balance tracking with USD values using the [Balances API](/evm/balances).
+2. **Total Portfolio Value**: Aggregated USD value across all chains.
+3. **Wallet Activity**: Comprehensive transaction history showing transfers and contract interactions using the [Activity API](/evm/activity)
+4. **NFTs**: A display of owned NFTs using the [Collectibles API](/evm/collectibles)
 
-1. **Token Balances**: Realtime balance tracking with USD values across 60+ EVM chains
-2. **Total Portfolio Value**: Aggregated USD value calculation combining balances across chains for a complete portfolio valuation
-3. **Wallet Activity**: Comprehensive transaction history showing transfers and contract interactions
-4. **NFT Collections**: Visual display of owned NFTs with metadata and images
+<Note>
+In this first guide, we will focus on implementing the first two: **Token Balances** and **Total Portfolio Value**.
+</Note>
 
 ## Project Setup
 
-Let's start with a complete project scaffold so we can focus on the Sim API integration.
+Let's start by scaffolding our project.
+This initial setup will provide a basic Express.js server and frontend templates, allowing us to focus on integrating Dune's sim APIs.
 
 <Steps>
   <Step title="Create Your Project Structure">
@@ -62,330 +53,254 @@ Let's start with a complete project scaffold so we can focus on the Sim API inte
     cd wallet-ui
     ```
 
-    Now you're in the `wallet-ui` directory.
+    Now you are in the `wallet-ui` directory.
     Next, initialize a new Node.js project with npm:
 
-    ```bash 
+    ```bash
     npm init -y
     npm pkg set type="module"
     ```
 
-    Those commands create a `package.json` file with default values and configures it to use ES modules.
-    Afterwards, install the required packages:
+    These commands create a `package.json` file with default values and configure it to use ES modules.
+    Afterward, install the required packages:
 
     ```bash
     npm install express ejs dotenv
     ```
-    
-    We're using 3 packages for the wallet:
 
-    - **Express.js**: A popular Node.js web framework for creating our server
-    - **EJS**: A simple templating engine that lets us generate dynamic HTML
-    - **dotenv**: A package to load environment variables from a `.env` file
-
+    We are using three packages for our wallet:
+    *   **Express.js**: A popular Node.js web framework for creating our server.
+    *   **EJS**: A simple templating engine that lets us generate dynamic HTML.
+    *   **dotenv**: A package to load environment variables from a `.env` file.
   </Step>
 
   <Step title="Configure Environment Variables">
     Create a new `.env` file in your project root:
-    
+
     ```bash
     touch .env
     ```
-    
+
     Open the `.env` file in your code editor and add your Dune API key:
-    
+
     ```plaintext .env
     # Your Dune API key (required)
     DUNE_API_KEY=your_api_key_here
     ```
 
     <Warning>
-    Never commit your `.env` file to version control! If you're using Git, add it to `.gitignore`.
+      Never commit your `.env` file to version control. If you are using Git, add `.env` to your `.gitignore` file.
     </Warning>
   </Step>
 
   <Step title="Add Starter Code">
-
-      ```bash
-      mkdir views
-      mkdir public
-      ```
-
-      This will create two new directories inside of the `wallet-ui` directory.
-      `views` will handle servering the front-end template, and `public` static assets, like CSS.
-      Let's create those required files:
-
-      ```bash
-      touch server.js
-      touch views/wallet.ejs
-      touch pubilc/styles.css
-      ```
-
-      Now that you have your files, let's populate them with some starter code. 
-
-      Copy this basic Express server code to `server.js`:
-
-      ```javascript server.js [expandable]
-import express from 'express';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-// Load environment variables
-dotenv.config();
-const DUNE_API_KEY = process.env.DUNE_API_KEY;
-
-if (!DUNE_API_KEY) {
-  console.error("FATAL ERROR: DUNE_API_KEY is not set in your environment variables.");
-  process.exit(1);
-}
-
-// Set up __dirname for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Initialize Express
-const app = express();
-
-// Configure Express settings
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Add our home route
-app.get('/', async (req, res) => {
-  const { 
-    walletAddress = '',
-    tab = 'tokens'
-  } = req.query;
-
-  res.render('wallet', {
-      walletAddress: walletAddress, // Pass back for pre-filling form
-      currentTab: tab,
-      totalWalletUSDValue: '$0.00',
-      tokens: [],
-      activities: [],
-      errorMessage: null
-    });
-
-});
-
-// Start the server
-app.listen(3001, () => {
-  console.log(`Server running at http://localhost:3001`);
-});
+    Create the necessary directories for views and public assets:
+    ```bash
+    mkdir views
+    mkdir public
     ```
 
-    Add the frontend template:
+    `views` will hold our EJS templates, and `public` will serve static assets like CSS.
+    Now, create the core files:
+
+    ```bash
+    touch server.js
+    touch views/wallet.ejs
+    touch public/styles.css
+    ```
+
+    Populate `server.js` with this basic Express server code:
+
+    ```javascript server.js [expandable]
+    import express from 'express';
+    import dotenv from 'dotenv';
+    import path from 'path';
+    import { fileURLToPath } from 'url';
+
+    // Load environment variables
+    dotenv.config();
+    const DUNE_API_KEY = process.env.DUNE_API_KEY;
+
+    if (!DUNE_API_KEY) {
+        console.error("FATAL ERROR: DUNE_API_KEY is not set in your environment variables.");
+        process.exit(1);
+    }
+
+    // Set up __dirname for ES modules
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    // Initialize Express
+    const app = express();
+
+    // Configure Express settings
+    app.set('view engine', 'ejs');
+    app.set('views', path.join(__dirname, 'views'));
+    app.use(express.static(path.join(__dirname, 'public')));
+
+    // Add our home route
+    app.get('/', async (req, res) => {
+        const { 
+            walletAddress = '',
+            tab = 'tokens' // Default to tokens tab
+        } = req.query;
+
+        let tokens = [];
+        let totalWalletUSDValue = 0;
+        let activities = []; // For Guide 2
+        let collectibles = []; // For Guide 3
+
+        // In future steps, we will replace empty arrays with API calls
+        res.render('wallet', {
+            walletAddress: walletAddress,
+            currentTab: tab,
+            totalWalletUSDValue: '$0.00', // Will be calculated in the next section
+            tokens: tokens,
+            activities: activities,
+            collectibles: collectibles
+        });
+    });
+
+    // Start the server
+    app.listen(3001, () => {
+        console.log(`Server running at http://localhost:3001`);
+    });
+    ```
+
+    Add the initial frontend template to `views/wallet.ejs`:
 
     ```ejs views/wallet.ejs [expandable]
     <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SIM Wallet UI - A simple and elegant wallet interface for viewing crypto assets and transactions">
-    <meta name="theme-color" content="#0b0e1f">
-    
-    <title>SIM Wallet UI</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Styles -->
-    <link rel="stylesheet" href="/styles.css">
-
-</head>
-<body>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="sim APIs Wallet UI - A simple and elegant wallet interface for viewing crypto assets and transactions">
+        <meta name="theme-color" content="#0b0e1f">
+        <title>sim APIs Wallet UI</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/styles.css">
+    </head>
+    <body>
     <div class="mobile-container">
-        <!-- 1. Header -->
         <header class="app-header">
             <div class="profile-pic-placeholder"></div>
             <div class="header-title">Wallet</div>
             <div class="settings-icon"></div>
         </header>
 
-        <!-- 2. Total Wallet Value -->
         <section class="total-balance-section">
             <p class="total-balance-amount"><%= totalWalletUSDValue %></p>
-            <p class="total-balance-label js-total-balance-amount"><%= walletAddress || 'Enter wallet address...' %></p>
+            <p class="total-balance-label js-wallet-address-display"><%= walletAddress || 'Enter wallet address...' %></p>
         </section>
 
-        <!-- 3. Tabs Navigation -->
         <nav class="tabs">
-            <button class="tab-button active" data-tab="tokens">Tokens</button>
-            <button class="tab-button" data-tab="activity">Activity</button>
-            <button class="tab-button" data-tab="collectibles">Collectibles</button>
+            <button class="tab-button <%= currentTab === 'tokens' ? 'active' : '' %>" data-tab="tokens">Tokens</button>
+            <button class="tab-button <%= currentTab === 'activity' ? 'active' : '' %>" data-tab="activity">Activity</button>
+            <button class="tab-button <%= currentTab === 'collectibles' ? 'active' : '' %>" data-tab="collectibles">Collectibles</button>
         </nav>
 
-        <!-- 4. Tab Content Area -->
         <main class="tab-content">
             <!-- Tokens Tab Pane -->
-            <div id="tokens" class="tab-pane active">
+            <div id="tokens" class="tab-pane <%= currentTab === 'tokens' ? 'active' : '' %>">
                 <% if (tokens && tokens.length > 0) { %>
                     <% tokens.forEach(token => { %>
                         <div class="list-item">
                             <% if (token.token_metadata && token.token_metadata.logo) { %>
-                                <img src="<%= token.token_metadata.logo %>" alt="<%= token.token_metadata.logo %>" class="item-icon-placeholder" style="object-fit: contain; padding: 6px;">
+                                <img src="<%= token.token_metadata.logo %>" alt="<%= token.symbol || 'Token' %> Logo" class="item-icon-placeholder" style="object-fit: contain; padding: 6px;">
                             <% } else { %>
-                                <div class="item-icon-placeholder"><%= token.symbol.substring(0, 4) %></div>
+                                <div class="item-icon-placeholder"><%= token.symbol ? token.symbol.substring(0, 4) : '?' %></div>
                             <% } %>
                             <div class="item-info">
-                                <% if (token.tokenUrl) { %>
-                                    <p class="item-name"><a href="<%= token.tokenUrl %>" target="_blank" style="color: inherit; text-decoration: none;"><%= token.name %></a></p>
+                                <% if (token.token_metadata && token.token_metadata.url) { %>
+                                    <p class="item-name"><a href="<%= token.token_metadata.url %>" target="_blank" style="color: inherit; text-decoration: none;"><%= token.name || token.symbol %></a></p>
                                 <% } else { %>
-                                    <p class="item-name"><%= token.name %></p>
+                                    <p class="item-name"><%= token.name || token.symbol %></p>
                                 <% } %>
-                                <p class="item-sub-info"><span class="mono"><%= token.balanceFormatted %> <%= token.symbol %></span> on <%= token.chainName %></p>
+                                <p class="item-sub-info"><span class="mono"><%= token.balanceFormatted || token.amount %> <%= token.symbol %></span> on <%= token.chain %></p>
                             </div>
                             <div class="item-value-right">
-                                <p class="item-usd-value"><%= token.price_usd %></p>
-                                <p class="item-sub-info">Price: <span class="mono"><%= token.price_usd %></span></p>
+                                <p class="item-usd-value"><%= token.price_usd ? '$' + parseFloat(token.price_usd).toFixed(2) : 'N/A' %></p>
+                                <p class="item-sub-info">Value: <span class="mono"><%= token.value_usd ? '$' + parseFloat(token.value_usd).toFixed(2) : 'N/A' %></span></p>
                             </div>
                         </div>
                     <% }); %>
-                <% } else { %>
+                <% } else if (walletAddress) { %>
                     <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">No tokens found for this wallet.</p>
-                <% } %>
-            </div>
-
-           <!-- Activity Tab Pane -->
-            <div id="activity" class="tab-pane">
-                <% if (activities && activities.length > 0) { %>
-                    <% activities.forEach(activity => { %>
-                        <div class="list-item">
-                            <div class="item-icon-placeholder">
-                                <% if (activity.type === 'receive') { %>
-                                    ↓
-                                <% } else if (activity.type === 'send') { %>
-                                    ↑
-                                <% } else { %>
-                                    ✓
-                                <% } %>
-                            </div>
-                            <div class="item-info">
-                                <% if (activity.type === 'call') { %>
-                                    <p class="item-name" style="color: var(--color-accent-purple);">Contract Call</p>
-                                <% } else { %>
-                                    <p class="activity-direction <%= activity.type %>">
-                                        <% if (activity.type === 'receive') { %>
-                                            Received
-                                        <% } else if (activity.type === 'send') { %>
-                                            Sent
-                                        <% } else { %>
-                                            Transferred
-                                        <% } %>
-                                        <span class="mono"><%= activity.token_metadata?.symbol || 'ETH' %></span>
-                                    </p>
-                                <% } %>
-                                
-                                <p class="activity-address">
-                                    <% let partyLabel, partyAddress %>
-                                    <% if (activity.type === 'receive') { %>
-                                        <% partyLabel = 'From' %>
-                                        <% partyAddress = activity.from %>
-                                    <% } else if (activity.type === 'send') { %>
-                                        <% partyLabel = 'To' %>
-                                        <% partyAddress = activity.to %>
-                                    <% } else { %>
-                                        <% partyLabel = 'With' %>
-                                        <% partyAddress = activity.to || activity.from %>
-                                    <% } %>
-                                    
-                                    <%= partyLabel %>: 
-                                    <span class="mono">
-                                        <% if (partyAddress) { %>
-                                            <%= partyAddress.substring(0, 6) %>...
-                                            <%= partyAddress.substring(partyAddress.length - 4) %>
-                                        <% } else { %>
-                                            Unknown
-                                        <% } %>
-                                    </span>
-                                </p>
-                                
-                                <p class="activity-timestamp">
-                                    <span class="mono"><%= new Date(activity.block_time).toLocaleString() %></span>
-                                </p>
-                            </div>
-                            <div class="item-value-right">
-                                <% if (activity.type === 'call') { %>
-                                    <p class="activity-amount-right" style="font-family: var(--font-primary);">
-                                        Contract Interaction
-                                    </p>
-                                <% } else { %>
-                                    <p class="activity-amount-right <%= activity.type %>">
-                                        <% if (activity.type === 'receive') { %>+<% } else if (activity.type === 'send') { %>-<% } %>
-                                        
-                                        <% 
-                                        let amount = '0';
-                                        if (activity.value && activity.token_metadata && activity.token_metadata.decimals) {
-                                            const decimals = parseInt(activity.token_metadata.decimals);
-                                            const divisor = Math.pow(10, decimals);
-                                            amount = (parseInt(activity.value) / divisor).toString();
-                                        }
-                                        %>
-                                        <%= amount %> 
-                                        <span class="mono"><%= activity.token_metadata?.symbol || 'ETH' %></span>
-                                    </p>
-                                <% } %>
-                                <p class="item-sub-info">
-                                    <span class="mono">
-                                        <% if (activity.value_usd) { %>
-                                            $<%= activity.value_usd.toFixed(2) %>
-                                        <% } else { %>
-                                            $0.00
-                                        <% } %>
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    <% }); %>
-                    
                 <% } else { %>
-                    <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">
-                        No activity found for this wallet.
-                    </p>
+                    <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address above to see token balances.</p>
                 <% } %>
             </div>
 
-            <!-- Collectibles Tab Pane -->
-            <div id="collectibles" class="tab-pane">
-                <p style="font-family: var(--font-primary); text-align: center; padding-top: 30px; color: var(--color-text-muted);">Collectibles feature coming soon!</p>
+           <!-- Activity Tab Pane (for Guide 2) -->
+            <div id="activity" class="tab-pane <%= currentTab === 'activity' ? 'active' : '' %>">
+                <p style="font-family: var(--font-primary); text-align: center; padding-top: 30px; color: var(--color-text-muted);">Activity feature will be added in the next guide.</p>
+            </div>
+
+            <!-- Collectibles Tab Pane (for Guide 3) -->
+            <div id="collectibles" class="tab-pane <%= currentTab === 'collectibles' ? 'active' : '' %>">
+                <p style="font-family: var(--font-primary); text-align: center; padding-top: 30px; color: var(--color-text-muted);">Collectibles feature will be added in a future guide.</p>
             </div>
         </main>
     </div>
 
     <script>
-    // Basic Tab Switching Logic (no changes here)
-const tabButtons = document.querySelectorAll('.tab-button');
-const tabPanes = document.querySelectorAll('.tab-pane');
-const totalBalanceAmount = document.querySelector(".js-total-balance-amount");
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabPanes = document.querySelectorAll('.tab-pane');
+        const walletAddressDisplay = document.querySelector(".js-wallet-address-display");
 
-tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabPanes.forEach(pane => pane.classList.remove('active'));
-        button.classList.add('active');
-        document.getElementById(button.dataset.tab).classList.add('active');
-    });
-});
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.tab;
+                const currentWalletAddress = new URLSearchParams(window.location.search).get('walletAddress');
+                if (currentWalletAddress) {
+                    window.location.search = `?walletAddress=${currentWalletAddress}&tab=${tab}`;
+                } else {
+                    // If no wallet address, just switch tab visually without reload, or prompt
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    tabPanes.forEach(pane => pane.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(tab).classList.add('active');
+                }
+            });
+        });
 
-totalBalanceAmount.addEventListener('click', () => {
-    let walletAddress = prompt("What's your wallet address?");
-    console.log("Wallet Address:", walletAddress);
-});
-</script>
+        walletAddressDisplay.addEventListener('click', () => {
+            let newWalletAddress = prompt("Enter wallet address:", new URLSearchParams(window.location.search).get('walletAddress') || '');
+            if (newWalletAddress !== null && newWalletAddress.trim() !== "") {
+                 const currentTab = new URLSearchParams(window.location.search).get('tab') || 'tokens';
+                 window.location.search = `?walletAddress=${newWalletAddress.trim()}&tab=${currentTab}`;
+            } else if (newWalletAddress !== null) { // Empty input, clear address
+                 const currentTab = new URLSearchParams(window.location.search).get('tab') || 'tokens';
+                 window.location.search = `?tab=${currentTab}`; // Or simply window.location.pathname
+            }
+        });
 
-</body>
-</html>
+        // Set active tab based on URL param on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab') || 'tokens';
+            
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+
+            const activeButton = document.querySelector(`.tab-button[data-tab="${tab}"]`);
+            const activePane = document.getElementById(tab);
+
+            if (activeButton) activeButton.classList.add('active');
+            if (activePane) activePane.classList.add('active');
+        });
+    </script>
+    </body>
+    </html>
     ```
 
-    Lastly, let's add basic styles:
+    Add basic styles to `public/styles.css`:
 
     ```css public/styles.css [expandable]
-   :root {
+    :root {
     --font-primary: 'IBM Plex Sans', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
 
@@ -401,9 +316,9 @@ totalBalanceAmount.addEventListener('click', () => {
     --color-accent-purple: #7e87ef;
     --color-accent-red: #ff7875;
     --color-placeholder-bg: #3a3f58;
-}
+    }
 
-body {
+    body {
     font-family: var(--font-primary);
     background-color: var(--color-bg-deep);
     color: var(--color-text-secondary);
@@ -415,85 +330,89 @@ body {
     min-height: 100vh;
     padding-top: 20px;
     padding-bottom: 20px;
-}
+    }
 
-.mobile-container {
+    .mobile-container {
     width: 100%;
     max-width: 420px;
-    height: 85vh;
-    max-height: 700px;
+    min-height: 700px; /* Ensure a consistent height */
     background-color: var(--color-bg-container);
     border-radius: 20px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
+    align-self: center;
+    }
 
-/* Header Styles */
-.app-header {
+    /* Header Styles */
+    .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 20px;
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
-}
+    }
 
-.profile-pic-placeholder {
+    .profile-pic-placeholder {
     width: 36px;
     height: 36px;
     background-color: var(--color-placeholder-bg);
     border-radius: 50%;
-}
+    }
 
-.header-title {
+    .header-title {
     font-family: var(--font-primary);
     font-size: 1.4em;
     font-weight: 600; /* IBM Plex Sans SemiBold */
     color: var(--color-text-primary);
-}
+    }
 
-.settings-icon {
+    .settings-icon {
     width: 22px;
     height: 22px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0e0e0'%3E%3Cpath d='M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23e0e0e0'%3E%3Cpath d='M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12-.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-size: contain;
     cursor: pointer;
     opacity: 0.8;
-}
+    }
 
-/* Total Balance Section */
-.total-balance-section {
+    /* Total Balance Section */
+    .total-balance-section {
     padding: 25px 20px;
     text-align: center;
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
-}
+    }
 
-.total-balance-amount {
+    .total-balance-amount {
     font-family: var(--font-mono); /* Mono for large number */
     font-size: 2.3em;
     font-weight: 700;
     margin: 0;
     color: var(--color-accent-green);
-}
-.total-balance-label {
+    }
+    .total-balance-label {
     font-family: var(--font-primary);
     font-size: 0.85em;
     color: var(--color-text-muted);
     margin-top: 2px;
-}
+    cursor: pointer; /* Make it look clickable */
+    }
+    .total-balance-label:hover {
+        color: var(--color-text-primary);
+    }
 
-/* Tabs Section */
-.tabs {
+    /* Tabs Section */
+    .tabs {
     display: flex;
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
-}
+    }
 
-.tab-button {
+    .tab-button {
     font-family: var(--font-primary);
     flex-grow: 1;
     padding: 14px;
@@ -506,33 +425,33 @@ body {
     font-weight: 500; /* IBM Plex Sans Medium */
     border-bottom: 3px solid transparent;
     transition: color 0.2s ease, border-bottom-color 0.2s ease;
-}
-.tab-button:hover {
+    }
+    .tab-button:hover {
     color: var(--color-text-primary);
-}
-.tab-button.active {
+    }
+    .tab-button.active {
     color: var(--color-text-primary);
     border-bottom: 3px solid var(--color-accent-purple);
-}
+    }
 
-.tab-content {
+    .tab-content {
     padding: 0px 20px 20px 20px;
     flex-grow: 1;
     overflow-y: auto;
-}
-.tab-pane { display: none; }
-.tab-pane.active { display: block; }
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
 
-/* Tokens Tab & Activity Tab Styles */
-.list-item {
+    /* Tokens Tab & Activity Tab Styles */
+    .list-item {
     display: flex;
     align-items: center;
     padding: 16px 0;
     border-bottom: 1px solid var(--color-border-secondary);
-}
-.list-item:last-child { border-bottom: none; }
+    }
+    .list-item:last-child { border-bottom: none; }
 
-.item-icon-placeholder {
+    .item-icon-placeholder {
     width: 38px;
     height: 38px;
     background-color: #2c3040; /* Using a specific color, not var for contrast */
@@ -546,13 +465,14 @@ body {
     font-size: 0.9em;
     color: #c0c3d1; /* Using specific color */
     flex-shrink: 0;
-}
+    overflow: hidden; /* Prevents text overflow if symbol is too long */
+    }
 
-.item-info {
+    .item-info {
     flex-grow: 1;
-    min-width: 0;
-}
-.item-name { /* Token Name, Activity Type like "Received", "Sent" */
+    min-width: 0; /* Prevents text overflow issues in flex children */
+    }
+    .item-name { /* Token Name, Activity Type like "Received", "Sent" */
     font-family: var(--font-primary);
     font-size: 1.05em;
     font-weight: 500; /* IBM Plex Sans Medium */
@@ -561,8 +481,8 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.item-sub-info { /* "1.2345 ETH on Ethereum", "Price: $800.00" */
+    }
+    .item-sub-info { /* "1.2345 ETH on Ethereum", "Price: $800.00" */
     font-family: var(--font-primary); /* Sans for descriptive part */
     font-size: 0.85em;
     color: var(--color-text-muted);
@@ -570,57 +490,57 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-}
-.item-sub-info .mono { /* Span class for monospaced parts within sub-info */
+    }
+    .item-sub-info .mono { /* Span class for monospaced parts within sub-info */
     font-family: var(--font-mono);
-}
+    }
 
-.item-value-right {
+    .item-value-right {
     text-align: right;
     flex-shrink: 0;
     padding-left: 10px;
-}
-.item-usd-value { /* USD value of holding */
+    }
+    .item-usd-value { /* USD value of holding */
     font-family: var(--font-mono); /* Mono for numerical USD value */
     font-size: 1.05em;
     font-weight: 500;
     margin: 0 0 3px 0;
     color: var(--color-text-primary);
-}
+    }
 
-/* Activity Tab Specifics */
-.activity-direction { /* "Received ETH", "Sent USDC" */
+    /* Activity Tab Specifics */
+    .activity-direction { /* "Received ETH", "Sent USDC" */
     font-family: var(--font-primary);
     font-size: 1.05em;
     font-weight: 500; /* IBM Plex Sans Medium */
     margin: 0 0 3px 0;
-}
- .activity-direction.sent { color: var(--color-accent-red); }
- .activity-direction.received { color: var(--color-accent-green); }
+    }
+    .activity-direction.sent { color: var(--color-accent-red); }
+    .activity-direction.receive { color: var(--color-accent-green); } /* Ensure class name consistency with JS */
 
-.activity-address, .activity-timestamp {
+
+    .activity-address, .activity-timestamp {
     font-family: var(--font-primary); /* Sans for "From:", "To:" */
     font-size: 0.8em;
     color: var(--color-text-subtle);
     margin: 0;
-}
-.activity-address .mono, .activity-timestamp .mono { /* For address itself and timestamp value */
+    }
+    .activity-address .mono, .activity-timestamp .mono { /* For address itself and timestamp value */
      font-family: var(--font-mono);
-}
- .activity-amount-right { /* "+0.5 ETH" */
+    }
+    .activity-amount-right { /* "+0.5 ETH" */
     font-family: var(--font-mono); /* Mono for amount + symbol */
     font-size: 1.05em;
     font-weight: 500;
- }
+    }
+    .activity-amount-right.sent { color: var(--color-accent-red); }
+    .activity-amount-right.receive { color: var(--color-accent-green); }
     ```
-
-    That'll set us up with a good scaffold.
-    
   </Step>
 
   <Step title="Verify Project Structure">
-    Run `ls` in your terminal. You should see these files in your project:
-    
+    Run `ls` in your terminal. Your project directory `wallet-ui/` should now contain:
+
     ```bash
     wallet-ui/
     ├── server.js             # Main application file with Express server
@@ -629,150 +549,149 @@ body {
     ├── public/               # Directory for static assets
     │   └── styles.css        # CSS styling for the wallet UI
     ├── package.json          # Project configuration
-    ├── package-lock.json     # Dependency lock file
-    ├── node_modules/         # Installed packages
+    ├── package-lock.json     # Dependency lock file (if `npm install` was run)
+    ├── node_modules/         # Installed packages (if `npm install` was run)
     └── .env                  # Your environment variables
     ```
   </Step>
 </Steps>
 
-<Note>
-If you prefer using React or other modern frameworks, check out our [React Hooks package](/hooks) which provides ready-to-use components for sim API integration.
-</Note>
+Run `node server.js` in the terminal to start the server.
+Visit `http://localhost:3001` to see the blank wallet.
 
-Start the server by running `node server.js` and visit `http://localhost:3001` in your browser.
-You'll see a blank wallet page for now, but everything is working correctly.
-Now we're ready to start building the Wallet and hit the sim API endpoints.
-
-## Add Balances
-
-Let's start by creating a function to fetch token balances for any wallet address.
-
-```javascript server.js (Basic Balance Fetching)
-async function getWalletBalances(walletAddress) {
-    try {
-        const response = await fetch(
-            `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}`,
-            {
-                headers: {
-                    'X-Dune-Api-Key': `${DUNE_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
-            }
-        );
-
-        if (!response.ok) {
-            throw new Error(`API request failed: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        return data.balances;
-    } catch (error) {
-        console.error("Error fetching wallet balances:", error);
-        return [];
-    }
-}
-```
-
-This function makes an authorized API request to the Activity API endpoint and retrieves the latest activity for that wallet address.
-
-<Card title="Balances API" href="/evm/balances" img="/images/evm/token-blance.svg">
-Get accurate and realtime balances of native and ERC20 tokens for a wallet on 60+ EVM blockchains
-</Card>
-
-Let's modify our home route to use this function:
-
-```javascript server.js {7, 13}
-app.get('/', async (req, res) => {
-  const { 
-    walletAddress = '',
-    tab = 'tokens'
-  } = req.query;
-
-  const tokens = await getWalletBalances(walletAddress);
-
-  res.render('wallet', {
-      walletAddress: walletAddress, // Pass back for pre-filling form
-      currentTab: tab,
-      totalWalletUSDValue: '$0.00',
-      tokens: tokens,
-      activities: [],
-      errorMessage: null
-    });
-
-});
-```
-
-Now restart the server by running `node index.js` again.
-Refresh the app and add `walletAddress` as a query parameter to the URL.
-For example:
-
-[`http://localhost:3001/?walletAddress=0x48b546F9F5E438662C6C8c44fac62ccbb7255CB8`](http://localhost:3001/?walletAddress=0x48b546F9F5E438662C6C8c44fac62ccbb7255CB8)
-
-Your app should look like the following:
-
-<Frame caption="Retrieve a wallet's balances">
-    <img src="/images/wallet-ui/get-wallet-balances.png" />
+<Frame caption="Our scaffolded wallet UI without any data.">
+    <img src="/images/wallet-ui/wallet-balances-blank.png" />
 </Frame>
 
 <Warning>
-If you're running into errors, make sure your `.env` file has a correct Dune API Key.
-Also, make sure the `walletAddress` URL query parameter is a proper EVM wallet address.
+  If you encounter errors, ensure your `.env` file contains the correct `DUNE_API_KEY` and that it is loaded correctly.
+  Also, verify the `walletAddress` in the URL is a valid EVM wallet address.
+  Check your terminal for any error messages from `server.js`.
 </Warning>
 
-### Add Logos, Filter Spam Tokens, and Format Prices
+Now, let's integrate the sim API to fetch real data.
 
-The Balances endpoint lets you add extra metadata and modify the results with query parameters in the URL.
+## Fetch and Show Token Balances
 
-Let's modify the `getWalletBalances` function to include the following information:
+We will use the [Balances API](/evm/balances) to get realtime token balances for a given wallet address.
+This endpoint provides comprehensive details about native and ERC20 tokens, including metadata and USD values across more than 60+ EVM chains.
 
-```javascript server.js (Balance Fetching w/ Metadata) {3, 7}
+First, let's create an async function in `server.js` to fetch these balances. Add this function before your `app.get('/')` route handler:
+
+```javascript server.js (getWalletBalances) {7,9,14,28}
 async function getWalletBalances(walletAddress) {
+    if (!walletAddress) return []; // Return empty if no address
 
-    let query = `metadata=url,logo&exclude_spam_tokens=true`;
+    // Construct the query parameters
+    // metadata=url,logo fetches token URLs and logo images
+    // exclude_spam_tokens=true filters out known spam tokens
+    const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
+
+    const url = `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}?${queryParams}`;
 
     try {
-        const response = await fetch(
-            `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}?${query}`,
-            {
-                headers: {
-                    'X-Dune-Api-Key': `${DUNE_API_KEY}`,
-                    'Content-Type': 'application/json'
-                }
+        const response = await fetch(url, {
+            headers: {
+                'X-Dune-Api-Key': DUNE_API_KEY, // Your API key from .env
+                'Content-Type': 'application/json'
             }
-        );
+        });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API request failed with status ${response.status}: ${response.statusText}`, errorBody);
             throw new Error(`API request failed: ${response.statusText}`);
         }
 
         const data = await response.json();
+
+        // The API returns JSON with a "balances" key. We return that directly.
         return data.balances;
+
     } catch (error) {
-        console.error("Error fetching wallet balances:", error);
-        return [];
+        console.error("Error fetching wallet balances:", error.message);
+        return []; // Return empty array on error
     }
 }
 ```
 
-It's that simple.
-If you restart the server and refresh the app, you'll now see images for each chain:
+This function creates the API request using Node's `fetch`.
+It includes your `DUNE_API_KEY` in the headers and sends a GET request to the `/echo/v1/balances/evm/{address}` endpoint.
 
-<Frame caption="Retrieve logos with the balances">
-    <img src="/images/wallet-ui/balances-with-logos.png" />
+The Balances API gives you access to various _URL query parameters_ that you can include to modify the response.
+We have included `metadata=url,logo` to include a token's URL and logo.
+There's also `exclude_spam_tokens=true` to filter out common spam tokens.
+
+<Note>
+You can find more details about available query parameters in the [Balances API documentation](/evm/balances).
+</Note>
+
+Next, modify your `app.get('/')` route handler in `server.js` to call `getWalletBalances` and pass the fetched tokens to your template:
+
+```javascript server.js
+app.get('/', async (req, res) => {
+    const { 
+        walletAddress = '',
+        tab = 'tokens'
+    } = req.query;
+
+    let tokens = [];
+    let totalWalletUSDValue = 0;
+    let errorMessage = null;
+
+    if (walletAddress) {
+        try {
+            tokens = await getWalletBalances(walletAddress);
+        } catch (error) {
+            console.error("Error in route handler:", error);
+            errorMessage = "Failed to fetch wallet data. Please try again.";
+            // tokens will remain empty, totalWalletUSDValue will be 0
+        }
+    }
+
+    res.render('wallet', {
+        walletAddress: walletAddress,
+        currentTab: tab,
+        totalWalletUSDValue: `$0.00`, // We'll calculate this in the next section
+        tokens: tokens,
+        activities: [], // Placeholder for Guide 2
+        collectibles: [], // Placeholder for Guide 3
+        errorMessage: errorMessage
+    });
+});
+```
+
+We've updated the route to:
+
+1. Call `getWalletBalances` if a `walletAddress` is provided.
+2. Pass the retreived `balances` to the `wallet.ejs` template.
+
+The `views/wallet.ejs` file you created earlier is already set up to display these tokens.
+Restart your server with `node server.js` and refresh your browser, providing a `walletAddress` in the URL.
+For example: [`http://localhost:3001/?walletAddress=0xd8da6bf26964af9d7eed9e03e53415d37aa96045`](http://localhost:3001/?walletAddress=0xd8da6bf26964af9d7eed9e03e53415d37aa96045)
+
+You should now see the wallet populated with token balances, logos, prices for each token, and how much of that token the wallet holds.
+
+<Frame caption="Wallet displaying token balances (in wei) with logos and prices.">
+  <img src="/images/wallet-ui/wallet-balances-without-formatting.png" className="mx-auto" style={{ width:"100%" }} />
 </Frame>
 
-## Track Realtime Wallet Activity
+## Format Balances
 
-The next part of the wallet is displaying all activity.
-sim APIs makes this simple with the Activity API endpoint.
+The Balances API returns token amounts in their smallest denomination. This will be in wei for ETH-like tokens.
+To display these amounts in a user-friendly way, like `1.23` ETH instead of `1230000000000000000` wei, we need to adjust the amount using the token's `decimals` property, which is also returned from the Balances API.
+We can add a new property, `balanceFormatted`, to each token object.
 
-```javascript server.js (Activity Fetching)
-async function getWalletActivity(walletAddress, offset = null, limit = 20) {
+Modify your `getWalletBalances` function in `server.js` as follows. The main change is mapping over `data.balances` to add the `balanceFormatted` property:
+
+```javascript server.js (getWalletBalances with formatting)
+async function getWalletBalances(walletAddress) {
+    if (!walletAddress) return []; 
+
+    const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
+    const url = `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}?${queryParams}`;
+
     try {
-
-        const url = `https://api.dune.com/api/echo/beta/activity/evm/${walletAddress}`;
-
         const response = await fetch(url, {
             headers: {
                 'X-Dune-Api-Key': DUNE_API_KEY,
@@ -781,61 +700,109 @@ async function getWalletActivity(walletAddress, offset = null, limit = 20) {
         });
 
         if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API request failed with status ${response.status}: ${response.statusText}`, errorBody);
             throw new Error(`API request failed: ${response.statusText}`);
         }
 
         const data = await response.json();
-
-        return data.activity;
+        
+        // Process balances to add formatted amount
+        return (data.balances || []).map(token => {
+            let balanceFormatted = token.amount; // Default to raw amount
+            if (token.amount && typeof token.decimals !== 'undefined' && token.decimals !== null) {
+                const decimals = parseInt(token.decimals);
+                const divisor = Math.pow(10, decimals);
+                // Use parseFloat for calculations, then toFixed for display precision
+                balanceFormatted = (parseFloat(token.amount) / divisor).toFixed(2); // Adjust precision as needed
+            }
+            return {
+                ...token,
+                balanceFormatted: balanceFormatted
+            };
+        });
 
     } catch (error) {
-        console.error("Error fetching wallet activity:", error);
-        return [];
+        console.error("Error fetching wallet balances:", error.message);
+        return []; 
     }
 }
 ```
 
-This function makes an authorized API request to the Activity API endpoint and retrieves the latest activity for that wallet address.
+Now, each token object returned by `getWalletBalances` will include a `balanceFormatted` string, which our EJS template (`views/wallet.ejs`) already uses: `<%= token.balanceFormatted || token.amount %>`.
 
-<Card title="Activity API" href="/evm/activity" img="/images/evm/activity.svg">
-Get a real-time feed of onchain activity for any EVM address
-</Card>
+Restart the server and refresh the browser. You will now see formatted balances.
 
-Let's modify our home route to use the new function:
+<Frame caption="Wallet displaying properly formatted token balances with logos and total USD value.">
+  <img src="/images/wallet-ui/wallet-balances-formatted.png" className="mx-auto" style={{ width:"100%" }} />
+</Frame>
 
-```javascript server.js (Updated home route) {8, 15}
-app.get("/", async (req, res) => {
-  const {
-    walletAddress = "",
-    tab = "tokens",
-  } = req.query;
+## Calculate Total Portfolio Value
 
-  const tokens = await getWalletBalances(walletAddress);
-  const activities = await getWalletActivity(walletAddress);
+The wallet's total value at the top of the UI still says `$0.00`.
+Let's calculate the total USD value of the wallet properly show it.
 
-  res.render("wallet", {
-    walletAddress: walletAddress, // Pass back for pre-filling form
-    currentTab: tab,
-    totalWalletUSDValue: "$0.00",
-    tokens: tokens,
-    activities: activities,
-    errorMessage: null,
-  });
+The Balances API provides a `value_usd` field with each token.
+This field represents the total U.S. dollar value of the wallet's entire holding for that specific token.
+
+Let's modify the `app.get('/')` route handler to iterate through the fetched tokens and sum their individual `value_usd` to calculate the `totalWalletUSDValue`.
+
+```javascript server.js (app.get('/') with total value calculation) {16, 17, 18, 19, 20, 21, 33}
+app.get('/', async (req, res) => {
+    const { 
+        walletAddress = '',
+        tab = 'tokens'
+    } = req.query;
+
+    let tokens = [];
+    let totalWalletUSDValue = 0; // Will be updated
+    let errorMessage = null;
+
+    if (walletAddress) {
+        try {
+            tokens = await getWalletBalances(walletAddress); // This now returns formatted tokens
+
+            // Calculate total portfolio value
+            if (tokens && tokens.length > 0) {
+                totalWalletUSDValue = tokens.reduce((sum, token) => {
+                    // Ensure value_usd is a number before adding
+                    const value = parseFloat(token.value_usd);
+                    return sum + (isNaN(value) ? 0 : value);
+                }, 0);
+            }
+        } catch (error) {
+            console.error("Error in route handler:", error);
+            errorMessage = "Failed to fetch wallet data. Please try again.";
+            // tokens will remain empty, totalWalletUSDValue will be 0
+        }
+    }
+
+    res.render('wallet', {
+        walletAddress: walletAddress,
+        currentTab: tab,
+        totalWalletUSDValue: `$${totalWalletUSDValue.toFixed(2)}`, // Pass the calculated total
+        tokens: tokens,
+        activities: [], // Placeholder for Guide 2
+        collectibles: [], // Placeholder for Guide 3
+        errorMessage: errorMessage
+    });
 });
 ```
 
-If you restart the server and click on the "Activity" tab in the app, you'll see a nicely formatted list of activities from the API.
+We use the `reduce` method to iterate over the `tokens` array.
+For each `token`, we access its `value_usd` property, parse it as a float, and add it to the running `sum`.
+The calculated `totalWalletUSDValue` is then formatted to two decimal places and passed to the template.
 
-<Frame caption="Retrieve all activity for the wallet">
-    <img src="/images/wallet-ui/wallet-with-activity.png" />
+The `views/wallet.ejs` template already has `<p class="total-balance-amount"><%= totalWalletUSDValue %></p>`, so it will display the calculated total correctly.
+
+Restart your server and refresh the browser page with a wallet address.
+You should now see the total wallet value at the top of the UI accurately reflecting the sum of all token balance USD values.
+
+<Frame caption="Wallet showing the correctly calculated total USD value.">
+  <img src="/images/wallet-ui/wallet-balances-total-wallet-value.png" className="mx-auto" style={{ width:"100%" }} />
 </Frame>
-
-<Note>
-By default, the `/activity` endpoint only retrieves 20 entries, but you can increase this with the `?limit=` query parameter.
-</Note>
-
-## Viewing a Wallet's NFT Collection
 
 ## Conclusion
 
-With just the balances and activity endpoints, this guide showed you how to build a complete multichain wallet with realtime balances and transaction history across 60+ EVM chains in minutes.
+You have successfully set up the basic structure of your multichain wallet and integrated sim APIs `Balances API` endpoint to display realtime token balances and total portfolio value.
+In the next guide, [Add Account Activity](/add-account-activity), we will enhance this wallet by adding a transaction history feature in the UI using the [Activity API](/evm/activity).

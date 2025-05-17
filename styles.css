@@ -45,3 +45,7 @@ html.dark #navigation-items > div:not(:last-child) {
 #navigation-items > div:not(:first-child) {
     margin-top: 1rem;
 }
+
+a.link {
+    border-bottom: 1px solid rgb(var(--primary-dark))
+}
