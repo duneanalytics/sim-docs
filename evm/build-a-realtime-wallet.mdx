@@ -592,7 +592,7 @@ async function getWalletBalances(walletAddress) {
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Dune-Api-Key': DUNE_API_KEY, // Your API key from .env
+                'X-Sim-Api-Key': DUNE_API_KEY, // Your API key from .env
                 'Content-Type': 'application/json'
             }
         });
@@ -694,7 +694,7 @@ async function getWalletBalances(walletAddress) {
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Dune-Api-Key': DUNE_API_KEY,
+                'X-Sim-Api-Key': DUNE_API_KEY,
                 'Content-Type': 'application/json'
             }
         });

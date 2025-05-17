@@ -16,14 +16,14 @@ sim APIs use API keys to authenticate requests.
 You can create and manage your API keys in your [sim Dashboard](https://dune.com/settings/api).
 
 <Frame caption="To generate a new API key, visit Settings -> API -> create new API key.">
-  <img src="/images/get-dune-api-key.png" />
+  <img src="/images/get-sim-api-key.png" />
 </Frame>
 
-To authenticate, include your API key in the `X-Dune-Api-Key` header for every request.
+To authenticate, include your API key in the `X-Sim-Api-Key` header for every request.
 
 ```bash
 curl --request GET \
-  --header "X-Dune-Api-Key: YOUR_API_KEY"
+  --header "X-Sim-Api-Key: YOUR_API_KEY"
 ```
 
 All API requests must be made over HTTPS.
@@ -45,11 +45,11 @@ Here's how to make the API call:
 
 ```bash cURL
 curl -X GET "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045" \
-     -H "X-Dune-Api-Key: YOUR_API_KEY"
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
 ```
 
 ```javascript JavaScript
-const options = {method: 'GET', headers: {'X-Dune-Api-Key': 'YOUR_API_KEY'}};
+const options = {method: 'GET', headers: {'X-Sim-Api-Key': 'YOUR_API_KEY'}};
 
 fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', options)
   .then(response => response.json())
@@ -62,7 +62,7 @@ import requests
 
 url = "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
 
-headers = {"X-Dune-Api-Key": "YOUR_API_KEY"}
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
 
 response = requests.request("GET", url, headers=headers)
 

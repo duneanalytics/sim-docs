@@ -68,6 +68,44 @@
       "chatgpt"
     ]
   },
+  "openapi": [
+    {
+      "name": "EVM Balances",
+      "file": "evm/openapi/balances.json"
+    },
+    {
+      "name": "EVM Activity",
+      "file": "evm/openapi/activity.json"
+    },
+    {
+      "name": "EVM Collectibles",
+      "file": "evm/openapi/collectibles.json"
+    },
+    {
+      "name": "EVM Token Info",
+      "file": "evm/openapi/token-info.json"
+    },
+    {
+      "name": "EVM Token Holders",
+      "file": "evm/openapi/token-holders.json"
+    },
+    {
+      "name": "EVM Supported Chains",
+      "file": "evm/openapi/supported-chains.json"
+    },
+    {
+      "name": "EVM Transactions",
+      "file": "evm/openapi/transactions.json"
+    },
+    {
+      "name": "SVM Balances",
+      "file": "svm/openapi/balances.json"
+    },
+    {
+      "name": "SVM Transactions",
+      "file": "svm/openapi/transactions.json"
+    }
+  ],
   "logo": {
     "light": "/logo/sim-logo-light.png",
     "dark": "/logo/sim-logo-dark.png"

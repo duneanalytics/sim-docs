@@ -1,0 +1,230 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - Token Holders Endpoint",
+    "description": "This API provides information about holders of specific tokens across different EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/token-holders/{uri}": {
+      "get": {
+        "tags": [
+          "token-holders"
+        ],
+        "summary": "Get holders of a specific EVM token",
+        "description": "This endpoint returns information about holders of a specific token contract address.",
+        "operationId": "getEvmTokenHolders",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "The contract address of the token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "description": "A comma separated list of chain ids to get token holders for",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of holders to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenHoldersResponse"
+                },
+                "example": {
+                  "contract_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                  "chain_id": 1,
+                  "holders": [
+                    {
+                      "address": "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503",
+                      "balance": "4234567890000",
+                      "percentage": 0.0423
+                    },
+                    {
+                      "address": "0x55fe002aeff02f77364de339a1292923a15844b8",
+                      "balance": "3456789000000",
+                      "percentage": 0.0346
+                    }
+                  ],
+                  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error - A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TokenHolder": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "The address of the token holder"
+          },
+          "balance": {
+            "type": "string",
+            "description": "The token balance of the holder (in the token's smallest unit)"
+          },
+          "balance_formatted": {
+            "type": "number",
+            "format": "double",
+            "description": "The token balance formatted according to the token's decimals",
+            "nullable": true
+          },
+          "percentage": {
+            "type": "number",
+            "format": "double",
+            "description": "The percentage of the total supply held by this address",
+            "nullable": true
+          },
+          "value_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "The USD value of the token balance",
+            "nullable": true
+          },
+          "ens_name": {
+            "type": "string",
+            "description": "The ENS name of the holder, if available",
+            "nullable": true
+          },
+          "last_transfer_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp of the last transfer involving this holder",
+            "nullable": true
+          }
+        }
+      },
+      "TokenHoldersResponse": {
+        "type": "object",
+        "required": [
+          "contract_address",
+          "chain_id",
+          "holders"
+        ],
+        "properties": {
+          "contract_address": {
+            "type": "string",
+            "description": "The contract address of the token"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The chain ID where the token exists"
+          },
+          "token_info": {
+            "type": "object",
+            "description": "Information about the token",
+            "nullable": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the token"
+              },
+              "symbol": {
+                "type": "string",
+                "description": "The symbol of the token"
+              },
+              "decimals": {
+                "type": "integer",
+                "description": "The number of decimals for the token"
+              },
+              "total_supply": {
+                "type": "string",
+                "description": "The total supply of the token"
+              }
+            }
+          },
+          "holders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenHolder"
+            },
+            "description": "Array of token holders"
+          },
+          "next_offset": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pagination cursor for the next page of results"
+          },
+          "total_holders_count": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The total number of holders for this token",
+            "nullable": true
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "token-holders",
+      "description": "Token Holders API"
+    }
+  ]
+}

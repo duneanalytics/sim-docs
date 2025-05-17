@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - Token Info Endpoint",
+    "description": "This API provides information about tokens across different EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/token-info/{uri}": {
+      "get": {
+        "tags": [
+          "token-info"
+        ],
+        "summary": "Get EVM token information for a specified contract address (or the native token), on any chain.",
+        "operationId": "getEvmTokenInfo",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "The contract address of the token or 'native' for the native token of the chain",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "description": "Either 'all' or a comma separated list of chain ids to get token info for",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "example": "1,8453"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of prices to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0
+            },
+            "example": "100"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets; this is a cursor being passed from the previous response, only use what the backend returns here",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokensResponse"
+                },
+                "example": {
+                  "contract_address": "native",
+                  "tokens": [
+                    {
+                      "chain": "ethereum",
+                      "chain_id": 1,
+                      "price_usd": 12.34,
+                      "symbol": "ETH"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error - A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "TokenInfo": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "description": "The name of the blockchain"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The ID of the blockchain"
+          },
+          "symbol": {
+            "type": "string",
+            "description": "The token symbol"
+          },
+          "name": {
+            "type": "string",
+            "description": "The token name",
+            "nullable": true
+          },
+          "decimals": {
+            "type": "integer",
+            "description": "The number of decimals for the token",
+            "nullable": true
+          },
+          "price_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "The price of the token in USD",
+            "nullable": true
+          },
+          "total_supply": {
+            "type": "string",
+            "description": "The total supply of the token",
+            "nullable": true
+          },
+          "market_cap": {
+            "type": "number",
+            "format": "double",
+            "description": "The market capitalization of the token",
+            "nullable": true
+          },
+          "logo": {
+            "type": "string",
+            "description": "URL to the token logo",
+            "nullable": true
+          }
+        }
+      },
+      "TokensResponse": {
+        "type": "object",
+        "required": [
+          "contract_address",
+          "tokens"
+        ],
+        "properties": {
+          "contract_address": {
+            "type": "string",
+            "description": "The contract address of the token or 'native' for the native token"
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenInfo"
+            },
+            "description": "Array of token information across different chains"
+          },
+          "next_offset": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pagination cursor for the next page of results"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "token-info",
+      "description": "Token Info API"
+    }
+  ]
+}
