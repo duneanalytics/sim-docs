@@ -56,8 +56,7 @@
       {
         "group": "Get Help",
         "pages": [
-          "support",
-          "errors"
+          "support"
         ]
       }
     ]
