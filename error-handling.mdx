@@ -1,0 +1,179 @@
+---
+title: "Error Handling"
+icon: "bug"
+description: "How to handle errors when using sim APIs"
+---
+
+This guide explains how to handle errors when using sim APIs, including common error codes, troubleshooting steps, and code examples for proper error handling.
+
+## Error Response Format
+
+When an error occurs, sim APIs return a standard error response format:
+
+```json
+{
+  "error": {
+    "message": "Description of what went wrong",
+    "code": "ERROR_CODE"
+  }
+}
+```
+
+## Common Error Codes
+
+| HTTP Status | Error Code | Description | Troubleshooting |
+| ----------- | ---------- | ----------- | --------------- |
+| 401 | UNAUTHORIZED | Invalid or missing API key | Check that you're including the correct API key in the `X-Sim-Api-Key` header |
+| 400 | BAD_REQUEST | Malformed request | Verify the address format and other parameters in your request |
+| 404 | NOT_FOUND | Resource not found | Verify the endpoint URL and resource identifiers |
+| 429 | RATE_LIMIT_EXCEEDED | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
+| 500 | INTERNAL_SERVER_ERROR | Server-side error | Retry the request after a short delay; if persistent, contact support |
+
+## Handling Errors in Code
+
+Here are examples of how to properly handle errors in different programming languages:
+
+### JavaScript
+
+```javascript
+fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', {
+  method: 'GET', 
+  headers: {'X-Sim-Api-Key': 'YOUR_API_KEY'}
+})
+  .then(response => {
+    if (!response.ok) {
+      return response.json().then(err => {
+        throw new Error(`API error: ${err.error?.message || response.statusText}`);
+      });
+    }
+    return response.json();
+  })
+  .then(data => {
+    console.log('Success:', data);
+    // Process your data here
+  })
+  .catch(err => {
+    console.error('Error fetching balances:', err);
+    // Handle error appropriately in your application
+    // e.g., show user-friendly message, retry, or fallback behavior
+  });
+```
+
+### Python
+
+```python
+import requests
+import time
+
+def get_balances(address, api_key, max_retries=3):
+    url = f"https://api.sim.dune.com/v1/evm/balances/{address}"
+    headers = {"X-Sim-Api-Key": api_key}
+    
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()  # Raises an exception for 4XX/5XX responses
+            return response.json()
+            
+        except requests.exceptions.HTTPError as err:
+            status_code = err.response.status_code
+            error_data = {}
+            
+            try:
+                error_data = err.response.json()
+            except:
+                pass
+                
+            error_message = error_data.get('error', {}).get('message', 'Unknown error')
+            
+            print(f"HTTP Error {status_code}: {error_message}")
+            
+            # Handle specific error codes
+            if status_code == 429:  # Rate limit exceeded
+                wait_time = min(2 ** attempt, 60)  # Exponential backoff
+                print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
+                time.sleep(wait_time)
+                continue
+            elif status_code == 500:  # Server error
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    print(f"Server error. Retrying in {wait_time} seconds...")
+                    time.sleep(wait_time)
+                    continue
+            
+            # For other errors or if we've exhausted retries
+            return {"error": error_message, "status_code": status_code}
+            
+        except requests.exceptions.RequestException as err:
+            print(f"Request error: {err}")
+            return {"error": "Network or connection error", "details": str(err)}
+    
+    return {"error": "Max retries exceeded"}
+
+# Usage
+result = get_balances("0xd8da6bf26964af9d7eed9e03e53415d37aa96045", "YOUR_API_KEY")
+if "error" in result:
+    print(f"Failed to get balances: {result['error']}")
+else:
+    print(f"Found {len(result['balances'])} token balances")
+```
+
+## Best Practices for Error Handling
+
+1. **Always check for errors**: Don't assume API calls will succeed.
+
+2. **Implement retry logic with backoff**: For transient errors (like rate limits or server errors), implement exponential backoff:
+   ```javascript
+   async function fetchWithRetry(url, options, maxRetries = 3) {
+     let retries = 0;
+     while (retries < maxRetries) {
+       try {
+         const response = await fetch(url, options);
+         if (response.ok) return response.json();
+         
+         const error = await response.json();
+         
+         // Don't retry for client errors (except rate limiting)
+         if (response.status < 500 && response.status !== 429) {
+           throw new Error(error.error?.message || response.statusText);
+         }
+         
+         // For rate limiting or server errors, retry with backoff
+         retries++;
+         const delay = Math.min(1000 * 2 ** retries, 10000);
+         await new Promise(resolve => setTimeout(resolve, delay));
+       } catch (err) {
+         if (retries === maxRetries - 1) throw err;
+         retries++;
+       }
+     }
+   }
+   ```
+
+3. **Provide meaningful error messages**: Transform API error responses into user-friendly messages.
+
+4. **Log errors for debugging**: Maintain detailed logs of API errors for troubleshooting.
+
+5. **Implement fallbacks**: When possible, have fallback behavior when API calls fail.
+
+## Debugging Tips
+
+If you're experiencing persistent errors:
+
+1. **Verify your API key**: Ensure it's valid and has the necessary permissions.
+
+2. **Check request format**: Validate that your request parameters match the API specifications.
+
+3. **Inspect full error responses**: The error message often contains specific details about what went wrong.
+
+4. **Monitor your usage**: Check if you're approaching or exceeding rate limits.
+
+5. **Test with cURL**: Isolate issues by testing the API directly with cURL:
+   ```bash
+   curl -v -X GET "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045" \
+        -H "X-Sim-Api-Key: YOUR_API_KEY"
+   ```
+
+## Need More Help?
+
+If you're still experiencing issues after following these guidelines, please reach out through our [support channels](/support).
