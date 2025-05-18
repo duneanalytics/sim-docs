@@ -18,8 +18,13 @@ Ask questions about endpoints, authentication, or specific data points, and it w
 
 ## Use with LLMs
 
-Next, you can access content in various LLM friendly formats.
-Every page on this documentation site offers several quick actions:
+### Complete Documentation for LLMs
+
+For LLM applications such as custom agents, RAG systems, or any scenario requiring our complete documentation, we provide an optimized text file at [`https://docs.sim.dune.com/llms-full.txt`](https://docs.sim.dune.com/llms-full.txt).
+
+### Per-Page Access
+
+Each page on this documentation site offers several ways to access its content in LLM-friendly formats:
 
 - **Copy Page:** Copies the fully rendered content of the current page.
 - **View Markdown:** Provides a URL with the raw Markdown source. This is ideal for direct input into LLMs.
@@ -36,20 +41,21 @@ Try it now.
 
 ## Cursor Integration
 
-To integrate our docs directly into Cursor:
+To integrate our documentation directly into Cursor:
 
-1.  Go to Cursor Settings -> Features -> Docs -> Add new doc.
-2.  Provide a name (e.g., "simAPIs").
-3.  For the URL, you can use the link to our `llms-full.txt` file which contains our entire documentation optimized for LLM consumption. You can find it at [`https://docs.sim.dune.com/llms-full.txt`](https://docs.sim.dune.com/llms-full.txt).
-4.  Once configured, you can reference sim APIs documentation by typing `@simAPIs` (or the name you chose) in your Cursor chat window.
-
-Open [`llms-full.txt`](https://docs.sim.dune.com/llms-full.txt)
+1. Go to Cursor Settings -> Features -> Docs -> Add new doc.
+2. Provide a name (e.g., "simAPIs").
+3. For the URL, use our `llms-full.txt` file mentioned above.
+4. Once configured, reference sim APIs documentation by typing `@simAPIs` (or your chosen name) in your Cursor chat window.
 
 <Frame caption="Add our docs to Cursor to use it in your chats">
     <img src="/images/cursor-add-docs.png" />
 </Frame>
 
-If you prefer a more compact format, use our OpenAPI spec.
-It details all available endpoints, parameters, request bodies, and response schemas that LLMs and AI code generation tools can use to understand our API structure.
+## OpenAPI Specifications
 
-Open [`openapi-index.json`](https://raw.githubusercontent.com/duneanalytics/sim-docs/refs/heads/main/openapi-index.json).
+For a more compact format, we provide OpenAPI specifications for each of our endpoints. These files detail available parameters, request bodies, and response schemas. This format is particularly useful for LLMs and AI code generation tools to understand our API structure.
+
+You can find our OpenAPI specifications in the following directories:
+- EVM API specifications: [`/evm/openapi/`](https://github.com/duneanalytics/sim-docs/tree/main/evm/openapi)
+- SVM API specifications: [`/svm/openapi/`](https://github.com/duneanalytics/sim-docs/tree/main/svm/openapi)
