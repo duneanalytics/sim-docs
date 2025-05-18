@@ -1,0 +1,264 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - SVM Balances",
+    "description": "Get token balances for a given SVM address",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/svm/balances/{uri}": {
+      "get": {
+        "tags": [
+          "svm-balances"
+        ],
+        "summary": "Get SVM token balances",
+        "description": "Get token balances for a given SVM address",
+        "operationId": "getSvmBalances",
+        "parameters": [
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "SVM address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chains",
+            "in": "query",
+            "description": "Comma-separated list of chains to include, or 'all' for all supported chains",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Pagination offset from previous response",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SvmBalancesResponse"
+                },
+                "example": {
+                  "processing_time_ms": 120,
+                  "wallet_address": "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+                  "next_offset": "eyJibG9ja190aW1lIjoxNjgwMDAwMDAwLCJpbmRleCI6MH0=",
+                  "balances_count": 2,
+                  "balances": [
+                    {
+                      "chain": "solana",
+                      "address": "native",
+                      "amount": "1000000000",
+                      "balance": "1.0",
+                      "value_usd": 20.5,
+                      "program_id": null,
+                      "decimals": 9,
+                      "total_supply": "1000000000000000",
+                      "name": "Solana",
+                      "symbol": "SOL",
+                      "uri": null,
+                      "price_usd": 20.5,
+                      "liquidity_usd": 500000000,
+                      "pool_type": null,
+                      "pool_address": null,
+                      "mint_authority": null
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SvmBalanceItem": {
+        "type": "object",
+        "required": [
+          "chain",
+          "address",
+          "amount"
+        ],
+        "properties": {
+          "chain": {
+            "type": "string",
+            "description": "Name of blockchain of token"
+          },
+          "address": {
+            "type": "string",
+            "description": "Token contract address or blockchain name for native token"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Amount of token owned in smallest unit"
+          },
+          "balance": {
+            "type": "string",
+            "description": "Formatted amount with decimals applied"
+          },
+          "value_usd": {
+            "type": "number",
+            "description": "Current value of token owned, if available",
+            "nullable": true
+          },
+          "program_id": {
+            "type": "string",
+            "description": "Program ID of the token (for SPL tokens)",
+            "nullable": true
+          },
+          "decimals": {
+            "type": "number",
+            "description": "Decimals of token",
+            "nullable": true
+          },
+          "total_supply": {
+            "type": "string",
+            "description": "Total supply of the token",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of token",
+            "nullable": true
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Symbol of token",
+            "nullable": true
+          },
+          "uri": {
+            "type": "string",
+            "description": "URI to token metadata",
+            "nullable": true
+          },
+          "price_usd": {
+            "type": "number",
+            "description": "Current price of token, if available",
+            "nullable": true
+          },
+          "liquidity_usd": {
+            "type": "number",
+            "description": "Liquidity in USD, if available",
+            "nullable": true
+          },
+          "pool_type": {
+            "type": "string",
+            "description": "Type of liquidity pool, if available",
+            "nullable": true
+          },
+          "pool_address": {
+            "type": "string",
+            "description": "Address of liquidity pool, if available",
+            "nullable": true
+          },
+          "mint_authority": {
+            "type": "string",
+            "description": "Mint authority address, if available",
+            "nullable": true
+          }
+        }
+      },
+      "SvmBalancesResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "balances"
+        ],
+        "properties": {
+          "processing_time_ms": {
+            "type": "number",
+            "description": "Time taken to process the request in milliseconds"
+          },
+          "wallet_address": {
+            "type": "string",
+            "description": "The queried wallet address"
+          },
+          "next_offset": {
+            "type": "string",
+            "description": "Pagination token for the next page of results",
+            "nullable": true
+          },
+          "balances_count": {
+            "type": "number",
+            "description": "Total number of balances returned"
+          },
+          "balances": {
+            "type": "array",
+            "description": "Array of token balance objects",
+            "items": {
+              "$ref": "#/components/schemas/SvmBalanceItem"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Sim-Api-Key"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "svm-balances",
+      "description": "SVM Balances API"
+    }
+  ]
+}

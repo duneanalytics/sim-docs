@@ -2,7 +2,7 @@
 title: "Token Info"
 sidebarTitle: "Token Info API"
 description: "Get detailed metadata and realtime price information for any native asset or ERC20 token including symbol, name, decimals, supply information, USD pricing, and logo URLs."
-openapi: "GET /echo/beta/tokens/evm/{contract_address}"
+openapi: "/evm/openapi/token-info.json GET /v1/evm/token-info/{uri}"
 icon: "shapes"
 ---
 
@@ -17,7 +17,7 @@ icon: "shapes"
 </Frame>
 
 <Note>
-  This endpoint is currently in beta and requires authentication using a normal Dune API key. The `chain_ids` query parameter is mandatory.
+  This endpoint is currently in beta and requires authentication using a normal sim API key. The `chain_ids` query parameter is mandatory.
 </Note>
 
 The Tokens API provides metadata and real-time pricing information for native and ERC20 tokens on supported EVM blockchains. The API returns:
@@ -47,7 +47,7 @@ To fetch tokens for all supported chains, pass the `chain_ids=all` parameter. Se
 
 # Token Prices
 
-Echo looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response.
+sim looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response.
 
 # Pagination
 

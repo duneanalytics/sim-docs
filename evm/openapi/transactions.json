@@ -1,0 +1,297 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - EVM Transactions",
+    "description": "Retrieve granular transaction details including block information, gas data, transaction types, and raw transaction values.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/transactions/{uri}": {
+      "get": {
+        "tags": [
+          "evm-transactions"
+        ],
+        "summary": "Get EVM transactions",
+        "description": "Get transactions for a given EVM address",
+        "operationId": "getEvmTransactions",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "EVM address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "description": "A comma separated list of chain_ids or tags for blockchains to get transactions for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionsResponse"
+                },
+                "example": {
+                  "transactions": [
+                    {
+                      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "block_hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                      "block_number": "12345678",
+                      "block_time": "2023-11-07T05:31:56Z",
+                      "block_version": 1,
+                      "chain": "ethereum",
+                      "from": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "to": "0x1234567890abcdef1234567890abcdef12345678",
+                      "data": "0x",
+                      "gas_price": "0x1234567890",
+                      "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                      "index": "0",
+                      "max_fee_per_gas": "0x1234567890",
+                      "max_priority_fee_per_gas": "0x1234567890",
+                      "nonce": "0x1234",
+                      "transaction_type": "0x2",
+                      "value": "0x1234567890abcdef"
+                    }
+                  ],
+                  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg",
+                  "request_time": "2023-11-07T05:31:56Z",
+                  "response_time": "2023-11-07T05:31:56Z",
+                  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error - A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Transaction": {
+        "type": "object",
+        "required": [
+          "address",
+          "block_hash",
+          "block_number",
+          "block_time",
+          "chain",
+          "from",
+          "hash"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Wallet or ERC20 contract address"
+          },
+          "block_hash": {
+            "type": "string",
+            "description": "Unique cryptographic block identifier"
+          },
+          "block_number": {
+            "type": "string",
+            "description": "Block's sequential index"
+          },
+          "block_time": {
+            "type": "string",
+            "description": "Timestamp of block creation"
+          },
+          "block_version": {
+            "type": "integer",
+            "description": "Block's protocol iteration"
+          },
+          "chain": {
+            "type": "string",
+            "description": "Name of the blockchain"
+          },
+          "from": {
+            "type": "string",
+            "description": "Address of sender"
+          },
+          "to": {
+            "type": "string",
+            "description": "Address of receiver",
+            "nullable": true
+          },
+          "data": {
+            "type": "string",
+            "description": "Data of transaction"
+          },
+          "gas_price": {
+            "type": "string",
+            "description": "Gas price of transaction as hexadecimal string",
+            "nullable": true
+          },
+          "hash": {
+            "type": "string",
+            "description": "Hash of transaction"
+          },
+          "index": {
+            "type": "string",
+            "description": "Index of transaction"
+          },
+          "max_fee_per_gas": {
+            "type": "string",
+            "description": "Max fee per gas of transaction as hexadecimal string",
+            "nullable": true
+          },
+          "max_priority_fee_per_gas": {
+            "type": "string",
+            "description": "Max priority fee per gas of transaction as hexadecimal string",
+            "nullable": true
+          },
+          "nonce": {
+            "type": "string",
+            "description": "Nonce of transaction as hexadecimal string"
+          },
+          "transaction_type": {
+            "type": "string",
+            "description": "Type of transaction"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value of transaction as hexadecimal string"
+          }
+        }
+      },
+      "TransactionErrorInformation": {
+        "type": "object",
+        "required": [
+          "chain_id",
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "TransactionErrors": {
+        "type": "object",
+        "properties": {
+          "error_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "transaction_errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionErrorInformation"
+            }
+          }
+        }
+      },
+      "TransactionsResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "transactions"
+        ],
+        "properties": {
+          "transactions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transaction"
+            }
+          },
+          "errors": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionErrors"
+              }
+            ],
+            "nullable": true
+          },
+          "next_offset": {
+            "type": "string",
+            "nullable": true
+          },
+          "request_time": {
+            "type": "string",
+            "nullable": true
+          },
+          "response_time": {
+            "type": "string",
+            "nullable": true
+          },
+          "wallet_address": {
+            "type": "string",
+            "example": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "evm-transactions",
+      "description": "EVM Transactions API"
+    }
+  ]
+}

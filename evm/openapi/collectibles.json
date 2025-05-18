@@ -1,0 +1,167 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - Collectibles Endpoint",
+    "description": "This API provides information about NFT collectibles for addresses across different EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/collectibles/{uri}": {
+      "get": {
+        "tags": [
+          "collectibles"
+        ],
+        "summary": "Get EVM collectibles for a given address",
+        "description": "This endpoint returns EVM collectibles (NFTs) for an address. Note: This endpoint is currently under development.",
+        "operationId": "getEvmCollectibles",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "Wallet to get collectibles for",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "description": "A comma separated list of chain_ids or tags for blockchains to get collectibles for.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of collectibles to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "collectibles": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "token_id": {
+                            "type": "string",
+                            "description": "The token ID of the collectible"
+                          },
+                          "contract_address": {
+                            "type": "string",
+                            "description": "The contract address of the collectible"
+                          },
+                          "chain_id": {
+                            "type": "integer",
+                            "description": "The chain ID where the collectible exists"
+                          },
+                          "chain": {
+                            "type": "string",
+                            "description": "The chain name where the collectible exists"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "The name of the collectible"
+                          },
+                          "description": {
+                            "type": "string",
+                            "description": "The description of the collectible"
+                          },
+                          "image_url": {
+                            "type": "string",
+                            "description": "URL to the image of the collectible"
+                          },
+                          "metadata_url": {
+                            "type": "string",
+                            "description": "URL to the metadata of the collectible"
+                          },
+                          "collection": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string",
+                                "description": "The name of the collection"
+                              },
+                              "symbol": {
+                                "type": "string",
+                                "description": "The symbol of the collection"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "next_offset": {
+                      "type": "string",
+                      "description": "Pagination cursor for the next page of results",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error - A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "collectibles",
+      "description": "Collectibles API"
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - Balances Endpoint",
+    "description": "This API provides realtime token balances for addresses across different EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/balances/{uri}": {
+      "get": {
+        "tags": [
+          "balances"
+        ],
+        "summary": "Get EVM token balances for a given address",
+        "description": "This endpoint returns EVM token balances for an address for any token that the address has interacted with",
+        "operationId": "getEvmBalances",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "Wallet to get balances for",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "description": "A comma separated list of chain_ids or tags for blockchains to get balances for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.  Only balances for blockchains tagged with all the specified tags are returned. Please see the response of the /chains endpoint for the tags on each blockchain.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "exclude_spam_tokens",
+            "in": "query",
+            "description": "Specify this to exclude spam tokens from the response",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "filters",
+            "in": "query",
+            "description": "Specify `ERC20` or `NATIVE` to get only ERC20 tokens or native assets, respectively",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "nullable": true
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of transactions to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "nullable": true,
+              "minimum": 0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalancesResponse"
+                },
+                "example": {
+                  "balances": [
+                    {
+                      "address": "native",
+                      "amount": "605371497350928252303",
+                      "chain": "ethereum",
+                      "decimals": 18,
+                      "price_usd": 3042.816964922323,
+                      "symbol": "ETH",
+                      "value_usd": 1842034.6622198338
+                    }
+                  ],
+                  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg",
+                  "request_time": "2023-11-07T05:31:56Z",
+                  "response_time": "2023-11-07T05:31:56Z",
+                  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error - A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BalanceData": {
+        "type": "object",
+        "required": [
+          "chain",
+          "address",
+          "amount"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "low_liquidity": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "pool_size": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "price_usd": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "symbol": {
+            "type": "string",
+            "nullable": true
+          },
+          "token_metadata": {
+            "type": "object",
+            "properties": {
+              "logo": {
+                "type": "string",
+                "nullable": true
+              },
+              "url": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "nullable": true
+          },
+          "value_usd": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        }
+      },
+      "BalanceErrorInformation": {
+        "type": "object",
+        "required": [
+          "chain_id",
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "BalanceErrors": {
+        "type": "object",
+        "properties": {
+          "error_message": {
+            "type": "string",
+            "nullable": true
+          },
+          "token_errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceErrorInformation"
+            }
+          }
+        }
+      },
+      "BalancesResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "balances"
+        ],
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceData"
+            }
+          },
+          "errors": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BalanceErrors"
+              }
+            ],
+            "nullable": true
+          },
+          "next_offset": {
+            "type": "string"
+          },
+          "request_time": {
+            "type": "string",
+            "nullable": true
+          },
+          "response_time": {
+            "type": "string",
+            "nullable": true
+          },
+          "wallet_address": {
+            "type": "string",
+            "example": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "balances",
+      "description": "Balances API"
+    }
+  ]
+}

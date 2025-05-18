@@ -1,0 +1,225 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "sim API - SVM Transactions",
+    "description": "Get transactions for a given SVM address",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/svm/transactions/{uri}": {
+      "get": {
+        "tags": [
+          "svm-transactions"
+        ],
+        "summary": "Get SVM transactions",
+        "description": "Get transactions for a given SVM address",
+        "operationId": "getSvmTransactions",
+        "parameters": [
+          {
+            "name": "uri",
+            "in": "path",
+            "description": "SVM address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Pagination offset from previous response",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SvmTransactionsResponse"
+                },
+                "example": {
+                  "next_offset": "eyJibG9ja190aW1lIjoxNjgwMDAwMDAwLCJpbmRleCI6MH0=",
+                  "transactions": [
+                    {
+                      "address": "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+                      "block_slot": 123456789,
+                      "block_time": 1680000000000000,
+                      "chain": "solana",
+                      "raw_transaction": {
+                        "blockTime": 1680000000,
+                        "meta": {
+                          "err": null,
+                          "fee": 5000,
+                          "innerInstructions": [],
+                          "logMessages": [
+                            "Program 11111111111111111111111111111111 invoke [1]",
+                            "Program 11111111111111111111111111111111 success"
+                          ],
+                          "postBalances": [499995000, 10000000],
+                          "postTokenBalances": [],
+                          "preBalances": [500000000, 0],
+                          "preTokenBalances": [],
+                          "rewards": [],
+                          "status": {
+                            "Ok": null
+                          }
+                        },
+                        "slot": 123456789,
+                        "transaction": {
+                          "message": {
+                            "accountKeys": [
+                              "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
+                              "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+                            ],
+                            "header": {
+                              "numReadonlySignedAccounts": 0,
+                              "numReadonlyUnsignedAccounts": 1,
+                              "numRequiredSignatures": 1
+                            },
+                            "instructions": [
+                              {
+                                "accounts": [0, 1],
+                                "data": "3Bxs4h24hBtQy9rw",
+                                "programIdIndex": 2
+                              }
+                            ],
+                            "recentBlockhash": "11111111111111111111111111111111"
+                          },
+                          "signatures": [
+                            "5SzSbWKM9yZC7cCGMhUhvnYdWQytrk9NBaWwug1gQBKKwNEBvBKqPSfVeYYnZwUuUyvcCHgYhDkTRrB6YBfwzfv8"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SvmTransaction": {
+        "type": "object",
+        "required": [
+          "address",
+          "block_slot",
+          "block_time",
+          "chain"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Wallet address"
+          },
+          "block_slot": {
+            "type": "number",
+            "description": "Block's sequential index"
+          },
+          "block_time": {
+            "type": "number",
+            "description": "Timestamp of block creation (in microseconds)"
+          },
+          "chain": {
+            "type": "string",
+            "description": "Name of the blockchain"
+          },
+          "raw_transaction": {
+            "type": "object",
+            "description": "Raw transaction data from the RPC node at the time of ingestion"
+          }
+        }
+      },
+      "SvmTransactionsResponse": {
+        "type": "object",
+        "required": [
+          "transactions"
+        ],
+        "properties": {
+          "next_offset": {
+            "type": "string",
+            "description": "Pagination token for the next page of results",
+            "nullable": true
+          },
+          "transactions": {
+            "type": "array",
+            "description": "Array of transaction objects",
+            "items": {
+              "$ref": "#/components/schemas/SvmTransaction"
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Sim-Api-Key"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "svm-transactions",
+      "description": "SVM Transactions API"
+    }
+  ]
+}
