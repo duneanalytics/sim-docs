@@ -1,6 +1,4 @@
 (function loadIBMPlexSans() {
-  console.log("Loading IBM Plex Sans");
-
   const head = document.head;
 
   [
@@ -100,14 +98,12 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
 
   // Function to apply replacements within a given parent element
   function applyReplacements(parentElement) {
-    console.log("Applying replacements within:", parentElement === document ? "document" : parentElement);
     iconConfigs.forEach(config => {
       // Construct the full selector. Note the quotes around the ID value.
       const selector = `li[id="${config.selectorId}"] > a > svg`;
       const svgElement = parentElement.querySelector(selector); // Use parentElement here
       
       if (svgElement) {
-        console.log(`Found SVG for ${config.selectorId} in`, parentElement === document ? "document" : "dialog");
         // Set common attributes
         for (const attrName in commonAttributes) {
           if (commonAttributes.hasOwnProperty(attrName)) {
@@ -120,8 +116,6 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
         
         // Replace inner HTML of the SVG
         svgElement.innerHTML = config.innerHTML;
-      } else {
-        console.warn(`SVG element not found for selector: ${selector} in`, parentElement === document ? "document" : "dialog");
       }
     });
   }
@@ -130,10 +124,8 @@ document.querySelectorAll("a .method-nav-pill").forEach((pill) => {
   const dialogElement = document.querySelector("[role='dialog']");
   
   if (dialogElement) {
-    console.log("Dialog element found. Scoping replacements to dialog.");
     applyReplacements(dialogElement);
   } else {
-    console.log("No dialog element found. Scoping replacements to document.");
     applyReplacements(document);
   }
 })();
