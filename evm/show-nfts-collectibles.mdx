@@ -1,21 +1,178 @@
 ---
 title: "Show NFT Collectibles in Your Wallet"
 sidebarTitle: "Show NFTs/Collectibles"
-description: "Complete your wallet by adding a display of a user's NFT collection."
+description: "Complete your realtime crypto wallet by adding a visual display of a user's NFT collection."
 ---
 
 <Frame caption="The user's full NFT collection, with artwork and details, displayed in the 'Collectibles' tab.">
-    <img src="/images/wallet-ui/wallet-with-collectibles.png" />
+    <img src="/images/wallet-ui/wallet-collections-final.png" />
 </Frame>
 
-Your wallet now displays token balances and tracks account activity.
-To offer a holistic view of a user's assets, let's add all their NFTs to the wallet.
-
-In this third and final guide of the series, we'll focus on implementing the "Collectibles" tab.
-You'll learn how to fetch and display a user's NFT collection using the [Collectibles API](/evm/collectibles).
+Your wallet now displays token balances, calculates total portfolio value, and tracks detailed account activity.
+To give users a holistic view of their onchain assets, the final piece is to **showcase their NFT collections**.
+In this third and final guide of our wallet series, we will focus on implementing the _Collectibles_ tab.
 
 <Note>
 This guide assumes you have completed the previous guides:
-1. [Create a Real-Time Wallet](/evm/build-a-realtime-wallet)
-2. [Add Account Activity](/evm/add-account-activity)
+
+1.  [Build a Realtime Wallet](/evm/build-a-realtime-wallet)
+2.  [Add Account Activity](/evm/add-account-activity)
 </Note>
+
+## Fetch NFT Collectibles
+
+Let's add a new asynchronous `getWalletCollectibles` function to `server.js` to fetch a user's NFT collection using the [Collectibles API](/evm/collectibles).
+
+```javascript server.js (getWalletCollectibles) {4}
+async function getWalletCollectibles(walletAddress, limit = 50) { // Default to fetching up to 50 collectibles
+    if (!walletAddress) return [];
+
+    const url = `https://api.sim.dune.com/v1/evm/collectibles/${walletAddress}?limit=${limit}`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Sim-Api-Key': SIM_API_KEY, // Your API key from .env
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Collectibles API request failed with status ${response.status}: ${response.statusText}`, errorBody);
+            throw new Error(`Collectibles API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.collectibles || []; 
+    } catch (error) {
+        console.error("Error fetching wallet collectibles:", error.message);
+        return []; // Return empty array on error
+    }
+}
+```
+
+The function sends an authorized GET request with your `SIM_API_KEY` and receives JSON response.
+The NFT data is extracted from the `collectibles` array within this response.
+
+<Note>
+The [Collectibles API](/evm/collectibles) supports pagination using `limit` and `offset` query parameters.
+For wallets with many NFTs, you can implement logic to fetch subsequent pages using the `next_offset` value returned by the API to provide a complete view of the user's collection.
+</Note>
+
+## Add Collectibles into the Server Route
+
+Next, we update our main `app.get('/')` route handler in `server.js` to call this new function:
+
+```javascript server.js (app.get('/') updated for collectibles) {16, 19, 41}
+app.get('/', async (req, res) => {
+    const { 
+        walletAddress = '',
+        tab = 'tokens'
+    } = req.query;
+
+    let tokens = [];
+    let activities = [];
+    let collectibles = []; // Initialize collectibles array
+    let totalWalletUSDValue = 0;
+    let errorMessage = null;
+
+    if (walletAddress) {
+        try {
+            // Fetch balances, activities, and collectibles concurrently for better performance
+            [tokens, activities, collectibles] = await Promise.all([
+                getWalletBalances(walletAddress),
+                getWalletActivity(walletAddress, 25), // Fetching 25 recent activities
+                getWalletCollectibles(walletAddress, 50) // Fetching up to 50 collectibles
+            ]);
+
+            // Calculate total portfolio value from token balances (Guide 1)
+            if (tokens && tokens.length > 0) {
+                totalWalletUSDValue = tokens.reduce((sum, token) => {
+                    const value = parseFloat(token.value_usd);
+                    return sum + (isNaN(value) ? 0 : value);
+                }, 0);
+            }
+        } catch (error) {
+            console.error("Error in route handler fetching all data:", error);
+            errorMessage = "Failed to fetch wallet data. Please try again.";
+        }
+    }
+    
+    res.render('wallet', {
+        walletAddress: walletAddress,
+        currentTab: tab,
+        totalWalletUSDValue: `$${totalWalletUSDValue.toFixed(2)}`,
+        tokens: tokens,
+        activities: activities,
+        collectibles: collectibles, // Pass collectibles to the template
+        errorMessage: errorMessage
+    });
+});
+```
+
+The route handler now fetches balances, then activities, and finally the NFT collectibles data.
+The `collectibles` array is then passed to the `wallet.ejs` template.
+
+## Display Collectibles in the Frontend
+
+The final step is to modify `views/wallet.ejs` to render the fetched collectibles within the "Collectibles" tab.
+We will use a simple 3-column grid layout to display NFT images and their names.
+
+In `views/wallet.ejs`, find the section for the "Collectibles" tab (you can search for `id="collectibles"`).
+It currently contains a placeholder paragraph.
+Replace that entire `div` with the following EJS:
+
+```ejs views/wallet.ejs (Collectibles tab content) [expandable]
+<!-- Collectibles Tab Pane -->
+<div id="collectibles" class="tab-pane <%= currentTab === 'collectibles' ? 'active' : '' %>">
+    <% if (collectibles && collectibles.length > 0) { %>
+        <div class="collectibles-grid">
+            <% collectibles.forEach(nft => { %>
+                <%# We assume an external_url might not always be present, so default to '#' or link to metadata_url %>
+                <a href="<%= nft.external_url || nft.metadata_url || '#' %>" target="_blank" rel="noopener noreferrer" class="collectible-item-link">
+                    <div class="collectible-item">
+                        <div class="collectible-image-container">
+                            <% if (nft.image_url) { %>
+                                <img src="<%= nft.image_url %>" alt="<%= nft.name || 'NFT Image' %>" class="collectible-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                <div class="collectible-image-placeholder" style="display: none;">Image Unavailable</div>
+                            <% } else { %>
+                                <div class="collectible-image-placeholder">No Image Provided</div>
+                            <% } %>
+                        </div>
+                        <div class="collectible-info">
+                            <p class="collectible-name" title="<%= nft.name || 'Unnamed NFT' %>"><%= nft.name || 'Unnamed NFT' %></p>
+                            <% if (nft.collection && nft.collection.name) { %>
+                                <p class="collectible-collection" title="<%= nft.collection.name %>"><%= nft.collection.name %></p>
+                            <% } else { %>
+                                <p class="collectible-collection">Unknown Collection</p>
+                            <% } %>
+                            <p class="collectible-chain mono">Chain: <%= nft.chain_id %> (<%= nft.chain || 'N/A' %>)</p>
+                        </div>
+                    </div>
+                </a>
+            <% }); %>
+        </div>
+    <% } else if (walletAddress) { %>
+        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">No collectibles found for this wallet.</p>
+    <% } else { %>
+        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address to see collectibles.</p>
+    <% } %>
+</div>
+```
+
+The EJS template iterates through the `collectibles` array.
+Each NFT is displayed with its `image_url` in an image tag.
+The display includes key metadata like `name`, `collection.name`, `chain_id`, and `chain` to provide complete context for each collectible.
+
+Restart your server using `node server.js` and navigate to your wallet app in the browser.
+When you click on the "Collectibles" tab, and if the wallet has NFTs, you should see the NFT collection displayed.
+
+## Conclusion
+
+That concludes this three-part series!
+With just three API requests - [Balances](/evm/balances), [Activity](/evm/activity), and [Collectibles](/evm/collectibles) - you've built a fully functional, multichain wallet that displays token balances, calculates portfolio value, tracks detailed transaction activity, and showcases NFT collections.
+
+**This project serves as a solid foundation for a wallet**.
+You can now expand upon it by exploring other sim API features.
+Whether you want to add more sophisticated analytics, deeper NFT insights, or advanced transaction tracking, sim APIs provides the blockchain data you need to build the next generation of onchain apps.
