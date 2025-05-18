@@ -1,6 +1,6 @@
 ---
 title: "Build a Realtime Wallet"
-description: "Create a multichain wallet that displays realtime balances, transactions, and NFTs using Dune's sim APIs and Express.js"
+description: "Create a multichain wallet that displays realtime balances, transactions, and NFTs using sim APIs and Express.js"
 ---
 
 <Frame caption="The final UI we'll build together in this guide">
@@ -20,7 +20,7 @@ You will set up a Node project with Express.js, fetch and display token balances
 Before we begin, make sure you have:
 
 - Node.js >= 18.0.0
-- A Dune API key
+- A sim API key
 
 <Card title="Get your API Key" icon="lock" horizontal href="/#authentication">
   Learn how to obtain your API key to properly authenticate requests.
@@ -81,11 +81,11 @@ This initial setup will provide a basic Express.js server and frontend templates
     touch .env
     ```
 
-    Open the `.env` file in your code editor and add your Dune API key:
+    Open the `.env` file in your code editor and add your sim API key:
 
     ```plaintext .env
-    # Your Dune API key (required)
-    DUNE_API_KEY=your_api_key_here
+    # Your sim API key (required)
+    SIM_API_KEY=your_api_key_here
     ```
 
     <Warning>
@@ -119,10 +119,10 @@ This initial setup will provide a basic Express.js server and frontend templates
 
     // Load environment variables
     dotenv.config();
-    const DUNE_API_KEY = process.env.DUNE_API_KEY;
+    const SIM_API_KEY = process.env.SIM_API_KEY;
 
-    if (!DUNE_API_KEY) {
-        console.error("FATAL ERROR: DUNE_API_KEY is not set in your environment variables.");
+    if (!SIM_API_KEY) {
+        console.error("FATAL ERROR: SIM_API_KEY is not set in your environment variables.");
         process.exit(1);
     }
 
@@ -535,6 +535,107 @@ This initial setup will provide a basic Express.js server and frontend templates
     }
     .activity-amount-right.sent { color: var(--color-accent-red); }
     .activity-amount-right.receive { color: var(--color-accent-green); }
+
+    /* NFT Grid Container */
+    .collectibles-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        padding-top: 20px;
+        width: 100%;
+    }
+
+    /* NFT Item Container */
+    .collectible-item-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        transition: transform 0.2s ease;
+    }
+
+    .collectible-item-link:hover {
+        transform: translateY(-5px);
+    }
+
+    .collectible-item {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgb(var(--gray-100));
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Image Container */
+    .collectible-image-container {
+        position: relative;
+        width: 100%;
+        padding-bottom: 100%; /* Creates a square aspect ratio */
+    }
+
+    .collectible-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Image Placeholder */
+    .collectible-image-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgb(var(--gray-200));
+        color: rgb(var(--gray-500));
+        font-size: 0.875rem;
+    }
+
+    /* NFT Info Container */
+    .collectible-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .collectible-item-link:hover .collectible-info {
+        opacity: 1;
+    }
+
+    /* NFT Text Styles */
+    .collectible-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .collectible-collection {
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .collectible-chain {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
     ```
   </Step>
 
@@ -564,7 +665,7 @@ Visit `http://localhost:3001` to see the blank wallet.
 </Frame>
 
 <Warning>
-  If you encounter errors, ensure your `.env` file contains the correct `DUNE_API_KEY` and that it is loaded correctly.
+  If you encounter errors, ensure your `.env` file contains the correct `SIM_API_KEY` and that it is loaded correctly.
   Also, verify the `walletAddress` in the URL is a valid EVM wallet address.
   Check your terminal for any error messages from `server.js`.
 </Warning>
@@ -587,12 +688,12 @@ async function getWalletBalances(walletAddress) {
     // exclude_spam_tokens=true filters out known spam tokens
     const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
 
-    const url = `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}?${queryParams}`;
+    const url = `https://api.sim.dune.com/v1/evm/balances/${walletAddress}?${queryParams}`;
 
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Sim-Api-Key': DUNE_API_KEY, // Your API key from .env
+                'X-Sim-Api-Key': SIM_API_KEY, // Your API key from .env
                 'Content-Type': 'application/json'
             }
         });
@@ -616,7 +717,7 @@ async function getWalletBalances(walletAddress) {
 ```
 
 This function creates the API request using Node's `fetch`.
-It includes your `DUNE_API_KEY` in the headers and sends a GET request to the `/echo/v1/balances/evm/{address}` endpoint.
+It includes your `SIM_API_KEY` in the headers and sends a GET request to the `/v1/evm/balances/{address}` endpoint.
 
 The Balances API gives you access to various _URL query parameters_ that you can include to modify the response.
 We have included `metadata=url,logo` to include a token's URL and logo.
@@ -689,12 +790,12 @@ async function getWalletBalances(walletAddress) {
     if (!walletAddress) return []; 
 
     const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
-    const url = `https://api.dune.com/api/echo/v1/balances/evm/${walletAddress}?${queryParams}`;
+    const url = `https://api.sim.dune.com/v1/evm/balances/${walletAddress}?${queryParams}`;
 
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Sim-Api-Key': DUNE_API_KEY,
+                'X-Sim-Api-Key': SIM_API_KEY,
                 'Content-Type': 'application/json'
             }
         });

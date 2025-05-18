@@ -29,12 +29,12 @@ async function getWalletActivity(walletAddress, limit = 25) { // Default to fetc
 
     // The Activity API is currently in beta.
     // We add a 'limit' query parameter to control how many activities are returned.
-    const url = `https://api.dune.com/api/echo/beta/activity/evm/${walletAddress}?limit=${limit}`;
+    const url = `https://api.sim.dune.com/v1/evm/activity/${walletAddress}?limit=${limit}`;
 
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Sim-Api-Key': DUNE_API_KEY, // Your API key from .env
+                'X-Sim-Api-Key': SIM_API_KEY, // Your API key from .env
                 'Content-Type': 'application/json'
             }
         });
@@ -55,7 +55,7 @@ async function getWalletActivity(walletAddress, limit = 25) { // Default to fetc
 }
 ```
 
-The function constructs the request URL for the `/echo/beta/activity/evm/{address}` endpoint, appending the `limit` as a query parameter.
+The function creates the request URL for the `/v1/evm/activity/{address}` endpoint, adding the `limit` as a query parameter.
 The [Activity API](/evm/activity) conveniently packages the transaction data within an `activity` array in the response.
 The array provides rich context for each event, such as `block_time`, `transaction_hash`, `from` and `to` addresses, `value`, `value_usd`, and more.
 
