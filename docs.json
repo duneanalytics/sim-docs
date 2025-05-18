@@ -49,13 +49,6 @@
         "group": "Resources",
         "pages": [
           "build-with-ai",
-          "hooks",
-          "proxy"
-        ]
-      },
-      {
-        "group": "Get Help",
-        "pages": [
           "error-handling",
           "support"
         ]
@@ -112,12 +105,7 @@
     "dark": "/logo/sim-logo-dark.png"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "https://docs.sim.dune.com/support"
-      }
-    ],
+    "links": [],
       "primary": {
       "type": "button",
       "label": "Start Building",
