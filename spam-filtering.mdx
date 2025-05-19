@@ -1,0 +1,52 @@
+---
+title: "Spam Filtering"
+description: "Learn how Sim APIs filter out spam tokens and how to customize filtering for your specific needs."
+---
+
+When working with blockchain data, you'll encounter numerous tokens with little to no value. These "spam tokens" can clutter your application's user interface and potentially mislead users. Sim APIs provide robust, real-time spam filtering capabilities to help you deliver a cleaner, more reliable experience.
+
+## How Sim's Spam Filtering Works
+
+Unlike many providers that rely on static lists or third-party data, Sim uses a dynamic, on-chain approach to identify spam tokens. This results in fewer false positives and negatives, giving you more accurate data.
+
+A token is considered legitimate (not spam) when it meets **all** of the following criteria:
+
+1. **Non-empty name**: The token must have a name property that isn't empty
+2. **Acceptable symbol**: The token must have a non-empty symbol that isn't excessively long
+3. **Non-zero decimals**: The token must have a decimals property greater than zero
+4. **Adequate liquidity** (when applicable): If the token has a liquidity pool, that pool must have more than $100 in value
+
+Sim's approach to assessing liquidity is particularly sophisticated:
+
+- For each token, we dynamically track highest liquidity route to USDC
+- We calculate the USD value of the liquidity along that route for each token upon each query
+
+## Using Spam Filtering in API Calls
+
+Both the [Balances](/evm/balances) and [Activity](/evm/activity) APIs support the `?exclude_spam_tokens` parameter. When included in your API call, this parameter will filter out tokens that don't meet the criteria described above.
+
+## Customizing Spam Filtering
+
+While the `exclude_spam_tokens` parameter provides a good baseline, you may want to implement custom filtering logic for your specific use case. Sim makes this easy by including all the data used for spam filtering in every API response. Scenarios where you might want to do this include:
+
+1. **Different liquidity threshold**: If $100 is too high or too low for your needs, you can filter based on the `pool_size` field using your own threshold
+2. **Allowlisting specific tokens**: You may want to include certain tokens regardless of their liquidity
+3. **Blocklisting specific tokens**: You may want to exclude certain tokens even if they meet all criteria
+4. **Custom criteria combinations**: You can create your own combination of the available fields to define what constitutes spam in your application
+
+## Applicable APIs
+
+Spam token filtering is currently available for:
+
+- [EVM Balances API](/evm/balances)
+- [EVM Activity API](/evm/activity)
+
+## Benefits of Sim's Approach
+
+- **Real-time assessment**: Liquidity is checked at query time, not based on outdated lists
+- **Fewer false positives**: Legitimate but lesser-known tokens aren't automatically excluded. New tokens are recognized as legitimate as soon as they're liquid.
+- **Fewer false negatives**: New spam tokens are identified immediately based on their characteristics
+- **Flexibility**: All filtering data is provided, allowing you to implement custom logic
+- **Simplicity**: The `exclude_spam_tokens` parameter provides an easy default option
+
+By leveraging Sim's spam filtering capabilities, you can provide your users with a cleaner, more focused view of blockchain data while maintaining the flexibility to customize the experience as needed.

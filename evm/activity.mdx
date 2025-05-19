@@ -15,5 +15,12 @@ The Activity endpoint provides a real-time feed of on-chain activity for any EVM
 - Contract interactions with decoded function calls
 
 <Note>
-  This endpoint is currently in beta and requires authentication using a normal Sim API key.
+  - These endpoints are authenticated with a normal Sim API key.
+  - Specify `?exclude_spam_tokens` to filter out activities related to spam tokens.
 </Note>
+
+# Spam tokens
+
+The Activity API supports filtering out activities related to spam tokens using the `?exclude_spam_tokens` parameter. When specified, this parameter will exclude transactions and transfers involving tokens that meet spam criteria, providing a cleaner activity feed.
+
+We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our spam filtering approach, see our [Spam Token Filtering](/spam-filtering) guide.
