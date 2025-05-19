@@ -50,6 +50,7 @@
         "pages": [
           "build-with-ai",
           "error-handling",
+          "proxy",
           "support"
         ]
       }
