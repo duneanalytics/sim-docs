@@ -51,6 +51,7 @@
           "build-with-ai",
           "error-handling",
           "proxy",
+          "hooks",
           "support"
         ]
       }
