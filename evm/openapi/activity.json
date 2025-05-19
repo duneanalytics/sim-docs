@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - Activity Endpoint",
+    "title": "Sim API - Activity Endpoint",
     "description": "This API provides realtime on-chain activity for addresses across different EVM chains.",
     "license": {
       "name": ""

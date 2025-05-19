@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - Collectibles Endpoint",
+    "title": "Sim API - Collectibles Endpoint",
     "description": "This API provides information about NFT collectibles for addresses across different EVM chains.",
     "license": {
       "name": ""

@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - SVM Balances",
+    "title": "Sim API - SVM Balances",
     "description": "Get token balances for a given SVM address",
     "license": {
       "name": ""

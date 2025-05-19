@@ -1,6 +1,6 @@
 ---
 title: "Build a Realtime Wallet"
-description: "Create a multichain wallet that displays realtime balances, transactions, and NFTs using sim APIs and Express.js"
+description: "Create a multichain wallet that displays realtime balances, transactions, and NFTs using Sim APIs and Express.js"
 ---
 
 <Frame caption="The final UI we'll build together in this guide">
@@ -11,7 +11,7 @@ description: "Create a multichain wallet that displays realtime balances, transa
   />
 </Frame>
 
-This is the first guide in our series on building a realtime, multichain wallet using Dune's sim APIs.
+This is the first guide in our series on building a realtime, multichain wallet using Sim APIs.
 In this one, we will lay the foundation for our wallet.
 You will set up a Node project with Express.js, fetch and display token balances from 60+ EVM chains using the Balances API, and calculate the wallet's total portfolio value in USD.
 
@@ -20,7 +20,7 @@ You will set up a Node project with Express.js, fetch and display token balances
 Before we begin, make sure you have:
 
 - Node.js >= 18.0.0
-- A sim API key
+- A Sim API key
 
 <Card title="Get your API Key" icon="lock" horizontal href="/#authentication">
   Learn how to obtain your API key to properly authenticate requests.
@@ -42,7 +42,7 @@ In this first guide, we will focus on implementing the first two: **Token Balanc
 ## Project Setup
 
 Let's start by scaffolding our project.
-This initial setup will provide a basic Express.js server and frontend templates, allowing us to focus on integrating Dune's sim APIs.
+This initial setup will provide a basic Express.js server and frontend templates, allowing us to focus on integrating Sim APIs.
 
 <Steps>
   <Step title="Create Your Project Structure">
@@ -81,10 +81,10 @@ This initial setup will provide a basic Express.js server and frontend templates
     touch .env
     ```
 
-    Open the `.env` file in your code editor and add your sim API key:
+    Open the `.env` file in your code editor and add your Sim API key:
 
     ```plaintext .env
-    # Your sim API key (required)
+    # Your Sim API key (required)
     SIM_API_KEY=your_api_key_here
     ```
 
@@ -175,9 +175,9 @@ This initial setup will provide a basic Express.js server and frontend templates
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="description" content="sim APIs Wallet UI - A simple and elegant wallet interface for viewing crypto assets and transactions">
+        <meta name="description" content="Sim APIs Wallet UI - A simple and elegant wallet interface for viewing crypto assets and transactions">
         <meta name="theme-color" content="#0b0e1f">
-        <title>sim APIs Wallet UI</title>
+        <title>Sim APIs Wallet UI</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -274,7 +274,7 @@ This initial setup will provide a basic Express.js server and frontend templates
                  window.location.search = `?walletAddress=${newWalletAddress.trim()}&tab=${currentTab}`;
             } else if (newWalletAddress !== null) { // Empty input, clear address
                  const currentTab = new URLSearchParams(window.location.search).get('tab') || 'tokens';
-                 window.location.search = `?tab=${currentTab}`; // Or simply window.location.pathname
+                 window.location.search = `?tab=${currentTab}`;
             }
         });
 
@@ -670,7 +670,7 @@ Visit `http://localhost:3001` to see the blank wallet.
   Check your terminal for any error messages from `server.js`.
 </Warning>
 
-Now, let's integrate the sim API to fetch real data.
+Now, let's integrate the Sim API to fetch real data.
 
 ## Fetch and Show Token Balances
 
@@ -905,5 +905,5 @@ You should now see the total wallet value at the top of the UI accurately reflec
 
 ## Conclusion
 
-You have successfully set up the basic structure of your multichain wallet and integrated sim APIs `Balances API` endpoint to display realtime token balances and total portfolio value.
+You have successfully set up the basic structure of your multichain wallet and integrated Sim APIs `Balances API` endpoint to display realtime token balances and total portfolio value.
 In the next guide, [Add Account Activity](/add-account-activity), we will enhance this wallet by adding a transaction history feature in the UI using the [Activity API](/evm/activity).

@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - Balances Endpoint",
+    "title": "Sim API - Balances Endpoint",
     "description": "This API provides realtime token balances for addresses across different EVM chains.",
     "license": {
       "name": ""

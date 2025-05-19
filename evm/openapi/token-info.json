@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - Token Info Endpoint",
+    "title": "Sim API - Token Info Endpoint",
     "description": "This API provides information about tokens across different EVM chains.",
     "license": {
       "name": ""

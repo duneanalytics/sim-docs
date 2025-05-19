@@ -6,7 +6,7 @@ openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{uri}"
 ---
 
 <Note>
-  This endpoint is currently in beta and requires authentication using a normal sim API key. The `chain_id` parameter is mandatory.
+  This endpoint is currently in beta and requires authentication using a normal Sim API key. The `chain_id` parameter is mandatory.
 </Note>
 
 The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains. The API returns the token address, chain ID, and an array of holders with their respective balances.
@@ -59,4 +59,4 @@ The Token Holders API supports several query parameters:
 
 - `limit`: Maximum number of holders to return (for pagination)
 - `offset`: Pagination offset value from a previous response's `next_offset`
-- `api_key`: Your sim API key for authentication
+- `api_key`: Your Sim API key for authentication

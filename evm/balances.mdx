@@ -20,7 +20,7 @@ Data is typically available within 100 ms since a block was propagated to nodes.
 To fetch balances for all supported chains please pass the `chain_ids=all` parameter. See [EVM Supported Chains](/evm/supported-chains) for more details.
 
 <Note>
-  - These endpoints are authenticated with a normal sim API key.
+  - These endpoints are authenticated with a normal Sim API key.
   - Specify `?filters=erc20` or `?filters=native` to get only erc20 tokens or native assets, respectively
   - Specify `?exclude_spam_tokens` to filter out tokens Dune believes to be spam.
   - Specify `?chain_ids=all` to fetch balances for all supported chains.
@@ -48,7 +48,7 @@ To fetch balances for all supported chains please pass the `chain_ids=all` param
 
 # Token prices
 
-sim looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
+Sim looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
 
 # Spam tokens
 

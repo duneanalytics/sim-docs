@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - EVM Transactions",
+    "title": "Sim API - EVM Transactions",
     "description": "Retrieve granular transaction details including block information, gas data, transaction types, and raw transaction values.",
     "license": {
       "name": ""

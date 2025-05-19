@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - Supported Chains Endpoint",
+    "title": "Sim API - Supported Chains Endpoint",
     "description": "This API provides information about supported chains for various EVM endpoints.",
     "license": {
       "name": ""

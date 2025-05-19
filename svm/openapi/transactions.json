@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "sim API - SVM Transactions",
+    "title": "Sim API - SVM Transactions",
     "description": "Get transactions for a given SVM address",
     "license": {
       "name": ""
