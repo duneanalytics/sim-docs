@@ -9,6 +9,8 @@ openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{uri}"
   This endpoint is currently in beta and requires authentication using a normal Sim API key. The `chain_id` parameter is mandatory.
 </Note>
 
+![Type=holders Sv](/images/type=holders.svg)
+
 The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains. The API returns the token address, chain ID, and an array of holders with their respective balances.
 
 To fetch token holders for a specific chain, provide the `chain_id` in the URL path. See [EVM Supported Chains](/evm/supported-chains) for more details on supported chains.
@@ -35,13 +37,13 @@ To fetch token holders for a specific chain, provide the `chain_id` in the URL p
 
 ## Response Fields
 
-| Field                   | Description                                      | Type      |
-| ----------------------- | ------------------------------------------------ | --------- |
-| token_address           | Contract address of the token                    | string    |
-| chain_id                | The ID of the blockchain                         | integer   |
-| holders                 | Array of holder objects                          | array     |
-| holders.wallet_address  | Wallet address of the token holder               | string    |
-| holders.balance         | Amount of tokens held by the address (in WEI)    | string    |
+| Field                  | Description                                   | Type    |
+| ---------------------- | --------------------------------------------- | ------- |
+| token_address          | Contract address of the token                 | string  |
+| chain_id               | The ID of the blockchain                      | integer |
+| holders                | Array of holder objects                       | array   |
+| holders.wallet_address | Wallet address of the token holder            | string  |
+| holders.balance        | Amount of tokens held by the address (in WEI) | string  |
 
 # Pagination
 
