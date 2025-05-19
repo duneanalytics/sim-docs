@@ -1,27 +1,44 @@
-export const Chains = ({ url }) => {
-  if (typeof document === "undefined") {
+export const SupportedChains = ({ endpoint }) => {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
+      method: "GET",
+      headers: {
+        "X-Sim-Api-Key": "sim_DEL8gWK09imHFMUkbrXCy4j9m6L3TsZL",
+      },
+    })
+      .then((response) => response.json())
+      .then(setData);
+  }, []);
+
+  if (data === null) {
     return null;
   }
 
-  setTimeout(async () => {
-    const response = await fetch(
-      url,
-      {
-        method: "GET",
-        headers: {
-          "X-Sim-Api-Key": "IyWrONau4kh1XUSASWgTalruhwvY0z2L"
-        },
-      }
-    );
+  const chains =
+    endpoint !== undefined
+      ? data.chains.filter((chain) => chain[endpoint]?.supported)
+      : data.chains;
 
-    const data = await response.json();
-    const chains = data.chains.map((chain) => `<tr><td>${chain.name}</td><td>${chain.id}</td></tr>`).join("");
-    const table = `<table><thead><tr><th>Name</th><th>ID</th></tr></thead><tbody>${chains}</tbody></table>`;
-    document.getElementById("client-component").innerHTML = table;
-    console.log("What's the table?", table);
-    console.log("What's the data?", data);
-    
-  }, 1);
-
-  return <div id="client-component"></div>
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>ID</th>
+          <th>Tags</th>
+        </tr>
+      </thead>
+      <tbody>
+        {chains.map((chain) => (
+          <tr key={chain.name}>
+            <td>{chain.name}</td>
+            <td>{chain.chain_id}</td>
+            <td>{chain.tags.join(", ")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 };
