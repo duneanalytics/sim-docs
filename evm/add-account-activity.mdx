@@ -5,18 +5,24 @@ description: "Expand your realtime crypto wallet by integrating a dynamic feed o
 ---
 
 <Frame caption="Show all onchain activity for a wallet address in the 'Activity' tab of our app.">
-    <img src="/images/wallet-ui/wallet-activity-final.png" className="mx-auto" style={{ width:"100%" }} />
+  <img
+    src="/Activity.webp"
+    className="mx-auto"
+    style={{ width:"100%" }}
+    alt=""
+    title=""
+  />
 </Frame>
 
 Now that you have a wallet capable of showing realtime token balances and total portfolio value, let's enhance it by adding an _Activity_ tab.
 
 A key feature for any wallet is the ability to view past transaction activity.
 This includes native currency transfers, ERC20 token movements, NFT transfers, and decoded interactions with smart contracts.
-The [Activity API](/evm/activity) provides a comprehensive, realtime feed of this onchain activity, letting you implement this functionality with a single API request across 60+ EVM chains.
+The [Activity API](/evm/activity) provides a comprehensive, realtime feed of this onchain activity, letting you implement this functionality with a single API request across 60\+ EVM chains.
 
 <Note>
-This guide assumes you've completed the first guide, [Build a Realtime Wallet](/evm/build-a-realtime-wallet).
-Your project should already be set up to fetch and display token balances.
+  This guide assumes you've completed the first guide, [Build a Realtime Wallet](/evm/build-a-realtime-wallet).
+  Your project should already be set up to fetch and display token balances.
 </Note>
 
 ## Fetch Wallet Activity
@@ -60,7 +66,7 @@ The [Activity API](/evm/activity) conveniently packages the transaction data wit
 The array provides rich context for each event, such as `block_time`, `transaction_hash`, `from` and `to` addresses, `value`, `value_usd`, and more.
 
 <Note>
-The [Activity API](/evm/activity) supports pagination via `offset` and `limit` query parameters. For a production wallet, you might implement infinite scrolling or "Load More" buttons to fetch subsequent pages of activity.
+  The [Activity API](/evm/activity) supports pagination via `offset` and `limit` query parameters. For a production wallet, you might implement infinite scrolling or "Load More" buttons to fetch subsequent pages of activity.
 </Note>
 
 ## Add Activity into the Server Route
@@ -121,7 +127,7 @@ This makes the complete dataset available to our `wallet.ejs` template, enabling
 
 The final step is to update our `views/wallet.ejs` template to render the fetched activity data within the "Activity" tab.
 
-CTRL+F for `id="activity"` and locate the section for the _Activity_ tab.
+CTRL\+F for `id="activity"` and locate the section for the _Activity_ tab.
 It currently contains a placeholder paragraph.
 Replace that entire `div` with the following EJS code:
 
@@ -229,19 +235,19 @@ Replace that entire `div` with the following EJS code:
 This EJS transforms the raw data from the Activity API into an intuitive and visual transaction history.
 Here's a breakdown of how it processes each activity item:
 
-* A **list entry** is generated for each transaction.
-* An **icon** visually indicates the transaction's nature: receive (↓), send (↑), or contract call (⇆).
-* A **descriptive title** is dynamically constructed using the `activity.type` (and `activity.function.name` for contract calls).
-* The transaction's **timestamp** (`block_time`) is converted to a readable local date/time string.
-* The **chain ID** (`chain_id`) is displayed, providing important multichain context.
+- A **list entry** is generated for each transaction.
+- An **icon** visually indicates the transaction's nature: receive (↓), send (↑), or contract call (⇆).
+- A **descriptive title** is dynamically constructed using the `activity.type` (and `activity.function.name` for contract calls).
+- The transaction's **timestamp** (`block_time`) is converted to a readable local date/time string.
+- The **chain ID** (`chain_id`) is displayed, providing important multichain context.
 
 Beyond these descriptive elements, the template also focuses on presenting the value and financial aspects of each transaction:
 
-* The **transaction amount** (raw `value`) is converted into a user-friendly decimal format (e.g., "1.5 ETH"). This conversion utilizes the `decimals` property from `token_metadata`.
-* For **NFTs**, if a standard decimal value isn't applicable, the template displays the `token_id`.
-* The **USD value** (`value_usd`), if provided by the API, is formatted to two decimal places and shown, giving a sense of the transaction's monetary worth.
+- The **transaction amount** (raw `value`) is converted into a user-friendly decimal format (e.g., "1.5 ETH"). This conversion utilizes the `decimals` property from `token_metadata`.
+- For **NFTs**, if a standard decimal value isn't applicable, the template displays the `token_id`.
+- The **USD value** (`value_usd`), if provided by the API, is formatted to two decimal places and shown, giving a sense of the transaction's monetary worth.
 
-***
+---
 
 Restart your server by running `node server.js` and refresh the app in the browser.
 When you click on the _Activity_ tab, you should now see a list of the latest transactions, similar to the screenshot at the beginning of this guide.
