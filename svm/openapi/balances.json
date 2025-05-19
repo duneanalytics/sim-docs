@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/svm/balances/{uri}": {
+    "/beta/svm/balances/{uri}": {
       "get": {
         "tags": [
           "svm-balances"
@@ -23,6 +23,15 @@
         "description": "Get token balances for a given SVM address",
         "operationId": "getSvmBalances",
         "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "API key to access the service",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "uri",
             "in": "path",
@@ -56,15 +65,6 @@
             "in": "query",
             "description": "Pagination offset from previous response",
             "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "API key to access the service",
-            "required": true,
             "schema": {
               "type": "string"
             }
@@ -241,20 +241,8 @@
           }
         }
       }
-    },
-    "securitySchemes": {
-      "ApiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-Sim-Api-Key"
-      }
     }
   },
-  "security": [
-    {
-      "ApiKeyAuth": []
-    }
-  ],
   "tags": [
     {
       "name": "svm-balances",
