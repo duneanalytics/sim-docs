@@ -5,6 +5,8 @@ description: "Get a list of chains supported by the Balances API endpoint."
 openapi: "/evm/openapi/supported-chains.json"
 ---
 
+import { Chains } from "/snippets/supported-chains.mdx";
+
 <Frame>
   <img
     src="/images/evm/Chains.svg"
@@ -19,9 +21,7 @@ The chains endpoint lists the supported EVM blockchains for the Token Balances e
 
 ## Chain List
 
-import { Chains } from "/snippets/echo/chains.mdx";
-
-<Chains url="https://api.sim.dune.com/api/echo/v1/balances/evm/chains" />
+<Chains url="https://api.sim.dune.com/v1/evm/supported-chains/balances" />
 
 ## Column Descriptions
 
