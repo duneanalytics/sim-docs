@@ -1,17 +1,42 @@
 ---
 title: "Supported Chains"
 sidebarTitle: "Supported Chains"
-description: "Get a list of chains supported by the Balances API endpoint."
-openapi: "/evm/openapi/supported-chains.json"
+description: "Explore chains supported by Sim's EVM API endpoints."
+openapi: "evm/openapi/supported-chains.json"
 ---
 
-![Logos Sv](/images/logos.svg)
+import { SupportedChains } from '/snippets/supported-chains.mdx';
 
-## Column Descriptions
+<Frame>
+  <img
+    src="/images/evm/Chains.svg"
+    alt="Chains"
+    title="Chains"
+    className="mx-auto"
+    style={{ width:"100%" }}
+  />
+</Frame>
 
-| Column           | Description                                        | Type     |
-| ---------------- | -------------------------------------------------- | -------- |
-| name             | Canonical blockchain name                          | string   |
-| id               | Chainid of blockchain                              | integer  |
-| supported_assets | The supported asset types                          | []string |
-| default          | Whether the chain is in the list of default chains | bool     |
+Chain support varies by API endpoint.
+Use the dropdown sections below to check which chains are available for each API:
+
+<AccordionGroup>
+  <Accordion title="Balances API">
+    <SupportedChains endpoint="balances" />
+  </Accordion>
+  <Accordion title="Activity API">
+    <SupportedChains endpoint="activity" />
+  </Accordion>
+  <Accordion title="Collectibles API">
+    <SupportedChains endpoint="collectibles" />
+  </Accordion>
+  <Accordion title="Transactions API">
+    <SupportedChains endpoint="transactions" />
+  </Accordion>
+  <Accordion title="Token Info API">
+    <SupportedChains endpoint="token_info" />
+  </Accordion>
+  <Accordion title="Token Holders API">
+    <SupportedChains endpoint="token_holders" />
+  </Accordion>
+</AccordionGroup>

@@ -5,21 +5,31 @@ description: "View chronologically ordered transactions including native transfe
 openapi: "/evm/openapi/activity.json GET /v1/evm/activity/{uri}"
 ---
 
-![Type=activity Sv](/images/type=activity.svg)
+import { SupportedChains } from '/snippets/supported-chains.mdx';
 
-The Activity endpoint provides a real-time feed of on-chain activity for any EVM address. Activity is returned in chronological order (newest first) and includes:
+<Frame>
+  <img
+    src="/images/evm/activity.svg"
+    alt="Activity"
+    title="Activity"
+    className="mx-auto"
+    style={{ width:"100%" }}
+  />
+</Frame>
+
+The Activity API provides a realtime feed of onchain activity for any EVM address.
+The newest activity is returned first and includes:
 
 - Native token transfers
 - ERC20 token transfers with metadata (symbol, decimals)
 - ERC721 (NFT) transfers with token IDs
 - Contract interactions with decoded function calls
 
-<Note>
-  - These endpoints are authenticated with a normal Sim API key.
-  - Specify `?exclude_spam_tokens` to filter out activities related to spam tokens.
-</Note>
+<Accordion title="Supported Chains">
+  <SupportedChains endpoint="activity" />
+</Accordion>
 
-# Spam tokens
+## Spam Tokens
 
 The Activity API supports filtering out activities related to spam tokens using the `?exclude_spam_tokens` parameter. When specified, this parameter will exclude transactions and transfers involving tokens that meet spam criteria, providing a cleaner activity feed.
 
