@@ -7,28 +7,29 @@ icon: "wallet"
 
 <Frame caption="The final UI we'll build together in this guide">
   <img
-    src="/images/wallet-ui/wallet-ui.png"
+    src="/Tokens.webp"
     className="mx-auto"
     style={{ width:"100%" }}
+    alt=""
+    title=""
   />
 </Frame>
 
 In this guide, we'll build a simple multichain wallet.
-It'll be a Node.js app that displays token balances, transaction history, and NFT collections across 60+ EVM chains.
+It'll be a Node.js app that displays token balances, transaction history, and NFT collections across 60\+ EVM chains.
 By the end, you'll have a fully functional wallet that you can extend for your own projects.
 
 This is the first guide in our series on building a realtime, multichain wallet using Dune's sim APIs.
 In this one, we will lay the foundation for our wallet.
-You will set up a Node project with Express.js, fetch and display token balances from 60+ EVM chains using the Balances API, and calculate the wallet's total portfolio value in USD.
+You will set up a Node project with Express.js, fetch and display token balances from 60\+ EVM chains using the Balances API, and calculate the wallet's total portfolio value in USD.
 
 By the end of this guide, you will have a wallet displaying token balances and their aggregated USD value.
-
 
 ## Prerequisites
 
 Before we begin, make sure you have:
 
-- Node.js >= 18.0.0 or higher.
+- Node.js \>= 18.0.0 or higher.
 - A Dune API key
 
 <Card title="Get your API Key" icon="lock" horizontal href="/#authentication">
@@ -47,7 +48,11 @@ By the end of this series, our wallet will have four main features:
 In this first guide, we will focus on implementing the first two: **Token Balances** and **Total Portfolio Value**.
 
 <Frame caption="The Token Balances tab and Total Portfolio Value we'll build in this guide.">
-  <img src="https://mintlify.s3.us-west-1.amazonaws.com/sim-dune/images/wallet-ui/balances-with-logos.png" className="mx-auto" style={{ width:"100%" }} />
+  <img
+    src="https://mintlify.s3.us-west-1.amazonaws.com/sim-dune/images/wallet-ui/balances-with-logos.png"
+    className="mx-auto"
+    style={{ width:"100%" }}
+  />
 </Frame>
 
 ## Project Setup
@@ -80,11 +85,11 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     ```
 
     We are using three packages for our wallet:
-    *   **Express.js**: A popular Node.js web framework for creating our server.
-    *   **EJS**: A simple templating engine that lets us generate dynamic HTML.
-    *   **dotenv**: A package to load environment variables from a `.env` file.
-  </Step>
 
+    - **Express.js**: A popular Node.js web framework for creating our server.
+    - **EJS**: A simple templating engine that lets us generate dynamic HTML.
+    - **dotenv**: A package to load environment variables from a `.env` file.
+  </Step>
   <Step title="Configure Environment Variables">
     Create a new `.env` file in your project root:
 
@@ -103,9 +108,9 @@ This initial setup will provide a basic Express.js server and HTML templates, al
       Never commit your `.env` file to version control. If you are using Git, add `.env` to your `.gitignore` file.
     </Warning>
   </Step>
-
   <Step title="Add Starter Code">
     Create the necessary directories for views and public assets:
+
     ```bash
     mkdir views
     mkdir public
@@ -127,40 +132,40 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     import dotenv from 'dotenv';
     import path from 'path';
     import { fileURLToPath } from 'url';
-
+    
     // Load environment variables
     dotenv.config();
     const DUNE_API_KEY = process.env.DUNE_API_KEY;
-
+    
     if (!DUNE_API_KEY) {
         console.error("FATAL ERROR: DUNE_API_KEY is not set in your environment variables.");
         process.exit(1);
     }
-
+    
     // Set up __dirname for ES modules
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-
+    
     // Initialize Express
     const app = express();
-
+    
     // Configure Express settings
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));
     app.use(express.static(path.join(__dirname, 'public')));
-
+    
     // Placeholder data until API integration
     let mockTokens = [];
     let mockActivities = []; // For Guide 2
     let mockCollectibles = []; // For Guide 3
-
+    
     // Add our home route
     app.get('/', async (req, res) => {
         const { 
             walletAddress = '',
             tab = 'tokens' // Default to tokens tab
         } = req.query;
-
+    
         // In future steps, we will replace mockData with API calls
         res.render('wallet', {
             walletAddress: walletAddress,
@@ -172,7 +177,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
             errorMessage: null
         });
     });
-
+    
     // Start the server
     app.listen(3001, () => {
         console.log(`Server running at http://localhost:3001`);
@@ -202,18 +207,18 @@ This initial setup will provide a basic Express.js server and HTML templates, al
             <div class="header-title">Wallet</div>
             <div class="settings-icon"></div>
         </header>
-
+    
         <section class="total-balance-section">
             <p class="total-balance-amount"><%= totalWalletUSDValue %></p>
             <p class="total-balance-label js-wallet-address-display"><%= walletAddress || 'Enter wallet address...' %></p>
         </section>
-
+    
         <nav class="tabs">
             <button class="tab-button <%= currentTab === 'tokens' ? 'active' : '' %>" data-tab="tokens">Tokens</button>
             <button class="tab-button <%= currentTab === 'activity' ? 'active' : '' %>" data-tab="activity">Activity</button>
             <button class="tab-button <%= currentTab === 'collectibles' ? 'active' : '' %>" data-tab="collectibles">Collectibles</button>
         </nav>
-
+    
         <main class="tab-content">
             <!-- Tokens Tab Pane -->
             <div id="tokens" class="tab-pane <%= currentTab === 'tokens' ? 'active' : '' %>">
@@ -245,24 +250,24 @@ This initial setup will provide a basic Express.js server and HTML templates, al
                     <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address above to see token balances.</p>
                 <% } %>
             </div>
-
+    
            <!-- Activity Tab Pane (for Guide 2) -->
             <div id="activity" class="tab-pane <%= currentTab === 'activity' ? 'active' : '' %>">
                 <p style="font-family: var(--font-primary); text-align: center; padding-top: 30px; color: var(--color-text-muted);">Activity feature will be added in the next guide.</p>
             </div>
-
+    
             <!-- Collectibles Tab Pane (for Guide 3) -->
             <div id="collectibles" class="tab-pane <%= currentTab === 'collectibles' ? 'active' : '' %>">
                 <p style="font-family: var(--font-primary); text-align: center; padding-top: 30px; color: var(--color-text-muted);">Collectibles feature will be added in a future guide.</p>
             </div>
         </main>
     </div>
-
+    
     <script>
         const tabButtons = document.querySelectorAll('.tab-button');
         const tabPanes = document.querySelectorAll('.tab-pane');
         const walletAddressDisplay = document.querySelector(".js-wallet-address-display");
-
+    
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const tab = button.dataset.tab;
@@ -278,7 +283,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
                 }
             });
         });
-
+    
         walletAddressDisplay.addEventListener('click', () => {
             let newWalletAddress = prompt("Enter wallet address:", new URLSearchParams(window.location.search).get('walletAddress') || '');
             if (newWalletAddress !== null && newWalletAddress.trim() !== "") {
@@ -289,7 +294,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
                  window.location.search = `?tab=${currentTab}`; // Or simply window.location.pathname
             }
         });
-
+    
         // Set active tab based on URL param on page load
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
@@ -297,10 +302,10 @@ This initial setup will provide a basic Express.js server and HTML templates, al
             
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabPanes.forEach(pane => pane.classList.remove('active'));
-
+    
             const activeButton = document.querySelector(`.tab-button[data-tab="${tab}"]`);
             const activePane = document.getElementById(tab);
-
+    
             if (activeButton) activeButton.classList.add('active');
             if (activePane) activePane.classList.add('active');
         });
@@ -315,7 +320,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     :root {
     --font-primary: 'IBM Plex Sans', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
-
+    
     --color-bg-deep: #0b0e1f;
     --color-bg-container: #141829;
     --color-border-primary: #2c3040;
@@ -329,7 +334,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     --color-accent-red: #ff7875;
     --color-placeholder-bg: #3a3f58;
     }
-
+    
     body {
     font-family: var(--font-primary);
     background-color: var(--color-bg-deep);
@@ -343,7 +348,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     padding-top: 20px;
     padding-bottom: 20px;
     }
-
+    
     .mobile-container {
     width: 100%;
     max-width: 420px;
@@ -355,7 +360,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     flex-direction: column;
     overflow: hidden;
     }
-
+    
     /* Header Styles */
     .app-header {
     display: flex;
@@ -365,21 +370,21 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
     }
-
+    
     .profile-pic-placeholder {
     width: 36px;
     height: 36px;
     background-color: var(--color-placeholder-bg);
     border-radius: 50%;
     }
-
+    
     .header-title {
     font-family: var(--font-primary);
     font-size: 1.4em;
     font-weight: 600; /* IBM Plex Sans SemiBold */
     color: var(--color-text-primary);
     }
-
+    
     .settings-icon {
     width: 22px;
     height: 22px;
@@ -389,7 +394,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     cursor: pointer;
     opacity: 0.8;
     }
-
+    
     /* Total Balance Section */
     .total-balance-section {
     padding: 25px 20px;
@@ -397,7 +402,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
     }
-
+    
     .total-balance-amount {
     font-family: var(--font-mono); /* Mono for large number */
     font-size: 2.3em;
@@ -415,14 +420,14 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     .total-balance-label:hover {
         color: var(--color-text-primary);
     }
-
+    
     /* Tabs Section */
     .tabs {
     display: flex;
     border-bottom: 1px solid var(--color-border-primary);
     flex-shrink: 0;
     }
-
+    
     .tab-button {
     font-family: var(--font-primary);
     flex-grow: 1;
@@ -444,7 +449,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     color: var(--color-text-primary);
     border-bottom: 3px solid var(--color-accent-purple);
     }
-
+    
     .tab-content {
     padding: 0px 20px 20px 20px;
     flex-grow: 1;
@@ -452,7 +457,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
-
+    
     /* Tokens Tab & Activity Tab Styles */
     .list-item {
     display: flex;
@@ -461,7 +466,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     border-bottom: 1px solid var(--color-border-secondary);
     }
     .list-item:last-child { border-bottom: none; }
-
+    
     .item-icon-placeholder {
     width: 38px;
     height: 38px;
@@ -478,7 +483,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     flex-shrink: 0;
     overflow: hidden; /* Prevents text overflow if symbol is too long */
     }
-
+    
     .item-info {
     flex-grow: 1;
     min-width: 0; /* Prevents text overflow issues in flex children */
@@ -505,7 +510,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     .item-sub-info .mono { /* Span class for monospaced parts within sub-info */
     font-family: var(--font-mono);
     }
-
+    
     .item-value-right {
     text-align: right;
     flex-shrink: 0;
@@ -518,7 +523,7 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     margin: 0 0 3px 0;
     color: var(--color-text-primary);
     }
-
+    
     /* Activity Tab Specifics */
     .activity-direction { /* "Received ETH", "Sent USDC" */
     font-family: var(--font-primary);
@@ -528,8 +533,8 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     }
     .activity-direction.sent { color: var(--color-accent-red); }
     .activity-direction.receive { color: var(--color-accent-green); } /* Ensure class name consistency with JS */
-
-
+    
+    
     .activity-address, .activity-timestamp {
     font-family: var(--font-primary); /* Sans for "From:", "To:" */
     font-size: 0.8em;
@@ -548,7 +553,6 @@ This initial setup will provide a basic Express.js server and HTML templates, al
     .activity-amount-right.receive { color: var(--color-accent-green); }
     ```
   </Step>
-
   <Step title="Verify Project Structure">
     Run `ls` in your terminal. Your project directory `wallet-ui/` should now contain:
 
@@ -573,7 +577,7 @@ Now, let's integrate the sim API to fetch real data.
 
 ### Fetching and Displaying Token Balances
 
-We will use the [Balances API](/evm/balances) to get realtime token balances for a given wallet address. This endpoint provides comprehensive details about native and ERC20 tokens, including metadata and USD values across more than 60+ EVM chains.
+We will use the [Balances API](/evm/balances) to get realtime token balances for a given wallet address. This endpoint provides comprehensive details about native and ERC20 tokens, including metadata and USD values across more than 60\+ EVM chains.
 
 First, let's create an asynchronous function in `server.js` to fetch these balances. Add this function before your `app.get('/')` route handler:
 
@@ -656,9 +660,9 @@ app.get('/', async (req, res) => {
 
 We've updated the route to:
 
-1.  Call `getWalletBalances` if a `walletAddress` is provided.
-2.  Calculate `totalWalletUSDValue` by summing the `value_usd` of each token. The `balances` API provides this pre-calculated value for each asset.
-3.  Pass the `tokens` and formatted `totalWalletUSDValue` to the `wallet.ejs` template.
+1. Call `getWalletBalances` if a `walletAddress` is provided.
+2. Calculate `totalWalletUSDValue` by summing the `value_usd` of each token. The `balances` API provides this pre-calculated value for each asset.
+3. Pass the `tokens` and formatted `totalWalletUSDValue` to the `wallet.ejs` template.
 
 The `views/wallet.ejs` file you created earlier is already set up to display these tokens and the total value. Restart your server (`node server.js`) and refresh your browser, providing a `walletAddress` in the URL.
 For example: `http://localhost:3001/?walletAddress=0xd8da6bf26964af9d7eed9e03e53415d37aa96045`
@@ -666,7 +670,11 @@ For example: `http://localhost:3001/?walletAddress=0xd8da6bf26964af9d7eed9e03e53
 You should now see the wallet populated with token balances, logos, and the calculated total portfolio value for the specified address.
 
 <Frame caption="Wallet displaying token balances with logos and total USD value.">
-  <img src="https://mintlify.s3.us-west-1.amazonaws.com/sim-dune/images/wallet-ui/balances-with-logos.png" className="mx-auto" style={{ width:"100%" }} />
+  <img
+    src="https://mintlify.s3.us-west-1.amazonaws.com/sim-dune/images/wallet-ui/balances-with-logos.png"
+    className="mx-auto"
+    style={{ width:"100%" }}
+  />
 </Frame>
 
 <Warning>
@@ -675,10 +683,11 @@ You should now see the wallet populated with token balances, logos, and the calc
 
 ### Conclusion
 
-Congratulations! You have successfully set up the basic structure of your multichain wallet and integrated Dune's sim APIs `balances` endpoint to display real-time token balances and total portfolio value. You learned how to:
-*   Set up a Node.js project with Express.js and EJS.
-*   Fetch token balances using the `/echo/v1/balances/evm/{address}` endpoint.
-*   Use query parameters like `metadata` and `exclude_spam_tokens` to refine API results.
-*   Calculate and display the total USD value of the wallet's portfolio.
+Congratulations\! You have successfully set up the basic structure of your multichain wallet and integrated Dune's sim APIs `balances` endpoint to display real-time token balances and total portfolio value. You learned how to:
+
+- Set up a Node.js project with Express.js and EJS.
+- Fetch token balances using the `/echo/v1/balances/evm/{address}` endpoint.
+- Use query parameters like `metadata` and `exclude_spam_tokens` to refine API results.
+- Calculate and display the total USD value of the wallet's portfolio.
 
 In the next guide, [Guide 2: Tracking Wallet Activity](./build-a-realtime-wallet-p2-activity), we will enhance this wallet by adding a transaction history feature using the `activity` API endpoint.

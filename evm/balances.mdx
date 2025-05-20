@@ -35,8 +35,9 @@ Sim looks up prices onchain. We use the most liquid onchain pair to determine a 
 
 ## Spam Tokens
 
-By default the API filters out any token with `symbol = ''`, `symbol.length > 15`, `name = ''` or `decimals = 0`.
-When the `?exclude_spam_tokens` is specified we use [this Dune query](https://dune.com/queries/3804603) to determine if something is spam. Additionally, we remove any token with less than \$100 of onchain liquidity.
+The Balances API provides the `?exclude_spam_tokens` query parameter. You can use it filter out potential spam tokens based on various criteria, including a minimum liquidity threshold of $100.
+
+We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our spam filtering approach, see our [Spam Token Filtering](/spam-filtering) guide.
 
 ## Pagination
 

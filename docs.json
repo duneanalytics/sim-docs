@@ -49,6 +49,7 @@
         "group": "Resources",
         "pages": [
           "build-with-ai",
+          "spam-filtering",
           "error-handling",
           "proxy",
           "hooks",

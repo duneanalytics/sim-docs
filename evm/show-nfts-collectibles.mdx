@@ -1,11 +1,11 @@
 ---
 title: "Show NFT Collectibles in Your Wallet"
-sidebarTitle: "Show NFTs/Collectibles"
+sidebarTitle: "3. Show NFTs/Collectibles"
 description: "Complete your realtime crypto wallet by adding a visual display of a user's NFT collection."
 ---
 
 <Frame caption="The user's full NFT collection, with artwork and details, displayed in the 'Collectibles' tab.">
-    <img src="/images/wallet-ui/wallet-collections-final.png" />
+  ![](/Collectibles.webp)
 </Frame>
 
 Your wallet now displays token balances, calculates total portfolio value, and tracks detailed account activity.
@@ -13,10 +13,10 @@ To give users a holistic view of their onchain assets, the final piece is to **s
 In this third and final guide of our wallet series, we will focus on implementing the _Collectibles_ tab.
 
 <Note>
-This guide assumes you have completed the previous guides:
+  This guide assumes you have completed the previous guides:
 
-1.  [Build a Realtime Wallet](/evm/build-a-realtime-wallet)
-2.  [Add Account Activity](/evm/add-account-activity)
+  1. [Build a Realtime Wallet](/evm/build-a-realtime-wallet)
+  2. [Add Account Activity](/evm/add-account-activity)
 </Note>
 
 ## Fetch NFT Collectibles
@@ -56,8 +56,8 @@ The function sends an authorized GET request with your `SIM_API_KEY` and receive
 The NFT data is extracted from the `collectibles` array within this response.
 
 <Note>
-The [Collectibles API](/evm/collectibles) supports pagination using `limit` and `offset` query parameters.
-For wallets with many NFTs, you can implement logic to fetch subsequent pages using the `next_offset` value returned by the API to provide a complete view of the user's collection.
+  The [Collectibles API](/evm/collectibles) supports pagination using `limit` and `offset` query parameters.
+  For wallets with many NFTs, you can implement logic to fetch subsequent pages using the `next_offset` value returned by the API to provide a complete view of the user's collection.
 </Note>
 
 ## Add Collectibles into the Server Route
@@ -170,7 +170,7 @@ When you click on the "Collectibles" tab, and if the wallet has NFTs, you should
 
 ## Conclusion
 
-That concludes this three-part series!
+That concludes this three-part series\!
 With just three API requests - [Balances](/evm/balances), [Activity](/evm/activity), and [Collectibles](/evm/collectibles) - you've built a fully functional, multichain wallet that displays token balances, calculates portfolio value, tracks detailed transaction activity, and showcases NFT collections.
 
 **This project serves as a solid foundation for a wallet**.
