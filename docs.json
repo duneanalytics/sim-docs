@@ -104,8 +104,8 @@
     }
   ],
   "logo": {
-    "light": "/logo/sim-logo-light.png",
-    "dark": "/logo/sim-logo-dark.png"
+    "light": "/logo/sim-logo-light.svg",
+    "dark": "/logo/sim-logo-dark.svg"
   },
   "navbar": {
     "links": [],
