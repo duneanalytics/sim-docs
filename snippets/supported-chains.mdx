@@ -20,22 +20,24 @@ export const SupportedChains = ({ endpoint }) => {
     endpoint !== undefined
       ? data.chains.filter((chain) => chain[endpoint]?.supported)
       : data.chains;
-
+  
+  console.log("data", data);
+  
   return (
     <table>
       <thead>
         <tr>
-          <th>Name</th>
-          <th>ID</th>
-          <th>Tags</th>
+          <th>name</th>
+          <th>chain_id</th>
+          <th>tags</th>
         </tr>
       </thead>
       <tbody>
         {chains.map((chain) => (
           <tr key={chain.name}>
-            <td>{chain.name}</td>
-            <td>{chain.chain_id}</td>
-            <td>{chain.tags.join(", ")}</td>
+            <td><code>{chain.name}</code></td>
+            <td><code>{chain.chain_id}</code></td>
+            <td><code>{chain.tags.join(", ")}</code></td>
           </tr>
         ))}
       </tbody>

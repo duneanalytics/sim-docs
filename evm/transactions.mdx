@@ -5,6 +5,8 @@ openapi: "/evm/openapi/transactions.json GET /v1/evm/transactions/{uri}"
 sidebarTitle: "Transactions"
 ---
 
+import { SupportedChains } from '/snippets/supported-chains.mdx';
+
 <Frame>
   <img
     src="/images/evm/transaction.svg"
@@ -15,37 +17,17 @@ sidebarTitle: "Transactions"
   />
 </Frame>
 
-The Transactions Endpoint allows for quick and accurate lookup of transactions associated with an address. Data is typically available within 100 ms after a block has been propagated to nodes.
+The Transactions API allows for quick and accurate lookup of transactions associated with an address.
+Transactions are ordered by descending block time, so the most recent transactions appear first.
 
-# Column Descriptions of the Transaction object
+<Accordion title="Supported Chains">
+  <SupportedChains endpoint="transactions" />
+</Accordion>
 
-| Column                   | Description                                                   | Type      |
-| ------------------------ | ------------------------------------------------------------- | --------- |
-| address                  | Wallet or ERC20 contract address                              | string    |
-| block_hash               | Unique cryptographic block identifier.                        | string    |
-| block_number             | Block's sequential index.                                     | string    |
-| block_time               | Timestamp of block creation.                                  | timestamp |
-| block_version            | Block's protocol iteration.                                   | integer   |
-| chain                    | Name of the blockchain                                        | string    |
-| from                     | Address of sender                                             | string    |
-| to                       | Address of receiver                                           | string    |
-| data                     | Data of transaction                                           | string    |
-| gas_price                | Gas price of transaction as hexadecimal string                | string    |
-| hash                     | Hash of transaction                                           | string    |
-| index                    | Index of transaction                                          | string    |
-| max_fee_per_gas          | Max fee per gas of transaction as hexadecimal string          | string    |
-| max_priority_fee_per_gas | Max priority fee per gas of transaction as hexadecimal string | string    |
-| nonce                    | Nonce of transaction as hexadecimal string                    | string    |
-| transaction_type         | Type of transaction                                           | string    |
-| value                    | Value of transaction as hexadecimal string                    | string    |
+## Pagination
 
-# Ordering
-
-The data is ordered by descending block time, so that new transactions will always be delivered first.
-
-# Pagination
-
-This endpoint is using cursor based pagination. You can use the `limit` parameter to define the maximum page size.
+This endpoint is using cursor based pagination.
+You can use the `limit` parameter to define the maximum page size.
 Results might at times be less than the maximum page size.
 The `next_offset` value is included in the initial response and can be utilized to fetch the next page of results by passing it as the `offset` query parameter in the next request.
 

@@ -5,58 +5,25 @@ description: "Discover token distribution across ERC20 or ERC721 holders, ranked
 openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{uri}"
 ---
 
+import { SupportedChains } from '/snippets/supported-chains.mdx';
+
+The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains.
+
 <Note>
-  This endpoint is currently in beta and requires authentication using a normal Sim API key. The `chain_id` parameter is mandatory.
+To fetch token holders for specific chains with the `?chain_ids=11,250,1` query parameter.
 </Note>
 
-The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains. The API returns the token address, chain ID, and an array of holders with their respective balances.
+<Accordion title="Supported Chains">
+  <SupportedChains endpoint="token_holders" />
+</Accordion>
 
-To fetch token holders for a specific chain, provide the `chain_id` in the URL path. See [EVM Supported Chains](/evm/supported-chains) for more details on supported chains.
+## Pagination
 
-# Response Structure
-
-```json
-{
-  "token_address": "0x63706e401c06ac8513145b7687A14804d17f814b",
-  "chain_id": 8453,
-  "holders": [
-    {
-      "wallet_address": "0x4a79B0168296c0eF7b8F314973B82aD406a29f1B",
-      "balance": "21677536714041544403178"
-    },
-    {
-      "wallet_address": "0x664d8F8F2417F52CbbF5Bd82Ba82EEfc58a87f07",
-      "balance": "1104710370249232698566"
-    }
-    // Additional holders...
-  ]
-}
-```
-
-## Response Fields
-
-| Field                   | Description                                      | Type      |
-| ----------------------- | ------------------------------------------------ | --------- |
-| token_address           | Contract address of the token                    | string    |
-| chain_id                | The ID of the blockchain                         | integer   |
-| holders                 | Array of holder objects                          | array     |
-| holders.wallet_address  | Wallet address of the token holder               | string    |
-| holders.balance         | Amount of tokens held by the address (in WEI)    | string    |
-
-# Pagination
-
-This endpoint uses cursor-based pagination. You can use the `limit` parameter to define the maximum page size.
+This endpoint uses cursor-based pagination.
+You can use the `limit` query parameter to define the maximum page size.
 Results might at times be less than the maximum page size.
-The `next_offset` value is included in the initial response and can be utilized to fetch the next page of results by passing it as the `offset` query parameter in the next request.
+The `next_offset` value is included in the initial response and can be used to fetch the next page of results by passing it as the `offset` query parameter in the next request.
 
 <Warning>
-  You can only use the value from `next_offset` to set the `offset` parameter of the next page of results. Using your own `offset` value will not have any effect.
+  You can only use the value from `next_offset` to set the `offset` parameter of the next page of results.
 </Warning>
-
-# Query Parameters
-
-The Token Holders API supports several query parameters:
-
-- `limit`: Maximum number of holders to return (for pagination)
-- `offset`: Pagination offset value from a previous response's `next_offset`
-- `api_key`: Your Sim API key for authentication

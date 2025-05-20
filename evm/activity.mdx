@@ -5,6 +5,8 @@ description: "View chronologically ordered transactions including native transfe
 openapi: "/evm/openapi/activity.json GET /v1/evm/activity/{uri}"
 ---
 
+import { SupportedChains } from '/snippets/supported-chains.mdx';
+
 <Frame>
   <img
     src="/images/evm/activity.svg"
@@ -15,13 +17,14 @@ openapi: "/evm/openapi/activity.json GET /v1/evm/activity/{uri}"
   />
 </Frame>
 
-The Activity endpoint provides a real-time feed of on-chain activity for any EVM address. Activity is returned in chronological order (newest first) and includes:
+The Activity API provides a realtime feed of onchain activity for any EVM address.
+The newest activity is returned first and includes:
 
 - Native token transfers
 - ERC20 token transfers with metadata (symbol, decimals)
 - ERC721 (NFT) transfers with token IDs
 - Contract interactions with decoded function calls
 
-<Note>
-  This endpoint is currently in beta and requires authentication using a normal Sim API key.
-</Note>
+<Accordion title="Supported Chains">
+  <SupportedChains endpoint="activity" />
+</Accordion>
