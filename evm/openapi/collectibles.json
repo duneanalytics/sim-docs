@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Sim API - Collectibles Endpoint",
-    "description": "This API provides information about NFT collectibles for addresses across different EVM chains.",
+    "description": "All NFT (ERC721 and ERC1155) balances, including IDs and metadata",
     "license": {
       "name": ""
     },
