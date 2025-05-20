@@ -2,7 +2,7 @@
 title: "Token Holders"
 sidebarTitle: "Token Holders"
 description: "Discover token distribution across ERC20 or ERC721 holders, ranked by wallet value."
-openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{uri}"
+openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{chain_id}/{token_address}"
 ---
 
 import { SupportedChains } from '/snippets/supported-chains.mdx';
@@ -10,10 +10,6 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 ![Type=holders Sv](/images/type=holders.svg)
 
 The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains.
-
-<Note>
-To fetch token holders for specific chains with the `?chain_ids=11,250,1` query parameter.
-</Note>
 
 <Accordion title="Supported Chains">
   <SupportedChains endpoint="token_holders" />
@@ -27,5 +23,5 @@ Results might at times be less than the maximum page size.
 The `next_offset` value is included in the initial response and can be used to fetch the next page of results by passing it as the `offset` query parameter in the next request.
 
 <Warning>
-  You can only use the value from `next_offset` to set the `offset` parameter of the next page of results.
+  You can only use the value from `next_offset` to set the `offset` query parameter of the next page of results.
 </Warning>

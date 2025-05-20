@@ -1,230 +1,311 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
-    "title": "Sim API - Token Holders Endpoint",
-    "description": "This API provides information about holders of specific tokens across different EVM chains.",
-    "license": {
-      "name": ""
-    },
-    "version": "0.1.0"
+    "title": "Sim APIs Token Holders API",
+    "version": "v1",
+    "description": "API for retrieving token holder information for a specific contract on an EVM compatible blockchain."
   },
   "servers": [
     {
-      "url": "https://api.sim.dune.com"
+      "url": "https://api.sim.dune.com",
+      "description": "Sim API Server"
     }
   ],
-  "paths": {
-    "/v1/evm/token-holders/{uri}": {
-      "get": {
-        "tags": [
-          "token-holders"
-        ],
-        "summary": "Get holders of a specific EVM token",
-        "description": "This endpoint returns information about holders of a specific token contract address.",
-        "operationId": "getEvmTokenHolders",
-        "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "API key to access the service",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "uri",
-            "in": "path",
-            "description": "The contract address of the token",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "chain_ids",
-            "in": "query",
-            "description": "A comma separated list of chain ids to get token holders for",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "offset",
-            "in": "query",
-            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Maximum number of holders to return",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int64",
-              "nullable": true,
-              "minimum": 0
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenHoldersResponse"
-                },
-                "example": {
-                  "contract_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                  "chain_id": 1,
-                  "holders": [
-                    {
-                      "address": "0x47ac0fb4f2d84898e4d9e7b4dab3c24507a6d503",
-                      "balance": "4234567890000",
-                      "percentage": 0.0423
-                    },
-                    {
-                      "address": "0x55fe002aeff02f77364de339a1292923a15844b8",
-                      "balance": "3456789000000",
-                      "percentage": 0.0346
-                    }
-                  ],
-                  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
-          }
-        }
-      }
-    }
-  },
   "components": {
     "schemas": {
-      "TokenHolder": {
+      "ErrorDetail": {
         "type": "object",
         "properties": {
-          "address": {
+          "message": {
             "type": "string",
-            "description": "The address of the token holder"
+            "description": "Description of what went wrong.",
+            "example": "Invalid or missing API key"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code.",
+            "example": "UNAUTHORIZED"
+          }
+        },
+        "required": [
+          "message",
+          "code"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Holder": {
+        "type": "object",
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "description": "The address of the token holder.",
+            "example": "0x4a79b0168296c0ef7b8f314973b82ad406a29f1b"
           },
           "balance": {
             "type": "string",
-            "description": "The token balance of the holder (in the token's smallest unit)"
+            "description": "The raw balance of tokens held by the address, as a string to support large numbers.",
+            "example": "13794442047246482254818"
           },
-          "balance_formatted": {
-            "type": "number",
-            "format": "double",
-            "description": "The token balance formatted according to the token's decimals",
-            "nullable": true
-          },
-          "percentage": {
-            "type": "number",
-            "format": "double",
-            "description": "The percentage of the total supply held by this address",
-            "nullable": true
-          },
-          "value_usd": {
-            "type": "number",
-            "format": "double",
-            "description": "The USD value of the token balance",
-            "nullable": true
-          },
-          "ens_name": {
-            "type": "string",
-            "description": "The ENS name of the holder, if available",
-            "nullable": true
-          },
-          "last_transfer_time": {
+          "first_acquired": {
             "type": "string",
             "format": "date-time",
-            "description": "The timestamp of the last transfer involving this holder",
-            "nullable": true
+            "description": "The timestamp when the holder first acquired tokens.",
+            "example": "2025-02-06T15:11:07+00:00"
+          },
+          "has_initiated_transfer": {
+            "type": "boolean",
+            "description": "Indicates if the holder has initiated a transfer of these tokens.",
+            "example": false
           }
         }
       },
       "TokenHoldersResponse": {
         "type": "object",
-        "required": [
-          "contract_address",
-          "chain_id",
-          "holders"
-        ],
         "properties": {
-          "contract_address": {
+          "token_address": {
             "type": "string",
-            "description": "The contract address of the token"
+            "format": "address",
+            "description": "The address of the token contract.",
+            "example": "0x63706e401c06ac8513145b7687a14804d17f814b"
           },
           "chain_id": {
             "type": "integer",
-            "format": "int64",
-            "description": "The chain ID where the token exists"
-          },
-          "token_info": {
-            "type": "object",
-            "description": "Information about the token",
-            "nullable": true,
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "The name of the token"
-              },
-              "symbol": {
-                "type": "string",
-                "description": "The symbol of the token"
-              },
-              "decimals": {
-                "type": "integer",
-                "description": "The number of decimals for the token"
-              },
-              "total_supply": {
-                "type": "string",
-                "description": "The total supply of the token"
-              }
-            }
+            "format": "int32",
+            "description": "The identifier of the blockchain. For a full list see Supported Chains",
+            "example": 8453
           },
           "holders": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/TokenHolder"
+              "$ref": "#/components/schemas/Holder"
             },
-            "description": "Array of token holders"
+            "description": "A list of token holders and their balances."
           },
           "next_offset": {
             "type": "string",
             "nullable": true,
-            "description": "Pagination cursor for the next page of results"
+            "description": "An opaque token for fetching the next page of results. Null if no more results.",
+            "example": "eyJvZmZzZXQiOjEwMH0="
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SimApiKeyHeader": {
+        "type": "apiKey",
+        "name": "X-Sim-Api-Key",
+        "in": "header",
+        "description": "API key for authenticating requests."
+      }
+    }
+  },
+  "paths": {
+    "/v1/evm/token-holders/{chain_id}/{token_address}": {
+      "get": {
+        "summary": "Get Token Holders",
+        "description": "Retrieves a list of token holders for a given token contract address on a specified blockchain.",
+        "operationId": "getTokenHolders",
+        "tags": [
+          "EVM"
+        ],
+        "parameters": [
+          {
+            "name": "chain_id",
+            "in": "path",
+            "required": true,
+            "description": "The identifier of the blockchain (e.g., 8453 for Base). For a full list see Supported Chains.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "example": 8453
           },
-          "total_holders_count": {
-            "type": "integer",
-            "format": "int64",
-            "description": "The total number of holders for this token",
-            "nullable": true
+          {
+            "name": "token_address",
+            "in": "path",
+            "required": true,
+            "description": "The address of the token contract.",
+            "schema": {
+              "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$"
+            },
+            "example": "0x63706e401c06ac8513145b7687A14804d17f814b"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of token holders to return.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          },
+          {
+            "name": "next_offset",
+            "in": "query",
+            "required": false,
+            "description": "Offset value for fetching the next page of results.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "security": [
+          {
+            "SimApiKeyHeader": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of token holders for the specified token address on the specified chain.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenHoldersResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "token_address": "0x63706e401c06ac8513145b7687a14804d17f814b",
+                      "chain_id": 8453,
+                      "holders": [
+                        {
+                          "wallet_address": "0x4a79b0168296c0ef7b8f314973b82ad406a29f1b",
+                          "balance": "13794442047246482254818",
+                          "first_acquired": "2025-02-06T15:11:07+00:00",
+                          "has_initiated_transfer": false
+                        },
+                        {
+                          "wallet_address": "0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B",
+                          "balance": "25000000000000000000",
+                          "first_acquired": "2024-01-15T10:30:00+00:00",
+                          "has_initiated_transfer": true
+                        }
+                      ],
+                      "next_offset": "eyJwYWdlIjoyLCJsaW1pdCI6Mn0="
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Malformed request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "badRequest": {
+                    "value": {
+                      "error": {
+                        "message": "Verify the address format and other parameters in your request",
+                        "code": "BAD_REQUEST"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "value": {
+                      "error": {
+                        "message": "Invalid or missing API key",
+                        "code": "UNAUTHORIZED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found - Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "notFound": {
+                    "value": {
+                      "error": {
+                        "message": "Resource not found",
+                        "code": "NOT_FOUND"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": {
+                        "message": "Too many requests",
+                        "code": "RATE_LIMIT_EXCEEDED"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Server-side error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internalServerError": {
+                    "value": {
+                      "error": {
+                        "message": "Server-side error",
+                        "code": "INTERNAL_SERVER_ERROR"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
     }
-  },
-  "tags": [
-    {
-      "name": "token-holders",
-      "description": "Token Holders API"
-    }
-  ]
+  }
 }
