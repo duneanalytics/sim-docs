@@ -41,9 +41,9 @@
             }
           },
           {
-            "name": "chain_ids",
+            "name": "chains",
             "in": "query",
-            "description": "Either 'all' or a comma separated list of chain ids to get token info for",
+            "description": "Either 'all' or a comma separated list of chain names or ids to get token info for",
             "required": true,
             "schema": {
               "type": "string",

@@ -42,9 +42,9 @@
             }
           },
           {
-            "name": "chain_ids",
+            "name": "chains",
             "in": "query",
-            "description": "A comma separated list of chain_ids or tags for blockchains to get transactions for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.",
+            "description": "A comma separated list of chain names, ids, or tags to get transactions for. Examples: chains=ethereum,polygon, chains=1,8453,10, chains=mainnet,testnet.",
             "required": false,
             "schema": {
               "type": "string",
