@@ -5,6 +5,12 @@ description: "Retrieve EVM compatiable NFTs (ERC721 and ERC1155) that include to
 openapi: "/evm/openapi/collectibles.json GET /v1/evm/collectibles/{address}"
 ---
 
+import { SupportedChains } from '/snippets/supported-chains.mdx';
+
 ![Type=collectibles Web](/images/type=collectibles.webp)
 
 The Collectibles API provides information about NFTs (ERC721 and ERC1155 tokens) owned by a specific address on supported EVM blockchains.
+
+<Accordion title="Supported Chains">
+  <SupportedChains endpoint="collectibles" />
+</Accordion>

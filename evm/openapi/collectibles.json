@@ -135,7 +135,7 @@
             "name": "chain_ids",
             "in": "query",
             "required": false,
-            "description": "A comma-separated list of chain IDs (e.g., `?chain_ids=1,137`) or chain names (e.g., `?chain_ids=ethereum,polygon`) to filter collectibles by. If not provided, collectibles from all `default` chains for the address are returned. See [Supported Chains](/evm/supported-chains#collectibles-api) for more information.",
+            "description": "A comma-separated list of chain IDs (e.g., `?chain_ids=1,137`) or chain names (e.g., `?chain_ids=ethereum,polygon`) to filter collectibles by. If not provided, collectibles from all `default` chains for the address are returned. See [Supported Chains](#supported-chains) for more information.",
             "schema": {
               "type": "string"
             }
