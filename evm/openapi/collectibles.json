@@ -1,144 +1,220 @@
 {
-  "openapi": "3.0.3",
+  "openapi": "3.0.0",
   "info": {
-    "title": "Sim API - Collectibles Endpoint",
-    "description": "All NFT (ERC721 and ERC1155) balances, including IDs and metadata",
-    "license": {
-      "name": ""
-    },
-    "version": "0.1.0"
+    "title": "Sim APIs Collectibles API",
+    "version": "v1",
+    "description": "API for retrieving EVM compatible collectible (NFT) balances, including IDs and metadata for a given address."
   },
   "servers": [
     {
-      "url": "https://api.sim.dune.com"
+      "url": "https://api.sim.dune.com",
+      "description": "Sim API Server"
     }
   ],
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Description of what went wrong.",
+            "example": "invalid API Key"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CollectibleEntry": {
+        "type": "object",
+        "properties": {
+          "contract_address": {
+            "type": "string",
+            "format": "address",
+            "description": "The contract address of the collectible."
+          },
+          "token_standard": {
+            "type": "string",
+            "description": "The token standard (e.g., ERC721, ERC1155)."
+          },
+          "token_id": {
+            "type": "string",
+            "description": "The token ID of the collectible."
+          },
+          "chain": {
+            "type": "string",
+            "description": "The name of the blockchain where the collectible exists."
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The chain ID where the collectible exists."
+          },
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "The name of the collectible."
+          },
+          "symbol": {
+            "type": "string",
+            "nullable": true,
+            "description": "The symbol of the collectible."
+          },
+          "balance": {
+            "type": "string",
+            "description": "The balance of this specific token ID held by the address. For ERC721, this is typically '1'."
+          }
+        }
+      },
+      "CollectiblesResponse": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "format": "address",
+            "description": "The wallet address for which collectibles are being reported."
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CollectibleEntry"
+            },
+            "description": "A list of collectible entries."
+          },
+          "next_offset": {
+            "type": "string",
+            "nullable": true,
+            "description": "An opaque token for fetching the next page of results. This key may be null or omitted if there are no more results."
+          },
+          "request_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of when the request was received."
+          },
+          "response_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of when the response was generated."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SimApiKeyHeader": {
+        "type": "apiKey",
+        "name": "X-Sim-Api-Key",
+        "in": "header",
+        "description": "API key for [authenticating requests](/#authentication)."
+      }
+    }
+  },
   "paths": {
-    "/v1/evm/collectibles/{uri}": {
+    "/v1/evm/collectibles/{address}": {
       "get": {
-        "tags": [
-          "collectibles"
-        ],
-        "summary": "Get EVM collectibles for a given address",
-        "description": "This endpoint returns EVM collectibles (NFTs) for an address. Note: This endpoint is currently under development.",
+        "summary": "Get EVM Collectibles",
+        "description": "Retrieves a list of EVM compatible collectibles (NFTs) for a given wallet address.",
         "operationId": "getEvmCollectibles",
+        "tags": [
+          "EVM"
+        ],
         "parameters": [
           {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "API key to access the service",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "uri",
+            "name": "address",
             "in": "path",
-            "description": "Wallet to get collectibles for",
             "required": true,
+            "description": "The wallet address to get collectibles for.",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$"
+            },
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "chain_ids",
             "in": "query",
-            "description": "A comma separated list of chain_ids or tags for blockchains to get collectibles for.",
             "required": false,
+            "description": "A comma-separated list of chain IDs (e.g., `?chain_ids=1,137`) or chain names (e.g., `?chain_ids=ethereum,polygon`) to filter collectibles by. If not provided, collectibles from all `default` chains for the address are returned. See [Supported Chains](/evm/supported-chains#collectibles-api) for more information.",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
             "name": "offset",
             "in": "query",
-            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
             "required": false,
+            "description": "The pagination cursor from the `next_offset` field of a previous response to fetch the next page of results. Omit this parameter to fetch the first page.",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
             "name": "limit",
             "in": "query",
-            "description": "Maximum number of collectibles to return",
             "required": false,
+            "description": "Maximum number of collectible entries to return per page.",
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true,
-              "minimum": 0
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 50
             }
+          }
+        ],
+        "security": [
+          {
+            "SimApiKeyHeader": []
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
+            "description": "A list of collectibles for the specified address.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "collectibles": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "token_id": {
-                            "type": "string",
-                            "description": "The token ID of the collectible"
-                          },
-                          "contract_address": {
-                            "type": "string",
-                            "description": "The contract address of the collectible"
-                          },
-                          "chain_id": {
-                            "type": "integer",
-                            "description": "The chain ID where the collectible exists"
-                          },
-                          "chain": {
-                            "type": "string",
-                            "description": "The chain name where the collectible exists"
-                          },
-                          "name": {
-                            "type": "string",
-                            "description": "The name of the collectible"
-                          },
-                          "description": {
-                            "type": "string",
-                            "description": "The description of the collectible"
-                          },
-                          "image_url": {
-                            "type": "string",
-                            "description": "URL to the image of the collectible"
-                          },
-                          "metadata_url": {
-                            "type": "string",
-                            "description": "URL to the metadata of the collectible"
-                          },
-                          "collection": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string",
-                                "description": "The name of the collection"
-                              },
-                              "symbol": {
-                                "type": "string",
-                                "description": "The symbol of the collection"
-                              }
-                            }
-                          }
+                  "$ref": "#/components/schemas/CollectiblesResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "entries": [
+                        {
+                          "contract_address": "0x0000000000cf80e7cf8fa4480907f692177f8e06",
+                          "token_standard": "ERC721",
+                          "token_id": "73906452355594127029039375271145516945927406532858726769026903911185640775143",
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "name": "NamefiNFT",
+                          "symbol": "NFNFT",
+                          "balance": "1"
+                        },
+                        {
+                          "contract_address": "0x01cde4e79913888e642300e705c283f1da0eadb8",
+                          "token_standard": "ERC1155",
+                          "token_id": "0",
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "name": "manatoken.net",
+                          "symbol": "claim rewards on manatoken.net",
+                          "balance": "1"
+                        },
+                        {
+                          "contract_address": "0x0a41db66c8f94ec56b55357c92e4f1e66d8ba06",
+                          "token_standard": "ERC1155",
+                          "token_id": "1",
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "name": null,
+                          "symbol": null,
+                          "balance": "1"
                         }
-                      }
-                    },
-                    "next_offset": {
-                      "type": "string",
-                      "description": "Pagination cursor for the next page of results",
-                      "nullable": true
+                      ],
+                      "next_offset": "KgAAAAAAAAAweGQ4ZGE2YmYyNjk2NGFmOWQ3ZWVkOWUwM2U1MzQxNWQzN2FhOTYwNDUBAAAAAAAAACoAAAAAAAAAMHg0OTVmOTQ3Mjc2NzQ5Y2U2NDZmNjhhYzhjMjQ4NDIwMDQ1Y2I3YjVlIAAAAAAAAAD7ygfi-RlYwIz6s5UYT_T8YI0_BgAAAAAAAHsAAAAnEAEAAAA",
+                      "request_time": "2025-05-21T05:49:41.456977Z",
+                      "response_time": "2025-05-21T05:49:41.831447Z"
                     }
                   }
                 }
@@ -146,13 +222,89 @@
             }
           },
           "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Malformed request.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "badRequest": {
+                    "value": {
+                      "error": "Verify the address format and other parameters in your request"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "unauthorized": {
+                    "value": {
+                      "error": "Invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found - Resource not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "notFound": {
+                    "value": {
+                      "error": "URL Not Found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
+            "description": "Internal Server Error - Server-side error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "examples": {
+                  "internalServerError": {
+                    "value": {
+                      "error": "Server-side error"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -160,8 +312,8 @@
   },
   "tags": [
     {
-      "name": "collectibles",
-      "description": "Collectibles API"
+      "name": "EVM",
+      "description": "Endpoints related to EVM compatible blockchains."
     }
   ]
 }
