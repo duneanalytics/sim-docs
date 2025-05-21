@@ -65,6 +65,11 @@
       "chatgpt"
     ]
   },
+  "api": {
+    "examples": {
+      "languages": ["curl", "javascript", "python"]
+    }
+  },
   "openapi": [
     {
       "name": "EVM Balances",
