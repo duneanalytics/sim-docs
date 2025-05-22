@@ -73,7 +73,7 @@ The array provides rich context for each event, such as `block_time`, `transacti
 
 Next, modify the `app.get('/')` route handler, add a call to `getWalletActivity`, and include its results in the data passed to `res.render`.
 
-```javascript server.js (app.get('/') updated for activity) {15, 17, 39}
+```javascript server.js (app.get('/') updated for activity) {16, 18, 45}
 app.get('/', async (req, res) => {
     const { 
         walletAddress = '',
@@ -81,38 +81,44 @@ app.get('/', async (req, res) => {
     } = req.query;
 
     let tokens = [];
-    let activities = []; // Initialize activities array
+    let activities = [];
+    let collectibles = [];
     let totalWalletUSDValue = 0;
-    let errorMessage = null; // Renamed for clarity from Guide 1
+    let errorMessage = null;
 
     if (walletAddress) {
         try {
-            // Fetch balances and activities concurrently for better performance
+
             [tokens, activities] = await Promise.all([
                 getWalletBalances(walletAddress),
                 getWalletActivity(walletAddress, 25) // Fetching 25 recent activities
             ]);
-            
-            // Calculate total portfolio value from tokens (as in Guide 1)
+
+            // Calculate the total USD value from the fetched tokens
             if (tokens && tokens.length > 0) {
-                totalWalletUSDValue = tokens.reduce((sum, token) => {
-                    const value = parseFloat(token.value_usd);
-                    return sum + (isNaN(value) ? 0 : value);
-                }, 0);
+                tokens.forEach(token => {
+                    let individualValue = parseFloat(token.value_usd);
+                    if (!isNaN(individualValue)) {
+                        totalWalletUSDValue += individualValue;
+                    }
+                });
             }
+            
+            totalWalletUSDValue = numbro(totalWalletUSDValue).format('$0,0.00');
+
         } catch (error) {
-            console.error("Error in route handler fetching data:", error);
+            console.error("Error in route handler:", error);
             errorMessage = "Failed to fetch wallet data. Please try again.";
-            // tokens and activities will remain empty, totalWalletUSDValue will be 0
+            // tokens will remain empty, totalWalletUSDValue will be 0
         }
     }
-    
+
     res.render('wallet', {
         walletAddress: walletAddress,
         currentTab: tab,
-        totalWalletUSDValue: `$${totalWalletUSDValue.toFixed(2)}`,
+        totalWalletUSDValue: totalWalletUSDValue, // We'll calculate this in the next section
         tokens: tokens,
-        activities: activities, // Pass activities to the template
+        activities: activities, // Placeholder for Guide 2
         collectibles: [], // Placeholder for Guide 3
         errorMessage: errorMessage
     });
@@ -132,103 +138,122 @@ It currently contains a placeholder paragraph.
 Replace that entire `div` with the following EJS code:
 
 ```ejs views/wallet.ejs (Activity tab content) [expandable]
-<!-- Activity Tab Pane -->
+<!-- Activity Tab Pane (for Guide 2) -->
 <div id="activity" class="tab-pane <%= currentTab === 'activity' ? 'active' : '' %>">
-    <% if (activities && activities.length > 0) { %>
-        <% activities.forEach(activity => { %>
-            <div class="list-item">
-                <div class="item-icon-placeholder">
-                    <% if (activity.type === 'receive') { %>
-                        ↓
-                    <% } else if (activity.type === 'send') { %>
-                        ↑
-                    <% } else if (activity.type === 'call') { %>
-                        ⇆ <!-- Icon for contract call -->
-                    <% } else { %>
-                        ✓ <!-- Generic icon for other types -->
-                    <% } %>
-                </div>
-                <div class="item-info">
-                    <% 
-                        let activityTitle = activity.type.charAt(0).toUpperCase() + activity.type.slice(1);
-                        let activityColorClass = activity.type; // Used for potential CSS styling
+<% if (activities && activities.length > 0) { %>
+    <% activities.forEach(activity => { %>
+        <div class="list-item">
+            <div class="item-icon-placeholder">
+                <% if (activity.type === 'receive') { %>
+                    ↓
+                <% } else if (activity.type === 'send') { %>
+                    ↑
+                <% } else if (activity.type === 'call') { %>
+                    ⇆ <!-- Icon for contract call -->
+                <% } else { %>
+                    ✓ <!-- Generic icon for other types -->
+                <% } %>
+            </div>
+            <div class="item-info">
+                <% 
+                    let activityTitle = activity.type.charAt(0).toUpperCase() + activity.type.slice(1);
+                    let activityColorClass = activity.type; // Used for potential CSS styling
 
-                        if (activity.type === 'call' && activity.function && activity.function.name) {
-                            activityTitle = `Call: ${activity.function.name}`;
-                            activityColorClass = 'call';
-                        } else if (activity.type === 'receive' || activity.type === 'send') {
-                            const tokenSymbol = activity.token_metadata?.symbol || 
-                                                (activity.asset_type === 'native' ? 
-                                                    (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'Native') : 
-                                                    'Token');
-                            activityTitle = `${activity.type === 'receive' ? 'Received' : 'Sent'} ${tokenSymbol}`;
+                    if (activity.type === 'call' && activity.function && activity.function.name) {
+                        activityTitle = `Call: ${activity.function.name}`;
+                        activityColorClass = 'call';
+                    } else if (activity.type === 'receive' || activity.type === 'send') {
+                        const tokenSymbol = activity.token_metadata?.symbol || 
+                                            (activity.asset_type === 'native' ? 
+                                                (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'Native') : 
+                                                'Token');
+                        activityTitle = `${activity.type === 'receive' ? 'Received' : 'Sent'} ${tokenSymbol}`;
+                    }
+                %>
+                <p class="item-name activity-direction <%= activityColorClass %>"><%= activityTitle %></p>
+                
+                <p class="activity-address">
+                    <% 
+                        let partyLabel = '', partyAddress = '';
+                        if (activity.type === 'receive') { 
+                            partyLabel = 'From'; 
+                            partyAddress = activity.from; 
+                        } else if (activity.type === 'send') { 
+                            partyLabel = 'To'; 
+                            partyAddress = activity.to; 
+                        } else if (activity.type === 'call') { 
+                            partyLabel = 'Contract'; 
+                            partyAddress = activity.to; 
+                        } else { 
+                            partyLabel = 'With'; 
+                            partyAddress = activity.to || activity.from || 'Unknown'; 
                         }
                     %>
-                    <p class="item-name activity-direction <%= activityColorClass %>"><%= activityTitle %></p>
                     
-                    <p class="activity-address">
-                        <% let partyLabel = '', partyAddress = ''; %>
-                        <% if (activity.type === 'receive') { partyLabel = 'From'; partyAddress = activity.from; } %>
-                        <% else if (activity.type === 'send') { partyLabel = 'To'; partyAddress = activity.to; } %>
-                        <% else if (activity.type === 'call') { partyLabel = 'Contract'; partyAddress = activity.to; } %>
-                        <% else { partyLabel = 'With'; partyAddress = activity.to || activity.from || 'Unknown'; } %>
-                        
-                        <% if (partyAddress && partyAddress !== 'Unknown') { %>
-                            <%= partyLabel %>: 
-                            <span class="mono">
-                                <%= partyAddress.substring(0, 6) %>...<%= partyAddress.substring(partyAddress.length - 4) %>
-                            </span>
-                        <% } else { %>
-                            Interaction
-                        <% } %>
-                    </p>
-                    
-                    <p class="activity-timestamp">
-                        <span class="mono"><%= new Date(activity.block_time).toLocaleString() %></span>
-                         on <span class="mono"><%= activity.chain_id %></span> <!-- Consider mapping chain_id to name -->
-                    </p>
-                </div>
-                <div class="item-value-right">
-                    <% if (activity.type === 'call') { %>
-                        <p class="activity-amount-right <%= activityColorClass %>" style="font-family: var(--font-primary);">
-                           Interaction
-                        </p>
-                    <% } else if (activity.value) { %>
-                        <p class="activity-amount-right <%= activityColorClass %>">
-                            <% if (activity.type === 'receive') { %>+<% } else if (activity.type === 'send') { %>-<% } %>
-                            <% 
-                            let amountDisplay = '0';
-                            const decimals = activity.token_metadata?.decimals ?? (activity.asset_type === 'native' ? 18 : null);
-                            if (activity.value && decimals !== null) {
-                                const divisor = BigInt(10) ** BigInt(decimals);
-                                const rawAmount = BigInt(activity.value);
-                                // Basic formatting, for more complex needs, use a library
-                                amountDisplay = (Number(rawAmount) / Number(divisor)).toFixed(4); 
-                            } else if (activity.value) { // For assets without decimal info, show raw value or NFT ID
-                                amountDisplay = activity.id || activity.value; // E.g. token_id for ERC721/1155
-                            }
-                            %>
-                            <%= amountDisplay %> 
-                            <span class="mono"><%= activity.token_metadata?.symbol || (activity.asset_type === 'native' ? (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'NTV') : (activity.id ? '' : 'Tokens')) %></span>
-                        </p>
-                    <% } %>
-                    <p class="item-sub-info">
+                    <% if (partyAddress && partyAddress !== 'Unknown') { %>
+                        <%= partyLabel %> 
                         <span class="mono">
-                            <% if (typeof activity.value_usd !== 'undefined' && activity.value_usd !== null) { %>
-                                $<%= parseFloat(activity.value_usd).toFixed(2) %>
-                            <% } else { %>
-                                <!-- No USD value or N/A -->
-                            <% } %>
+                            <%= partyAddress.substring(0, 6) %>...<%= partyAddress.substring(partyAddress.length - 4) %>
                         </span>
-                    </p>
-                </div>
+                    <% } else { %>
+                        Interaction
+                    <% } %>
+                </p>
+                
+                <p class="activity-timestamp">
+                    <span class="mono"><%= new Date(activity.block_time).toLocaleDateString(); %></span>
+                </p>
             </div>
-        <% }); %>
-    <% } else if (walletAddress) { %>
-        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">No activity found for this wallet.</p>
-    <% } else { %>
-        <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address to see activity.</p>
-    <% } %>
+            <div class="item-value-right">
+                <% if (activity.type === 'call') { %>
+                    <p class="activity-amount-right <%= activityColorClass %>" style="font-family: var(--font-primary);">
+                        Interaction
+                    </p>
+                <% } else if (activity.value) { %>
+                    <p class="activity-amount-right <%= activityColorClass %>">
+                        <%
+                        let amountDisplay = '0';
+                        const decimals = typeof activity.token_metadata?.decimals === 'number' ? activity.token_metadata.decimals : 18;
+                        if (decimals !== null) {
+                            const valueStr = activity.value.toString();
+                            const padded = valueStr.padStart(decimals + 1, '0');
+                            let intPart = padded.slice(0, -decimals);
+                            let fracPart = padded.slice(-decimals).replace(/0+$/, '');
+                            if (!intPart) intPart = '0';
+                            if (fracPart) {
+                                amountDisplay = `${intPart}.${fracPart}`;
+                            } else {
+                                amountDisplay = intPart;
+                            }
+                            const amountNum = parseFloat(amountDisplay);
+                            if (amountNum > 0 && amountNum < 0.0001) {
+                                amountDisplay = '<0.0001';
+                            }
+                            if (amountNum > 1e12 || amountDisplay.length > 12) {
+                                amountDisplay = amountNum.toExponential(2);
+                            }
+                        } else {
+                            amountDisplay = activity.id || String(activity.value);
+                        }
+                        // Clean up the symbol: remove $ and anything after space/dash/bracket, and limit length
+                        let symbol = activity.token_metadata?.symbol || (activity.asset_type === 'native'
+                            ? (activity.chain_id === 1 || activity.chain_id === 8453 || activity.chain_id === 10 ? 'ETH' : 'NTV')
+                            : (activity.id ? '' : 'Tokens'));
+                        if (symbol) {
+                            symbol = symbol.replace('$', '').split(/[\s\-\[]/)[0].substring(0, 8);
+                        }
+                        %>
+                        <% if (activity.type === 'receive') { %>+<% } else if (activity.type === 'send') { %>-<% } %><%= amountDisplay %> <span class="mono"><%= symbol %></span>
+                    </p>
+                <% } %>
+            </div>
+        </div>
+    <% }); %>
+<% } else if (walletAddress) { %>
+    <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">No activity found for this wallet.</p>
+<% } else { %>
+    <p style="text-align: center; padding-top: 30px; color: var(--color-text-muted);">Enter a wallet address to see activity.</p>
+<% } %>
 </div>
 ```
 
