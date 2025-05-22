@@ -68,7 +68,7 @@ This initial setup will provide a basic Express.js server and frontend templates
     Afterward, install the required packages:
 
     ```bash
-    npm install express ejs dotenv
+    npm install express ejs dotenv numbro
     ```
 
     We are using three packages for our wallet:
@@ -76,6 +76,7 @@ This initial setup will provide a basic Express.js server and frontend templates
     - **Express.js**: A popular Node.js web framework for creating our server.
     - **EJS**: A simple templating engine that lets us generate dynamic HTML.
     - **dotenv**: A package to load environment variables from a `.env` file.
+    - **numbro**: For formatting numbers and currency.
   </Step>
   <Step title="Configure Environment Variables">
     Create a new `.env` file in your project root:
@@ -116,6 +117,7 @@ This initial setup will provide a basic Express.js server and frontend templates
 
     ```javascript server.js [expandable]
     import express from 'express';
+    import numbro from 'numbro';
     import dotenv from 'dotenv';
     import path from 'path';
     import { fileURLToPath } from 'url';
@@ -222,11 +224,16 @@ This initial setup will provide a basic Express.js server and frontend templates
                                 <% } else { %>
                                     <p class="item-name"><%= token.name || token.symbol %></p>
                                 <% } %>
-                                <p class="item-sub-info"><span class="mono"><%= token.balanceFormatted || token.amount %> <%= token.symbol %></span> on <%= token.chain %></p>
                             </div>
                             <div class="item-value-right">
-                                <p class="item-usd-value"><%= token.price_usd ? '$' + parseFloat(token.price_usd).toFixed(2) : 'N/A' %></p>
-                                <p class="item-sub-info">Value: <span class="mono"><%= token.value_usd ? '$' + parseFloat(token.value_usd).toFixed(2) : 'N/A' %></span></p>
+                                <p class="item-usd-value">
+                                    <strong>
+                                        <%= token.valueUSDFormatted || (token.value_usd != null ? token.value_usd : 'N/A') %>
+                                    </strong>
+                                </p>
+                                <p class="item-sub-info">
+                                    <%= token.amountFormatted || token.amount %> <%= token.symbol %>
+                                </p>
                             </div>
                         </div>
                     <% }); %>
@@ -307,7 +314,7 @@ This initial setup will provide a basic Express.js server and frontend templates
     --font-primary: 'IBM Plex Sans', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
     
-    --color-bg-deep: #0b0e1f;
+    --color-bg-deep: #e1e2f9;
     --color-bg-container: #141829;
     --color-border-primary: #2c3040;
     --color-border-secondary: #222636;
@@ -329,23 +336,26 @@ This initial setup will provide a basic Express.js server and frontend templates
     padding: 0;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     min-height: 100vh;
-    padding-top: 20px;
-    padding-bottom: 20px;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: 100vh;
     }
     
     .mobile-container {
     width: 100%;
     max-width: 420px;
-    min-height: 700px; /* Ensure a consistent height */
+    height: 90vh;
+    max-height: 800px;
+    min-height: 600px;
     background-color: var(--color-bg-container);
     border-radius: 20px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     align-self: center;
+    box-shadow: 0 8px 32px rgba(20, 24, 41, 0.18), 0 1.5px 6px rgba(20, 24, 41, 0.10);
     }
     
     /* Header Styles */
@@ -731,7 +741,7 @@ There's also `exclude_spam_tokens=true` to filter out common spam tokens.
 
 Next, modify your `app.get('/')` route handler in `server.js` to call `getWalletBalances` and pass the fetched tokens to your template:
 
-```javascript server.js
+```javascript server.js {13}
 app.get('/', async (req, res) => {
     const { 
         walletAddress = '',
@@ -791,7 +801,7 @@ We can add a new property, `balanceFormatted`, to each token object.
 
 Modify your `getWalletBalances` function in `server.js` as follows. The main change is mapping over `data.balances` to add the `balanceFormatted` property:
 
-```javascript server.js (getWalletBalances with formatting)
+```javascript server.js (getWalletBalances with formatting) {24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38}
 async function getWalletBalances(walletAddress) {
     if (!walletAddress) return []; 
 
@@ -814,20 +824,22 @@ async function getWalletBalances(walletAddress) {
 
         const data = await response.json();
         
-        // Process balances to add formatted amount
+        // Return formatted values and amounts
         return (data.balances || []).map(token => {
-            let balanceFormatted = token.amount; // Default to raw amount
-            if (token.amount && typeof token.decimals !== 'undefined' && token.decimals !== null) {
-                const decimals = parseInt(token.decimals);
-                const divisor = Math.pow(10, decimals);
-                // Use parseFloat for calculations, then toFixed for display precision
-                balanceFormatted = (parseFloat(token.amount) / divisor).toFixed(2); // Adjust precision as needed
-            }
+            // 1. Calculate human-readable token amount
+            const numericAmount = parseFloat(token.amount) / Math.pow(10, parseInt(token.decimals));
+            // 2. Get numeric USD value
+            const numericValueUSD = parseFloat(token.value_usd);
+            // 3. Format using numbro
+            const valueUSDFormatted = numbro(numericValueUSD).format('$0,0.00');
+            const amountFormatted = numbro(numericAmount).format('0,0.[00]A');
+
             return {
                 ...token,
-                balanceFormatted: balanceFormatted
+                valueUSDFormatted,
+                amountFormatted
             };
-        });
+        }).filter(token => token.symbol !== 'RTFKT'); // Removing Spam Tokens. Add more if you like.
 
     } catch (error) {
         console.error("Error fetching wallet balances:", error.message);
@@ -858,7 +870,7 @@ This field represents the total U.S. dollar value of the wallet's entire holding
 
 Let's modify the `app.get('/')` route handler to iterate through the fetched tokens and sum their individual `value_usd` to calculate the `totalWalletUSDValue`.
 
-```javascript server.js (app.get('/') with total value calculation) {16, 17, 18, 19, 20, 21, 33}
+```javascript server.js (app.get('/') with total value calculation) {16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 37}
 app.get('/', async (req, res) => {
     const { 
         walletAddress = '',
@@ -871,16 +883,20 @@ app.get('/', async (req, res) => {
 
     if (walletAddress) {
         try {
-            tokens = await getWalletBalances(walletAddress); // This now returns formatted tokens
+            tokens = await getWalletBalances(walletAddress);
 
-            // Calculate total portfolio value
+            // Calculate the total USD value from the fetched tokens
             if (tokens && tokens.length > 0) {
-                totalWalletUSDValue = tokens.reduce((sum, token) => {
-                    // Ensure value_usd is a number before adding
-                    const value = parseFloat(token.value_usd);
-                    return sum + (isNaN(value) ? 0 : value);
-                }, 0);
+                tokens.forEach(token => {
+                    let individualValue = parseFloat(token.value_usd);
+                    if (!isNaN(individualValue)) {
+                        totalWalletUSDValue += individualValue;
+                    }
+                });
             }
+            
+            totalWalletUSDValue = numbro(totalWalletUSDValue).format('$0,0.00');
+
         } catch (error) {
             console.error("Error in route handler:", error);
             errorMessage = "Failed to fetch wallet data. Please try again.";
@@ -891,7 +907,7 @@ app.get('/', async (req, res) => {
     res.render('wallet', {
         walletAddress: walletAddress,
         currentTab: tab,
-        totalWalletUSDValue: `$${totalWalletUSDValue.toFixed(2)}`, // Pass the calculated total
+        totalWalletUSDValue: totalWalletUSDValue, // Pass the calculated total
         tokens: tokens,
         activities: [], // Placeholder for Guide 2
         collectibles: [], // Placeholder for Guide 3
