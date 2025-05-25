@@ -39,7 +39,7 @@ By the end of this series, our wallet will have four main features:
 4. **NFTs**: A display of owned NFTs using the [Collectibles API](/evm/collectibles)
 
 <Note>
-  In this first guide, we will focus on implementing the first two: **Token Balances** and **Total Portfolio Value**.
+  The `exclude_spam_tokens` parameter provides a good baseline to filter out low-value and potentially malicious tokens, but you may want to implement custom filtering for your use case - learn more in our [Spam Filtering guide](/spam-filtering).
 </Note>
 
 ## Project Setup
@@ -697,8 +697,8 @@ async function getWalletBalances(walletAddress) {
 
     // Construct the query parameters
     // metadata=url,logo fetches token URLs and logo images
-    // exclude_spam_tokens=true filters out known spam tokens
-    const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
+    // exclude_spam_tokens filters out known spam tokens
+    const queryParams = `metadata=url,logo&exclude_spam_tokens`;
 
     const url = `https://api.sim.dune.com/v1/evm/balances/${walletAddress}?${queryParams}`;
 
@@ -731,12 +731,13 @@ async function getWalletBalances(walletAddress) {
 This function creates the API request using Node's `fetch`.
 It includes your `SIM_API_KEY` in the headers and sends a GET request to the `/v1/evm/balances/{address}` endpoint.
 
-The Balances API gives you access to various _URL query parameters_ that you can include to modify the response.
+The Balances API gives you access to various [_URL query parameters_](/evm/balances#parameter-uri) that you can include to modify the response.
 We have included `metadata=url,logo` to include a token's URL and logo.
-There's also `exclude_spam_tokens=true` to filter out common spam tokens.
+There's also `exclude_spam_tokens` to filter out common spam tokens.
 
 <Note>
-  You can find more details about available query parameters in the [Balances API documentation](/evm/balances).
+  The `exclude_spam_tokens` parameter provides a good baseline to filter out low-value and potentially malicious tokens, but you may want to implement custom filtering for your use case.
+  Learn more in our [Spam Filtering guide](/spam-filtering).
 </Note>
 
 Next, modify your `app.get('/')` route handler in `server.js` to call `getWalletBalances` and pass the fetched tokens to your template:
@@ -805,7 +806,7 @@ Modify your `getWalletBalances` function in `server.js` as follows. The main cha
 async function getWalletBalances(walletAddress) {
     if (!walletAddress) return []; 
 
-    const queryParams = `metadata=url,logo&exclude_spam_tokens=true`;
+    const queryParams = `metadata=url,logo&exclude_spam_tokens`;
     const url = `https://api.sim.dune.com/v1/evm/balances/${walletAddress}?${queryParams}`;
 
     try {
