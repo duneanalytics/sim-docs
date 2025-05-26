@@ -64,10 +64,11 @@
           {
             "name": "filters",
             "in": "query",
-            "description": "Specify `ERC20` or `NATIVE` to get only ERC20 tokens or native assets, respectively",
+            "description": "Specify `erc20` or `native` to get only ERC20 tokens or native assets, respectively",
             "required": false,
             "schema": {
               "type": "string",
+              "enum": ["erc20", "native"],
               "nullable": true
             }
           },
