@@ -23,8 +23,8 @@ In this third and final guide of our wallet series, we will focus on implementin
 
 Let's add a new asynchronous `getWalletCollectibles` function to `server.js` to fetch a user's NFT collection using the [Collectibles API](/evm/collectibles).
 
-```javascript server.js (getWalletCollectibles) {4}
-async function getWalletCollectibles(walletAddress, limit = 50) { // Default to fetching up to 50 collectibles
+```javascript server.js (getWalletCollectibles - Sim API portion) {4}
+async function getWalletCollectibles(walletAddress, limit = 50) {
     if (!walletAddress) return [];
 
     const url = `https://api.sim.dune.com/v1/evm/collectibles/${walletAddress}?limit=${limit}`;
@@ -32,7 +32,7 @@ async function getWalletCollectibles(walletAddress, limit = 50) { // Default to 
     try {
         const response = await fetch(url, {
             headers: {
-                'X-Sim-Api-Key': SIM_API_KEY, // Your API key from .env
+                'X-Sim-Api-Key': SIM_API_KEY,
                 'Content-Type': 'application/json'
             }
         });
@@ -44,21 +44,131 @@ async function getWalletCollectibles(walletAddress, limit = 50) { // Default to 
         }
 
         const data = await response.json();
-        return data.collectibles || []; 
+        const collectibles = data.entries || [];
+        
+        // ... (OpenSea enrichment will be added in the next section)
+        
     } catch (error) {
         console.error("Error fetching wallet collectibles:", error.message);
-        return []; // Return empty array on error
+        return [];
     }
 }
 ```
 
-The function sends an authorized GET request with your `SIM_API_KEY` and receives JSON response.
-The NFT data is extracted from the `collectibles` array within this response.
+The NFT data is extracted from the `entries` array within this response, providing information like contract addresses, token IDs, and chain data.
 
 <Note>
   The [Collectibles API](/evm/collectibles) supports pagination using `limit` and `offset` query parameters.
   For wallets with many NFTs, you can implement logic to fetch subsequent pages using the `next_offset` value returned by the API to provide a complete view of the user's collection.
 </Note>
+
+## Fetch NFT Images
+
+Sim APIs provide comprehensive blockchain metadata for NFTs, but we images to create a rich visual experience.
+We'll integrate with OpenSea's API to enrich our NFT data with image URLs.
+
+<Note>
+  NFT image data and enhanced metadata might be coming soon to the Sim APIs, but for now you can use OpenSea APIs to grab image URLs and provide a visual NFT display for users.
+</Note>
+
+### Get an OpenSea API Key
+
+Before we can fetch NFT images from OpenSea, you'll need to obtain an [OpenSea API key](https://docs.opensea.io/reference/api-keys).
+Once you receive your API key, add it to your `.env` file:
+
+```bash .env (Add OpenSea API Key)
+SIM_API_KEY=your_sim_api_key_here
+OPENSEA_API_KEY=your_opensea_api_key_here
+```
+
+### Update getWalletCollectibles
+
+Let's complete the `getWalletCollectibles` function by adding OpenSea API integration to fetch images:
+
+```javascript server.js (getWalletCollectibles - Complete function) {4, 24}
+async function getWalletCollectibles(walletAddress, limit = 50) {
+    if (!walletAddress) return [];
+
+    const url = `https://api.sim.dune.com/v1/evm/collectibles/${walletAddress}?limit=${limit}`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Sim-Api-Key': SIM_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Collectibles API request failed with status ${response.status}: ${response.statusText}`, errorBody);
+            throw new Error(`Collectibles API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const collectibles = data.entries || [];
+
+        // Enrich collectibles with OpenSea image data
+        const enrichedCollectibles = await Promise.all(
+            collectibles.map(async (collectible) => {
+                try {
+                    // Use the chain value directly from Sim APIs
+                    if (collectible.chain) {
+                        const openSeaUrl = `https://api.opensea.io/api/v2/chain/${collectible.chain}/contract/${collectible.contract_address}/nfts/${collectible.token_id}`;
+                        
+                        const openSeaResponse = await fetch(openSeaUrl, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'x-api-key': process.env.OPENSEA_API_KEY
+                            }
+                        });
+
+                        if (openSeaResponse.ok) {
+                            const openSeaData = await openSeaResponse.json();
+                            return {
+                                ...collectible,
+                                image_url: openSeaData.nft?.image_url || null,
+                                opensea_url: openSeaData.nft?.opensea_url || null,
+                                description: openSeaData.nft?.description || null,
+                                collection_name: openSeaData.nft?.collection || collectible.name
+                            };
+                        }
+                    }
+                    
+                    // Return original collectible if OpenSea fetch fails or no chain info
+                    return {
+                        ...collectible,
+                        image_url: null,
+                        opensea_url: null,
+                        description: null,
+                        collection_name: collectible.name
+                    };
+                } catch (error) {
+                    console.error(`Error fetching OpenSea data for ${collectible.chain}:${collectible.contract_address}:${collectible.token_id}:`, error.message);
+                    return {
+                        ...collectible,
+                        image_url: null,
+                        opensea_url: null,
+                        description: null,
+                        collection_name: collectible.name
+                    };
+                }
+            })
+        );
+
+        // Filter out collectibles without images
+        return enrichedCollectibles.filter(collectible => collectible.image_url !== null);
+
+    } catch (error) {
+        console.error("Error fetching wallet collectibles:", error.message);
+        return [];
+    }
+}
+```
+
+This enhanced function combines blockchain data from Sim APIs with rich metadata from OpenSea.
+For each NFT, we make an additional API call to OpenSea using the chain and contract information provided by Sim APIs.
+The function enriches each collectible with `image_url`, `opensea_url`, `description`, and `collection_name` fields, then filters to only return NFTs that have available images for display.
 
 ## Add Collectibles into the Server Route
 
@@ -111,13 +221,13 @@ app.get('/', async (req, res) => {
 });
 ```
 
-The route handler now fetches balances, then activities, and finally the NFT collectibles data.
-The `collectibles` array is then passed to the `wallet.ejs` template.
+The route handler now fetches balances, activities, and the enriched NFT collectibles data concurrently for optimal performance.
+The `collectibles` array, now containing both blockchain data and image URLs, is passed to the `wallet.ejs` template.
 
 ## Display Collectibles in the Frontend
 
 The final step is to modify `views/wallet.ejs` to render the fetched collectibles within the "Collectibles" tab.
-We will use a 3-column grid layout to display NFT images and their names.
+We will use a grid layout to display NFT images with their collection names and token IDs.
 
 In `views/wallet.ejs`, find the section for the "Collectibles" tab (you can search for `id="collectibles"`).
 It currently contains a placeholder paragraph.
@@ -128,29 +238,36 @@ Replace that entire `div` with the following EJS:
 <div id="collectibles" class="tab-pane <%= currentTab === 'collectibles' ? 'active' : '' %>">
     <% if (collectibles && collectibles.length > 0) { %>
         <div class="collectibles-grid">
-            <% collectibles.forEach(nft => { %>
-                <%# We assume an external_url might not always be present, so default to '#' or link to metadata_url %>
-                <a href="<%= nft.external_url || nft.metadata_url || '#' %>" target="_blank" rel="noopener noreferrer" class="collectible-item-link">
+            <% collectibles.forEach(collectible => { %>
+                <% if (collectible.opensea_url) { %>
+                    <a href="<%= collectible.opensea_url %>" target="_blank" class="collectible-item-link">
+                <% } else { %>
+                    <div class="collectible-item-link">
+                <% } %>
                     <div class="collectible-item">
                         <div class="collectible-image-container">
-                            <% if (nft.image_url) { %>
-                                <img src="<%= nft.image_url %>" alt="<%= nft.name || 'NFT Image' %>" class="collectible-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                                <div class="collectible-image-placeholder" style="display: none;">Image Unavailable</div>
+                            <% if (collectible.image_url) { %>
+                                <img src="<%= collectible.image_url %>" alt="<%= collectible.collection_name || collectible.name || 'NFT' %>" class="collectible-image">
                             <% } else { %>
-                                <div class="collectible-image-placeholder">No Image Provided</div>
+                                <div class="collectible-image-placeholder">
+                                    NFT
+                                </div>
                             <% } %>
                         </div>
-                        <div class="collectible-info">
-                            <p class="collectible-name" title="<%= nft.name || 'Unnamed NFT' %>"><%= nft.name || 'Unnamed NFT' %></p>
-                            <% if (nft.collection && nft.collection.name) { %>
-                                <p class="collectible-collection" title="<%= nft.collection.name %>"><%= nft.collection.name %></p>
-                            <% } else { %>
-                                <p class="collectible-collection">Unknown Collection</p>
-                            <% } %>
-                            <p class="collectible-chain mono">Chain: <%= nft.chain_id %> (<%= nft.chain || 'N/A' %>)</p>
+                        <div class="collectible-info-static">
+                            <div class="collectible-name">
+                                <%= collectible.collection_name || collectible.name || `Token #${collectible.token_id}` %>
+                            </div>
+                            <div class="collectible-collection">
+                                #<%= collectible.token_id.length > 10 ? collectible.token_id.substring(0, 8) + '...' : collectible.token_id %>
+                            </div>
                         </div>
                     </div>
-                </a>
+                <% if (collectible.opensea_url) { %>
+                    </a>
+                <% } else { %>
+                    </div>
+                <% } %>
             <% }); %>
         </div>
     <% } else if (walletAddress) { %>
@@ -161,17 +278,17 @@ Replace that entire `div` with the following EJS:
 </div>
 ```
 
-The EJS template iterates through the `collectibles` array.
-Each NFT is displayed with its `image_url` in an image tag.
-The display includes key metadata like `name`, `collection.name`, `chain_id`, and `chain` to provide complete context for each collectible.
+The EJS template iterates through the `collectibles` array and displays each NFT with its enriched metadata.
+Each collectible shows the `image_url` from OpenSea, the `collection_name` or fallback name, and a truncated `token_id` for identification.
+If an `opensea_url` is available, the entire NFT card becomes a clickable link that opens the NFT's OpenSea page in a new tab.
 
 Restart your server using `node server.js` and navigate to your wallet app in the browser.
-When you click on the "Collectibles" tab, and if the wallet has NFTs, you should see the NFT collection displayed.
+When you click on the "Collectibles" tab, and if the wallet has NFTs, you should see the NFT collection displayed with rich visual metadata.
 
 ## Conclusion
 
 That concludes this three-part series\!
-With just three API requests - [Balances](/evm/balances), [Activity](/evm/activity), and [Collectibles](/evm/collectibles) - you've built a fully functional, multichain wallet that displays token balances, calculates portfolio value, tracks detailed transaction activity, and showcases NFT collections.
+With just three API requests - [Balances](/evm/balances), [Activity](/evm/activity), and [Collectibles](/evm/collectibles) - enhanced with OpenSea metadata, you've built a fully functional, multichain wallet that displays token balances, calculates portfolio value, tracks detailed transaction activity, and showcases NFT collections with rich visual displays.
 
 **This project serves as a solid foundation for a wallet**.
 You can now expand upon it by exploring other Sim API features.
