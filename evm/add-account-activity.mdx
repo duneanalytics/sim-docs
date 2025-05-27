@@ -20,10 +20,34 @@ A key feature for any wallet is the ability to view past transaction activity.
 This includes native currency transfers, ERC20 token movements, NFT transfers, and decoded interactions with smart contracts.
 The [Activity API](/evm/activity) provides a comprehensive, realtime feed of this onchain activity, letting you implement this functionality with a single API request across 60\+ EVM chains.
 
+<Columns cols={2}>
+  <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui" horizontal>
+    Access the complete source code for this wallet on GitHub
+  </Card>
+  
+  <Card title="Try Live Demo" icon="globe" href="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7" horizontal>
+    Interact with the finished wallet app
+  </Card>
+</Columns>
+
 <Note>
   This guide assumes you've completed the first guide, [Build a Realtime Wallet](/evm/build-a-realtime-wallet).
   Your project should already be set up to fetch and display token balances.
 </Note>
+
+## See It in Action
+
+You can see the activity feed in action by trying the live demo below. Click on the "Activity" tab to explore transaction history for the sample wallet:
+
+<iframe 
+  src="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7&tab=activity" 
+  className="w-full rounded-xl border border-gray-200 dark:border-gray-700"
+  style={{ height: "800px" }}
+  title="Live Wallet Demo - Activity Tab"
+  frameBorder="0"
+  allow="clipboard-write; encrypted-media"
+  allowFullScreen
+/>
 
 ## Fetch Wallet Activity
 

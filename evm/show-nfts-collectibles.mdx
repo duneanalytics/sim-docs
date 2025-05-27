@@ -12,12 +12,36 @@ Your wallet now displays token balances, calculates total portfolio value, and t
 To give users a holistic view of their onchain assets, the final piece is to **showcase their NFT collections**.
 In this third and final guide of our wallet series, we will focus on implementing the _Collectibles_ tab.
 
+<Columns cols={2}>
+  <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/sim-guides" horizontal>
+    Access the complete source code for this wallet on GitHub
+  </Card>
+  
+  <Card title="Try Live Demo" icon="globe" href="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7" horizontal>
+    Interact with the finished wallet app
+  </Card>
+</Columns>
+
 <Note>
   This guide assumes you have completed the previous guides:
 
   1. [Build a Realtime Wallet](/evm/build-a-realtime-wallet)
   2. [Add Account Activity](/evm/add-account-activity)
 </Note>
+
+## Explore the NFT Collection
+
+See the collectibles feature in action with the live demo below. Click on the "Collectibles" tab to browse the sample wallet's NFT collection:
+
+<iframe 
+  src="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7&tab=collectibles" 
+  className="w-full rounded-xl border border-gray-200 dark:border-gray-700"
+  style={{ height: "800px" }}
+  title="Live Wallet Demo - Collectibles Tab"
+  frameBorder="0"
+  allow="clipboard-write; encrypted-media"
+  allowFullScreen
+/>
 
 ## Fetch NFT Collectibles
 
@@ -281,6 +305,8 @@ Replace that entire `div` with the following EJS:
 The EJS template iterates through the `collectibles` array and displays each NFT with its enriched metadata.
 Each collectible shows the `image_url` from OpenSea, the `collection_name` or fallback name, and a truncated `token_id` for identification.
 If an `opensea_url` is available, the entire NFT card becomes a clickable link that opens the NFT's OpenSea page in a new tab.
+
+---
 
 Restart your server using `node server.js` and navigate to your wallet app in the browser.
 When you click on the "Collectibles" tab, and if the wallet has NFTs, you should see the NFT collection displayed with rich visual metadata.

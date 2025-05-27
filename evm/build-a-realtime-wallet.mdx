@@ -18,6 +18,16 @@ This is the first guide in our series on building a realtime, multichain wallet 
 In this one, we will lay the foundation for our wallet.
 You will set up a Node project with Express.js, fetch and display token balances from 60\+ EVM chains using the Balances API, and calculate the wallet's total portfolio value in USD.
 
+<Columns cols={2}>
+  <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/sim-guides/tree/main/wallet-ui" horizontal>
+    Access the complete source code for this wallet on GitHub
+  </Card>
+  
+  <Card title="Try Live Demo" icon="globe" href="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7" horizontal>
+    Interact with the finished wallet app
+  </Card>
+</Columns>
+
 ## Prerequisites
 
 Before we begin, make sure you have:
@@ -25,7 +35,7 @@ Before we begin, make sure you have:
 - Node.js \>= 18.0.0
 - A Sim API key
 
-<Card title="Get your API Key" icon="lock" horizontal href="/#authentication">
+<Card title="Get your API Key" icon="key" horizontal href="/#authentication">
   Learn how to obtain your API key to properly authenticate requests.
 </Card>
 
@@ -41,6 +51,21 @@ By the end of this series, our wallet will have four main features:
 <Note>
   In this first guide, we will focus on implementing the first two: **Token Balances** and **Total Portfolio Value**.
 </Note>
+
+## Try the Live Demo
+
+Before diving into building, you can interact with the finished wallet app below.
+Enter any Ethereum wallet address to explore its token balances, transaction history, and NFT collection across multiple chains.
+
+<iframe 
+  src="https://sim-guides.vercel.app/?walletAddress=0x48D004a6C175dB331E99BeAf64423b3098357Ae7" 
+  className="w-full rounded-xl border border-gray-200 dark:border-gray-700"
+  style={{ height: "800px" }}
+  title="Live Wallet Demo"
+  frameBorder="0"
+  allow="clipboard-write; encrypted-media"
+  allowFullScreen
+/>
 
 ## Project Setup
 
