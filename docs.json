@@ -58,7 +58,6 @@
           "spam-filtering",
           "error-handling",
           "proxy",
-          "hooks",
           "support"
         ]
       }
