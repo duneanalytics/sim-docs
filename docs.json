@@ -24,9 +24,15 @@
           {
             "group": "Guides",
             "pages": [
-              "evm/build-a-realtime-wallet",
-              "evm/add-account-activity",
-              "evm/show-nfts-collectibles"
+              "evm/build-a-realtime-chat-agent",
+              {
+                "group": "Realtime Wallet",
+                "pages": [
+                  "evm/build-a-realtime-wallet",
+                  "evm/add-account-activity",
+                  "evm/show-nfts-collectibles"
+                ]
+              }
             ]
           },
           "evm/balances",
