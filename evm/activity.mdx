@@ -10,8 +10,17 @@ import { SupportedChains } from "/snippets/supported-chains.mdx";
 ![Activity Sv](/images/activity.svg)
 
 The Activity API provides a realtime feed of onchain activity for any EVM address.
-The newest activity is returned first and includes:
+The newest activity is returned first and includes the following activity types:
 
+- **send** - Outgoing transfers of tokens or native assets
+- **receive** - Incoming transfers of tokens or native assets  
+- **mint** - Token minting activities
+- **burn** - Token burning activities
+- **swap** - Token swaps and exchanges
+- **approve** - Token approval transactions
+- **call** - Generic contract interactions that don't fall into the above categories
+
+Each activity includes detailed information such as:
 - Native token transfers
 - ERC20 token transfers with metadata (symbol, decimals)
 - ERC721 (NFT) transfers with token IDs
@@ -20,6 +29,10 @@ The newest activity is returned first and includes:
 <Accordion title="Supported Chains">
   <SupportedChains endpoint="activity" />
 </Accordion>
+
+<Callout type="info">
+Activities are mostly indexed events. There are, of course, no events for native token transfers (wen [7708](https://ethereum-magicians.org/t/eip-7708-eth-transfers-emit-a-log/20034)?). We do have a heuristic to catch very simple native token transfers, where the native token transfer is the entirety of the transaction, but unfortunately we don't currently catch native token transfers that happen within internal txns.
+</Callout>
 
 ## Token Filtering
 

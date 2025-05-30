@@ -78,7 +78,7 @@
                       "chain_id": 8453,
                       "block_number": 26635101,
                       "block_time": "2025-02-20T13:52:29+00:00",
-                      "transaction_hash": "0x184544c8d67a0cbed0a3f04abe5f958b96635e8c743c070f70e24b1c06cd1aa6",
+                      "tx_hash": "0x184544c8d67a0cbed0a3f04abe5f958b96635e8c743c070f70e24b1c06cd1aa6",
                       "type": "receive",
                       "asset_type": "erc20",
                       "token_address": "0xf92e740ad181b13a484a886ed16aa6d32d71b19a",
@@ -131,7 +131,7 @@
             "format": "date-time",
             "description": "Timestamp of the block"
           },
-          "transaction_hash": {
+          "tx_hash": {
             "type": "string",
             "description": "Hash of the transaction"
           },
