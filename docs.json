@@ -55,7 +55,7 @@
         "group": "Resources",
         "pages": [
           "build-with-ai",
-          "spam-filtering",
+          "token-filtering",
           "error-handling",
           "proxy",
           "support"

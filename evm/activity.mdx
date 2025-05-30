@@ -21,8 +21,6 @@ The newest activity is returned first and includes:
   <SupportedChains endpoint="activity" />
 </Accordion>
 
-## Spam Tokens
+## Token Filtering
 
-The Activity API supports filtering out activities related to spam tokens using the `?exclude_spam_tokens` parameter. When specified, this parameter will exclude transactions and transfers involving tokens that meet spam criteria, providing a cleaner activity feed.
-
-We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our spam filtering approach, see our [Spam Token Filtering](/spam-filtering) guide.
+We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
