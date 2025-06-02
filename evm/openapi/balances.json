@@ -52,16 +52,6 @@
             }
           },
           {
-            "name": "exclude_spam_tokens",
-            "in": "query",
-            "description": "Specify this to exclude spam tokens from the response",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "nullable": true
-            }
-          },
-          {
             "name": "filters",
             "in": "query",
             "description": "Specify `erc20` or `native` to get only ERC20 tokens or native assets, respectively",

@@ -22,11 +22,9 @@ The Token Balances API provides accurate and fast real time balances of the nati
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a USD price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
 
-## Spam Tokens
+## Token Filtering
 
-The Balances API provides the `?exclude_spam_tokens` query parameter. You can use it filter out potential spam tokens based on various criteria, including a minimum liquidity threshold of \$100.
-
-We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our spam filtering approach, see our [Spam Token Filtering](/spam-filtering) guide.
+We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
 
 ## Pagination
 

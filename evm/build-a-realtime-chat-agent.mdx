@@ -681,8 +681,6 @@ const functions = [
                         type: "string",
                         description: "The wallet address to get balances for (e.g., 0xd8da6bf26964af9d7eed9e03e53415d37aa96045)"
                     },
-                    exclude_spam_tokens: {
-                        type: "boolean",
                         description: "Whether to exclude spam tokens from results",
                         default: true
                     }
@@ -927,9 +925,8 @@ Next, we'll create a more comprehensive configuration object that handles all th
 ```javascript
 // API endpoint configurations
 const API_CONFIGS = {
-    get_token_balances: (address, exclude_spam_tokens = true) => {
+    get_token_balances: (address) => {
         const queryParams = new URLSearchParams({ metadata: 'url,logo' });
-        if (exclude_spam_tokens) queryParams.append('exclude_spam_tokens', 'true');
         return [`/v1/evm/balances/${address}`, queryParams];
     },
     
