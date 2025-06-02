@@ -5,7 +5,7 @@ description: "Explore chains supported by Sim's EVM API endpoints."
 openapi: "evm/openapi/supported-chains.json"
 ---
 
-import { SupportedChains } from '/snippets/supported-chains.mdx';
+import { SupportedChainsAccordion } from '/snippets/supported-chains-accordion.mdx';
 
 <Frame>
   <img
@@ -20,23 +20,4 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 Chain support varies by API endpoint.
 Use the dropdown sections below to check which chains are available for each API:
 
-<AccordionGroup>
-  <Accordion title="Balances API">
-    <SupportedChains endpoint="balances" />
-  </Accordion>
-  <Accordion title="Activity API">
-    <SupportedChains endpoint="activity" />
-  </Accordion>
-  <Accordion title="Collectibles API">
-    <SupportedChains endpoint="collectibles" />
-  </Accordion>
-  <Accordion title="Transactions API">
-    <SupportedChains endpoint="transactions" />
-  </Accordion>
-  <Accordion title="Token Info API">
-    <SupportedChains endpoint="token_info" />
-  </Accordion>
-  <Accordion title="Token Holders API">
-    <SupportedChains endpoint="token_holders" />
-  </Accordion>
-</AccordionGroup>
+<SupportedChainsAccordion />

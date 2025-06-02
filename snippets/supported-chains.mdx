@@ -1,46 +1,71 @@
 export const SupportedChains = ({ endpoint }) => {
-  const [data, setData] = useState(null);
+  const dataState = useState(null);
+  const data = dataState[0];
+  const setData = dataState[1];
 
-  useEffect(() => {
+  useEffect(function() {
     fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
       method: "GET",
       headers: {
         "X-Sim-Api-Key": "sim_qfIvSWu7c8WBXzfCQ0SeLBGJts204uyT",
       },
     })
-      .then((response) => response.json())
-      .then(setData);
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(responseData) {
+        setData(responseData);
+      });
   }, []);
 
   if (data === null) {
-    return null;
+    return <div>Loading chain information...</div>;
   }
 
-  const chains =
-    endpoint !== undefined
-      ? data.chains.filter((chain) => chain[endpoint]?.supported)
-      : data.chains;
+  if (!data.chains) {
+    return <div>No chain data available</div>;
+  }
+
+  var supportedChains = [];
+  var totalChains = data.chains.length;
   
-  console.log("data", data);
-  
+  if (endpoint !== undefined) {
+    for (var i = 0; i < data.chains.length; i++) {
+      var chain = data.chains[i];
+      if (chain[endpoint] && chain[endpoint].supported) {
+        supportedChains.push(chain);
+      }
+    }
+  } else {
+    supportedChains = data.chains;
+  }
+
+  var count = supportedChains.length;
+  var endpointName = endpoint ? (endpoint.charAt(0).toUpperCase() + endpoint.slice(1).replace(/_/g, " ")) : "All";
+  var accordionTitle = "Supported Chains (" + count + ")";
+
   return (
-    <table>
-      <thead>
-        <tr>
-          <th>name</th>
-          <th>chain_id</th>
-          <th>tags</th>
-        </tr>
-      </thead>
-      <tbody>
-        {chains.map((chain) => (
-          <tr key={chain.name}>
-            <td><code>{chain.name}</code></td>
-            <td><code>{chain.chain_id}</code></td>
-            <td><code>{chain.tags.join(", ")}</code></td>
+    <Accordion title={accordionTitle}>
+      <table>
+        <thead>
+          <tr>
+            <th>name</th>
+            <th>chain_id</th>
+            <th>tags</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {supportedChains.map(function(chain) {
+            return (
+              <tr key={chain.name}>
+                <td><code>{chain.name}</code></td>
+                <td><code>{chain.chain_id}</code></td>
+                <td><code>{chain.tags ? chain.tags.join(", ") : ""}</code></td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Accordion>
   );
 };
