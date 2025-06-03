@@ -8,7 +8,7 @@ This guide will walk you through installing the CLI, initializing your first app
 ## What is Sim idx?
 
 Sim idx is a framework designed to radically simplify the process of indexing blockchain data.
-You write simple Solidity "listener" contracts to specify what on-chain data you're interested in, and Sim idx automatically indexes that data and provides you with the tools to build custom APIs to query it.
+You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim idx automatically indexes that data and provides you with the tools to build custom APIs to query it.
 
 ## Install the Sim idx CLI
 
@@ -121,6 +121,71 @@ The sample app is set up to index successful `transfer` function calls on the [U
 
 `Listener.sol` is a Solidity smart contract you write that specifies what onchain data you're interested in.
 Let's examine the sample `Listener.sol` for USDC transfers:
+
+
+Here's the complete contract we'll build, including both transfer and approval indexing:
+
+```typescript listeners/src/Listener.sol [expandable]
+pragma solidity ^0.8.19;
+
+import {ProbeDsl, ChainIdContract} from "simidx/Dsl.sol";
+import {
+    Usdc$function_OnPostTransfer,
+    Usdc$function_transferInputs,
+    Usdc$function_transferOutputs,
+    Usdc$postTransferFunction,
+    Usdc$function_OnPostApprove,
+    Usdc$function_approveInputs,
+    Usdc$function_approveOutputs,
+    Usdc$postApproveFunction
+} from "simidx/generated/Usdc.sol";
+
+contract UserProbe is Usdc$function_OnPostTransfer, Usdc$function_OnPostApprove, ProbeDsl {
+
+    // Events for the data we want to index
+    event Transfer(address indexed to, uint256 value);
+    event Approval(address indexed spender, uint256 value);
+
+    constructor() {
+        // Hook for transfer events
+        addHook(
+            ChainIdContract(
+                1, // Chain ID (1 for Ethereum Mainnet)
+                0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 // USDC Contract Address
+            ),
+            Usdc$postTransferFunction(),
+            UserProbe.onPostTransfer.selector
+        );
+
+        // Hook for approval events
+        addHook(
+            ChainIdContract(1, 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48),
+            Usdc$postApproveFunction(),
+            UserProbe.onPostApprove.selector
+        );
+    }
+
+    function onPostTransfer(
+        Usdc$function_transferInputs memory inputs,
+        Usdc$function_transferOutputs memory outputs
+    ) external override {
+        if (outputs.outArg0 == true) {
+            emit Transfer(inputs.to, inputs.value);
+        }
+    }
+
+    function onPostApprove(
+        Usdc$function_approveInputs memory inputs,
+        Usdc$function_approveOutputs memory outputs
+    ) external override {
+        if (outputs.outArg0 == true) {
+            emit Approval(inputs.spender, inputs.value);
+        }
+    }
+}
+```
+
+We'll build this contract step by step in the following sections, starting with the basic transfer functionality and then adding approval indexing.
 
 ### Importing Generated Interfaces
 
@@ -360,6 +425,68 @@ The database tables are automatically created based on the events you define in 
 What Sim idx handles is deploying your API. 
 What you'll do is write TypeScript code, using any NPM libraries to build your backend APIs.
 You'll build a TypeScript-based backend, and you're going to read data from the database to query the data for your API.
+
+Here's the complete API we'll build with all endpoints:
+
+```typescript apis/src/index.ts [expandable]
+import express from 'express';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Database connection - use the connection string from sim deploy
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+app.use(express.json());
+
+// Get all transfers
+app.get('/api/transfers', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM "Transfer" ORDER BY block_number DESC LIMIT 100';
+    const result = await pool.query(query);
+    
+    res.json({
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching transfers:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Get all approvals
+app.get('/api/approvals', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM "Approval" ORDER BY block_number DESC LIMIT 100';
+    const result = await pool.query(query);
+    
+    res.json({
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching approvals:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`API server running on port ${port}`);
+});
+```
+
+This is the complete API we'll build step by step. It includes endpoints for both transfers and approvals, connecting to your indexed database to serve the data through REST endpoints.
 
 ### Understanding the APIs Folder
 
