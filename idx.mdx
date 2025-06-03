@@ -1,0 +1,331 @@
+---
+title: "Sim idx Quickstart"
+description: "Get started with Sim idx and deploy your first blockchain data API in minutes."
+---
+
+This guide will walk you through installing the CLI, initializing your first app, understanding its structure, and deploying your first blockchain data API.
+
+## What is Sim idx?
+
+Sim idx is a framework designed to radically simplify the process of indexing blockchain data.
+You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim idx automatically generates and deploys an API for you to query that data.
+
+## Install the Sim idx CLI
+
+The Sim idx CLI is your primary tool for interacting with the framework.
+
+<Steps>
+<Step title="Download the CLI">
+  Download [the latest release ](https://github.com/duneanalytics/simsim/releases) of Sim CLI for your platform.
+</Step>
+
+<Step title="Install Dependencies">
+  Install the required dependencies:
+  
+  ```bash
+  # Install Foundry (nightly version)
+  curl -L https://foundry.paradigm.xyz | bash && foundryup --install nightly
+  
+  # Install solc-typed-ast
+  npm install -g solc-typed-ast
+  ```
+  
+  For the best development experience, also install [the Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) for code completion when editing listeners.
+
+  <Info>
+Sim idx uses the nightly version of Foundry. We're working to simplify this setup process. If you have trouble getting this working on your current system, consider setting up an Ubuntu machine. We'll have a Docker container available soon to make this even easier.
+</Info>
+
+</Step>
+
+<Step title="Extract and Setup">
+  Extract the downloaded file and make it executable:
+  
+  ```bash
+  # Extract the tar file (replace with your downloaded filename)
+  tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
+  
+  # Make it executable
+  chmod +x ./sim
+  
+  # Move to system bin (optional - allows you to run 'sim' from anywhere)
+  mv ./sim /usr/bin/sim
+  ```
+  
+  <Info>
+  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted file before making it executable.
+  </Info>
+</Step>
+
+<Step title="Verify Installation">
+  Verify the CLI is working:
+  ```bash
+  sim --version
+  ```
+  
+  You should see output similar to:
+  
+  ```
+  sim  (984668 2025-06-02T15:34:14.000000000Z)
+  ```
+</Step>
+</Steps>
+
+## Initialize Your First App
+
+Let's create your first Sim idx app. We'll start with the default USDC sample app, which indexes USDC token transfers on Ethereum.
+
+```bash
+mkdir my-first-idx-app
+cd my-first-idx-app
+sim init
+```
+
+This command creates a new directory `my-first-idx-app` and initializes a Sim with a pre-configured sample app.
+
+## App Structure Overview
+
+The initialized app has the following structure:
+
+```
+my-first-idx-app/
+├── sim.toml                     # App configuration (app name, etc.)
+├── abis/                        # Stores contract ABI files (JSON)
+│   └── Usdc.json                # ABI for the USDC contract
+├── listeners/                   # Foundry app for your listener contracts
+│   ├── src/
+│   │   └── Listener.sol         # YOUR PRIMARY EDITING TARGET!
+│   ├── test/
+│   │   └── Listener.t.sol       # Unit tests for your listener
+│   ├── lib/simidx/src/
+│   │   ├── Dsl.sol              # Core Sim idx DSL for triggers
+│   │   └── generated/           # Solidity interfaces auto-generated from ABIs
+│   │       └── Usdc.sol         # Generated interfaces for Usdc.json
+└── apis/                        # Your generated APIs
+```
+
+The `abis/` directory contains JSON ABI files of smart contracts you want to index.
+The sample includes `abis/Usdc.json` for the USDC contract.
+
+The `listeners/`directory is a Foundry app where you'll spend most of your development time, specifically editing `src/Listener.sol` to define what onchain events to listen for and what data to extract.
+These are the two main folders you'll be working with directly.
+
+The `lib/simidx/src/` directory contains core Sim idx libraries and auto-generated interfaces that you'll import in your listeners. We'll explore these in detail in the next section.
+
+## Edit Listener
+
+The sample app is set up to index successful `transfer` function calls on the USDC contract on Ethereum mainnet. This sample app has already been set up with the appropriate ABI.
+
+The file `listeners/lib/simidx/src/generated/Usdc.sol` is auto-generated based on `abis/Usdc.json`. The auto-generated files provide helpful building blocks for `Listener.sol` that you can import.
+
+`Listener.sol` is a Solidity smart contract you write that specifies what onchain data you're interested in. Let's examine the sample `Listener.sol` for USDC transfers:
+
+### Importing Generated Interfaces
+
+First, we import the generated interfaces and structs from the auto-generated `Usdc.sol` file:
+
+```solidity
+import {ProbeDsl, ChainIdContract} from "simidx/Dsl.sol";
+import {
+    Usdc$function_OnPostTransfer, // Interface for the transfer function handler
+    Usdc$function_transferInputs, // Struct for transfer inputs
+    Usdc$function_transferOutputs, // Struct for transfer outputs
+    Usdc$postTransferFunction     // Helper to get transfer function selector for hooks
+} from "simidx/generated/Usdc.sol";
+```
+
+When you add an ABI, Sim idx automatically generates interfaces like `Usdc$function_OnPostTransfer` and structs like `Usdc$function_transferInputs` that provide type-safe access to function parameters. This is why we recommend the [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) - it helps you find the correct functions automatically through code completion.
+
+### Contract Definition
+
+Next, we define our listener contract:
+
+```solidity
+contract UserProbe is Usdc$function_OnPostTransfer, ProbeDsl {
+```
+
+Your listener contract implements the generated interface (`Usdc$function_OnPostTransfer`) to handle USDC transfer calls, and inherits from `ProbeDsl` to use Sim idx's trigger definition helpers.
+
+### Event Definition
+
+We define an event for the data we want to index:
+
+```solidity
+// Define an event for the data you want to index.
+// This event's fields will become columns in your queryable dataset.
+event Transfer(address indexed to, uint256 value);
+```
+
+Events are crucial because they define the structure of data that will be indexed. When this event is emitted, Sim idx captures the `to` address and `value` amount, making them queryable through your API.
+
+### Constructor (Setting Up Triggers)
+
+The constructor is where we define our triggers:
+
+```solidity
+constructor() {
+    // addHook connects a trigger to a handler.
+    addHook(
+        // Trigger 1: What contract & chain to listen on?
+        ChainIdContract(
+            1, // Chain ID (1 for Ethereum Mainnet)
+            0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 // USDC Contract Address on Mainnet
+        ),
+        // Trigger 2: Which function on that contract?
+        // Usdc$postTransferFunction() is a helper from generated/Usdc.sol
+        // It specifies we want to trigger *after* the 'transfer' function executes.
+        Usdc$postTransferFunction(),
+        // Handler: Which function in *this* contract should be called?
+        UserProbe.onPostTransfer.selector // The selector of our onPostTransfer handler
+    );
+}
+```
+
+A **Trigger** defines conditions that determine when a specific handler function should be invoked during EVM execution. The `addHook()` call sets up a trigger for successful `transfer` function calls on the USDC contract, specifying the chain, contract address, and which function to monitor.
+
+### Handler Function
+
+Finally, we implement the handler that processes the data:
+
+```solidity
+function onPostTransfer(
+    Usdc$function_transferInputs memory inputs, // Decoded inputs of the USDC transfer call
+    Usdc$function_transferOutputs memory outputs // Decoded outputs of the USDC transfer call
+) external override {
+    // outputs.outArg0 typically represents the 'success' boolean of a transfer.
+    if (outputs.outArg0 == true) { // Check if the transfer was successful
+        // Emit the data you want to save.
+        // 'inputs.to' and 'inputs.value' come from the decoded transfer call.
+        emit Transfer(inputs.to, inputs.value);
+    }
+}
+```
+
+A **Handler** is a Solidity function that is automatically invoked when the trigger conditions are met. It receives decoded input and output data from the matched transaction, allowing you to process this data and emit events containing the information you want to index.
+
+## Index a New Function
+
+Let's say you want to index `approve` calls on the USDC contract.
+
+### Find Generated Components for `approve`
+
+Open `listeners/lib/simidx/src/generated/Usdc.sol`. You'll find:
+*   Interface: `Usdc$function_OnPostApprove`
+*   Input struct: `Usdc$function_approveInputs` (containing `spender` and `value`)
+*   Output struct: `Usdc$function_approveOutputs` (containing the success boolean)
+*   Hook helper: `Usdc$postApproveFunction()`
+
+### Modify `Listener.sol`
+
+**Import new components:**
+```solidity
+import {
+    // ... existing imports ...
+    Usdc$function_OnPostApprove,      // New interface
+    Usdc$function_approveInputs,      // New input struct
+    Usdc$function_approveOutputs,     // New output struct
+    Usdc$postApproveFunction          // New hook helper
+} from "simidx/generated/Usdc.sol";
+```
+
+**Implement the new interface:**
+```solidity
+contract UserProbe is Usdc$function_OnPostTransfer, Usdc$function_OnPostApprove, ProbeDsl {
+    // ...
+}
+```
+
+**Define a new event for `approve` data:**
+```solidity
+event Approval(address indexed spender, uint256 value);
+```
+
+**Add a new hook in the constructor:**
+```solidity
+constructor() {
+    // ... existing hook for transfer ...
+
+    addHook(
+        ChainIdContract(1, 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), // Same USDC contract
+        Usdc$postApproveFunction(),                                 // Trigger on 'approve'
+        UserProbe.onPostApprove.selector                            // Call our new handler
+    );
+}
+```
+
+**Implement the new handler function:**
+```solidity
+function onPostApprove(
+    Usdc$function_approveInputs memory inputs,
+    Usdc$function_approveOutputs memory outputs
+) external override {
+    if (outputs.outArg0 == true) { // Check if approve was successful
+        // Emit Approval data
+        emit Approval(inputs.spender, inputs.value);
+    }
+}
+```
+
+## Build, Test, and Deploy
+
+After making changes to `Listener.sol`, you're ready to compile your app, test it, and deploy it to the Sim idx platform.
+
+<Steps>
+<Step title="Build Your App">
+Compile your Solidity contracts:
+```bash
+sim build
+```
+When successful, you'll see: `✓ Build completed successfully`
+</Step>
+
+<Step title="Test Your Listener">
+Run your Solidity tests:
+```bash
+sim test
+```
+The sample app includes tests in `listeners/test/Listener.t.sol` that you can run and modify. When successful, you'll see: `✓ All tests passed successfully`
+</Step>
+
+<Step title="Authenticate">
+Before deploying, authenticate with your API key. You can find your API key in the Sim portal:
+```bash
+sim authenticate
+```
+This will prompt you to paste your API key and save it locally.
+</Step>
+
+<Step title="Deploy Your Application">
+Deploy your listener to start indexing:
+```bash
+sim deploy
+```
+After successful deployment, you'll receive your API URL and can monitor your deployment through the Sim dashboard. Your app will begin indexing blockchain events according to your defined triggers.
+</Step>
+</Steps>
+
+## 7. Defining Your API (Through Events)
+
+In Sim idx, you define the "schema" of your API by defining `event`s in your `Listener.sol` contract and `emit`ting them from your handlers.
+
+For example, the `event Transfer(address indexed to, uint256 value);` and `emit Transfer(inputs.to, inputs.value);` in `Listener.sol` means that your indexed data will have `to` and `value` fields.
+
+Sim idx automatically creates API endpoints to query the data emitted by these events.
+
+The `apis/` directory in your app is for *advanced users* who want to build custom API layers on top of the data indexed by Sim idx. For most initial use-cases, you won't need to touch this directory; the auto-generated API will suffice.
+
+## 8. Using Your API
+
+After a successful `sim deploy`, the CLI output will the URL provide for your newly created API.
+
+You can then query this API to retrieve the data your listener has indexed. For example, you might make a GET request to an endpoint like:
+
+`https://your-app-name.api.simidx.com/v1/events/Transfer`
+
+You would typically be able to filter by the event parameters (e.g., `to` address or `value`).
+
+## Next Steps
+
+Congratulations! You've now seen the basics of creating, testing, and deploying a Sim idx application.
+
+Happy indexing! If you have questions or feedback during this private beta, please reach out through the provided channels.
