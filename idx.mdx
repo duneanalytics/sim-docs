@@ -8,7 +8,7 @@ This guide will walk you through installing the CLI, initializing your first app
 ## What is Sim idx?
 
 Sim idx is a framework designed to radically simplify the process of indexing blockchain data.
-You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim idx automatically generates and deploys an API for you to query that data.
+You write simple Solidity "listener" contracts to specify what on-chain data you're interested in, and Sim idx automatically indexes that data and provides you with the tools to build custom APIs to query it.
 
 ## Install the Sim idx CLI
 
@@ -16,7 +16,7 @@ The Sim idx CLI is your primary tool for interacting with the framework.
 
 <Steps>
 <Step title="Download the CLI">
-  Download [the latest release ](https://github.com/duneanalytics/simsim/releases) of Sim CLI for your platform.
+  Download [the latest release ](https://drive.google.com/drive/folders/137naBu5bFX-6stc8x9fTyggApnT3w9Xx) of Sim CLI for your platform.
 </Step>
 
 <Step title="Install Dependencies">
@@ -49,11 +49,11 @@ Sim idx uses the nightly version of Foundry. We're working to simplify this setu
   chmod +x ./sim
   
   # Move to system bin (optional - allows you to run 'sim' from anywhere)
-  mv ./sim /usr/bin/sim
+  sudo mv ./sim /usr/bin/sim
   ```
   
   <Info>
-  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted file before making it executable.
+  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted executable before making it executable.
   </Info>
 </Step>
 
@@ -81,7 +81,7 @@ cd my-first-idx-app
 sim init
 ```
 
-This command creates a new directory `my-first-idx-app` and initializes a Sim with a pre-configured sample app.
+This command creates a new directory `my-first-idx-app` and initializes a new pre-configured sample app.
 
 ## App Structure Overview
 
@@ -91,7 +91,6 @@ The initialized app has the following structure:
 my-first-idx-app/
 ├── sim.toml                     # App configuration (app name, etc.)
 ├── abis/                        # Stores contract ABI files (JSON)
-│   └── Usdc.json                # ABI for the USDC contract
 ├── listeners/                   # Foundry app for your listener contracts
 │   ├── src/
 │   │   └── Listener.sol         # YOUR PRIMARY EDITING TARGET!
@@ -100,32 +99,38 @@ my-first-idx-app/
 │   ├── lib/simidx/src/
 │   │   ├── Dsl.sol              # Core Sim idx DSL for triggers
 │   │   └── generated/           # Solidity interfaces auto-generated from ABIs
-│   │       └── Usdc.sol         # Generated interfaces for Usdc.json
-└── apis/                        # Your generated APIs
+└── apis/                        # Your custom API code
 ```
 
-The `abis/` directory contains JSON ABI files of smart contracts you want to index.
-The sample includes `abis/Usdc.json` for the USDC contract.
+The `abis/` and the `listeners/` folders are the two main folders you'll be working with directly.
+
+`abis/` contains JSON ABI files of smart contracts you want to index.
+The sample app includes `abis/Usdc.json` for the USDC contract.
 
 The `listeners/`directory is a Foundry app where you'll spend most of your development time, specifically editing `src/Listener.sol` to define what onchain events to listen for and what data to extract.
-These are the two main folders you'll be working with directly.
 
-The `lib/simidx/src/` directory contains core Sim idx libraries and auto-generated interfaces that you'll import in your listeners. We'll explore these in detail in the next section.
+The `lib/simidx/src/` directory contains core Sim idx libraries and auto-generated interfaces that you'll import in your listeners.
+We'll explore these in detail in the next section.
+
+The `apis/` directory is where you'll write custom TypeScript APIs to query your indexed data.
+After deployment, Sim idx provides you with a database connection and hosts your API code.
 
 ## Edit Listener
 
-The sample app is set up to index successful `transfer` function calls on the USDC contract on Ethereum mainnet. This sample app has already been set up with the appropriate ABI.
+The sample app is set up to index successful `transfer` function calls on the [USDC contract on Ethereum mainne](https://etherscan.io/token/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48).
 
-The file `listeners/lib/simidx/src/generated/Usdc.sol` is auto-generated based on `abis/Usdc.json`. The auto-generated files provide helpful building blocks for `Listener.sol` that you can import.
-
-`Listener.sol` is a Solidity smart contract you write that specifies what onchain data you're interested in. Let's examine the sample `Listener.sol` for USDC transfers:
+`Listener.sol` is a Solidity smart contract you write that specifies what onchain data you're interested in.
+Let's examine the sample `Listener.sol` for USDC transfers:
 
 ### Importing Generated Interfaces
 
 First, we import the generated interfaces and structs from the auto-generated `Usdc.sol` file:
 
-```solidity
-import {ProbeDsl, ChainIdContract} from "simidx/Dsl.sol";
+The file `listeners/lib/simidx/src/generated/Usdc.sol` is auto-generated based on the `abis/Usdc.json` ABI.
+The auto-generated files provide helpful building blocks for `Listener.sol` that you can import.
+
+```typescript
+import { ProbeDsl, ChainIdContract } from "simidx/Dsl.sol";
 import {
     Usdc$function_OnPostTransfer, // Interface for the transfer function handler
     Usdc$function_transferInputs, // Struct for transfer inputs
@@ -134,13 +139,15 @@ import {
 } from "simidx/generated/Usdc.sol";
 ```
 
-When you add an ABI, Sim idx automatically generates interfaces like `Usdc$function_OnPostTransfer` and structs like `Usdc$function_transferInputs` that provide type-safe access to function parameters. This is why we recommend the [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) - it helps you find the correct functions automatically through code completion.
+When you add an ABI, Sim idx automatically generates interfaces like `Usdc$function_OnPostTransfer` and structs like `Usdc$function_transferInputs` that provide type-safe access to function parameters.
+This is why we recommend the [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity).
+It helps you find the correct functions automatically through code completion.
 
 ### Contract Definition
 
 Next, we define our listener contract:
 
-```solidity
+```typescript
 contract UserProbe is Usdc$function_OnPostTransfer, ProbeDsl {
 ```
 
@@ -150,19 +157,19 @@ Your listener contract implements the generated interface (`Usdc$function_OnPost
 
 We define an event for the data we want to index:
 
-```solidity
+```typescript
 // Define an event for the data you want to index.
 // This event's fields will become columns in your queryable dataset.
 event Transfer(address indexed to, uint256 value);
 ```
 
-Events are crucial because they define the structure of data that will be indexed. When this event is emitted, Sim idx captures the `to` address and `value` amount, making them queryable through your API.
+Events are crucial because they define the structure of data that will be indexed. When this event is emitted, Sim idx captures the `to` address and `value` amount, making them queryable through your custom API.
 
 ### Constructor (Setting Up Triggers)
 
 The constructor is where we define our triggers:
 
-```solidity
+```typescript
 constructor() {
     // addHook connects a trigger to a handler.
     addHook(
@@ -187,7 +194,7 @@ A **Trigger** defines conditions that determine when a specific handler function
 
 Finally, we implement the handler that processes the data:
 
-```solidity
+```typescript
 function onPostTransfer(
     Usdc$function_transferInputs memory inputs, // Decoded inputs of the USDC transfer call
     Usdc$function_transferOutputs memory outputs // Decoded outputs of the USDC transfer call
@@ -218,7 +225,7 @@ Open `listeners/lib/simidx/src/generated/Usdc.sol`. You'll find:
 ### Modify `Listener.sol`
 
 **Import new components:**
-```solidity
+```typescript
 import {
     // ... existing imports ...
     Usdc$function_OnPostApprove,      // New interface
@@ -229,19 +236,19 @@ import {
 ```
 
 **Implement the new interface:**
-```solidity
+```typescript
 contract UserProbe is Usdc$function_OnPostTransfer, Usdc$function_OnPostApprove, ProbeDsl {
     // ...
 }
 ```
 
 **Define a new event for `approve` data:**
-```solidity
+```typescript
 event Approval(address indexed spender, uint256 value);
 ```
 
 **Add a new hook in the constructor:**
-```solidity
+```typescript
 constructor() {
     // ... existing hook for transfer ...
 
@@ -254,7 +261,7 @@ constructor() {
 ```
 
 **Implement the new handler function:**
-```solidity
+```typescript
 function onPostApprove(
     Usdc$function_approveInputs memory inputs,
     Usdc$function_approveOutputs memory outputs
@@ -300,29 +307,238 @@ Deploy your listener to start indexing:
 ```bash
 sim deploy
 ```
-After successful deployment, you'll receive your API URL and can monitor your deployment through the Sim dashboard. Your app will begin indexing blockchain events according to your defined triggers.
 </Step>
 </Steps>
 
-## 7. Defining Your API (Through Events)
+After successful deployment, you'll receive two key pieces of information in the CLI:
 
-In Sim idx, you define the "schema" of your API by defining `event`s in your `Listener.sol` contract and `emit`ting them from your handlers.
+1. **API URL** - Where your custom API will be hosted:
+```
+api_url: "https://your-app.idx.dev.dune.com"
+```
 
-For example, the `event Transfer(address indexed to, uint256 value);` and `emit Transfer(inputs.to, inputs.value);` in `Listener.sol` means that your indexed data will have `to` and `value` fields.
+2. **Database Connection String** - PostgreSQL connection to your indexed data:
 
-Sim idx automatically creates API endpoints to query the data emitted by these events.
+```
+db_read_connection: "postgres://username:password@host/database?sslmode=require"
+```
 
-The `apis/` directory in your app is for *advanced users* who want to build custom API layers on top of the data indexed by Sim idx. For most initial use-cases, you won't need to touch this directory; the auto-generated API will suffice.
+<Note>
+Copy this connection string - you'll need it to connect your API to the indexed data.
+</Note>
 
-## 8. Using Your API
+Your app will begin indexing blockchain events according to your defined triggers, and you can now build custom APIs to query this data.
 
-After a successful `sim deploy`, the CLI output will the URL provide for your newly created API.
+## Inspect Your Data
 
-You can then query this API to retrieve the data your listener has indexed. For example, you might make a GET request to an endpoint like:
+Before building custom APIs, you can inspect your indexed data directly using any PostgreSQL client. Use the database connection string from your deployment to connect and explore:
 
-`https://your-app-name.api.simidx.com/v1/events/Transfer`
+```bash
+# Using psql
+psql "your_connection_string_here"
 
-You would typically be able to filter by the event parameters (e.g., `to` address or `value`).
+# List all tables
+\dt
+
+# Describe a table structure
+\d "Transfer"
+
+# View sample data
+SELECT * FROM "Transfer" LIMIT 5;
+```
+
+The database tables are automatically created based on the events you define in your `Listener.sol`:
+- **Transfer event** → `Transfer` table with columns: `to`, `value`, `block_number`, `log_index`, `transaction_hash`
+- **Approval event** → `Approval` table with columns: `spender`, `value`, `block_number`, `log_index`, `transaction_hash`
+
+<Info>
+  You can connect to this database using any PostgreSQL client like psql, DBeaver, or Beekeeper Studio to explore the schema and test queries during development.
+</Info>
+
+## Build Your API
+
+What Sim idx handles is deploying your API. 
+What you'll do is write TypeScript code, using any NPM libraries to build your backend APIs.
+You'll build a TypeScript-based backend, and you're going to read data from the database to query the data for your API.
+
+### Understanding the APIs Folder
+
+The `apis/` folder in your Sim idx app contains a **Cloudflare Workers** app that serves as your custom API layer. This is where you'll build endpoints to query the data that your listeners have indexed.
+
+```
+apis/
+├── src/
+│   ├── index.ts          # YOUR MAIN API FILE - Edit this!
+│   └── types.ts          # Type definitions - Edit this!
+├── package.json          # Dependencies and scripts
+├── wrangler.jsonc        # Cloudflare Workers configuration
+├── tsconfig.json         # TypeScript configuration
+```
+
+The APIs folder uses Cloudflare Workers for serverless deployment, providing global edge distribution and auto-scaling. Sim idx handles the deployment process - you just write the TypeScript code and run `sim deploy`.
+
+**Files you should edit:**
+
+- **`src/index.ts`** - Your main API implementation where you'll define endpoints and database connections
+- **`src/types.ts`** - Custom type definitions and validation schemas
+- **`package.json`** - Add new npm packages you need
+
+### Setting Up Your API with Express.js
+
+Navigate to the `apis/` directory in your project.
+This is where you'll build your custom API endpoints.
+While you can build your APIs in any way you like, we'll use Express.js for this example.
+
+```bash
+cd apis
+npm install express pg dotenv
+npm install --save-dev @types/express @types/pg
+```
+
+Create a `.env` file to store your database connection:
+
+```env
+DATABASE_URL=your_database_connection_string_from_sim_deploy
+PORT=3000
+```
+
+<Warning>
+  **Security**: Never commit your `.env` file to version control. Add it to your `.gitignore` file.
+</Warning>
+
+Now let's set up the basic Express.js server. Start by adding the imports and database connection in `src/index.ts`:
+
+```typescript
+import express from 'express';
+import { Pool } from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Database connection - use the connection string from sim deploy
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+app.use(express.json());
+```
+
+This sets up Express.js and creates a PostgreSQL connection pool using the database connection string you received from `sim deploy`.
+Make sure to replace `DATABASE_URL` in the `.env` file with your actual connection string.
+
+### Setting Up API Endpoints for Transfers
+
+Add an endpoint to query transfer data:
+
+```typescript
+// Get all transfers
+app.get('/api/transfers', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM "Transfer" ORDER BY block_number DESC LIMIT 100';
+    const result = await pool.query(query);
+    
+    res.json({
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching transfers:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+```
+
+This endpoint queries the `Transfer` table (created from your Transfer event) and returns the most recent 100 transfers. You have full access to the database, so you can structure your API however you want. For example, if you want to return transfers by recipient, you could create a URL like `/api/transfers/:address` and filter by the `to` field.
+
+**Example API Response for `/api/transfers`:**
+```json
+{
+  "data": [
+    {
+      "to": "0x8ce8725A65DaE7d3D5543372D5415f4F8ad448f9",
+      "value": "1000000",
+      "block_number": 18500000,
+      "log_index": 45,
+      "transaction_hash": "0x1234..."
+    }
+  ],
+  "count": 1
+}
+```
+
+### Setting Up API Endpoints for Approvals
+
+Add an endpoint to query approval data:
+
+```typescript
+// Get all approvals
+app.get('/api/approvals', async (req, res) => {
+  try {
+    const query = 'SELECT * FROM "Approval" ORDER BY block_number DESC LIMIT 100';
+    const result = await pool.query(query);
+    
+    res.json({
+      data: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Error fetching approvals:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Start the server
+app.listen(port, () => {
+  console.log(`API server running on port ${port}`);
+});
+```
+
+This endpoint queries the `Approval` table (created from your Approval event) and returns the most recent 100 approvals. You can customize these endpoints to add filtering, pagination, or any other functionality your application needs.
+
+**Example API Response for `/api/approvals`:**
+```json
+{
+  "data": [
+    {
+      "spender": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "value": "1000000000",
+      "block_number": 18500001,
+      "log_index": 12,
+      "transaction_hash": "0x5678..."
+    }
+  ],
+  "count": 1
+}
+```
+
+### Test Your API
+
+Once you've set up your API, you can test it locally:
+
+```bash
+npm run dev
+```
+
+Your API will be available at `http://localhost:3000`. You can test the endpoints by visiting:
+- `http://localhost:3000/api/transfers`
+- `http://localhost:3000/api/approvals`
+
+### Deployment
+
+After you have your APIs written and tested properly, you can deploy them by running:
+
+```bash
+sim deploy
+```
+
+This will deploy your API code and make it available at your API URL.
+Sim idx handles the entire deployment process for you.
 
 ## Next Steps
 
