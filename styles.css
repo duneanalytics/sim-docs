@@ -49,3 +49,7 @@ html.dark #navigation-items > div:not(:last-child) {
 a.link {
     border-bottom: 1px solid rgb(var(--primary-dark))
 }
+
+#table-of-contents .toc-item.relative[data-depth="1"] {
+    display: none;
+}
