@@ -1,0 +1,169 @@
+---
+title: API Development
+---
+
+With your onchain data indexed and stored in a PostgreSQL database, the final step is to build an API to serve it.
+Sim IDX provides a serverless TypeScript environment with **Cloudflare Workers**, allowing you to build and deploy fast, scalable APIs with minimal configuration.
+
+The boilerplate API in the `apis/` directory uses **Hono** as a lightweight web framework and **Drizzle** as a type-safe ORM for database queries.
+
+## Local Development Setup
+
+Before deploying, you can run and test your API locally.
+
+<Steps>
+  <Step title="Navigate to the API directory">
+    ```bash
+    cd apis
+    ```
+  </Step>
+
+  <Step title="Set Up Environment Variable">
+    Create a file named `.dev.vars` in the `apis/` directory. Add the database connection string you received from `sim deploy` to this file.
+
+    ```plaintext .dev.vars
+    DB_CONNECTION_STRING="your_database_connection_string_from_sim_deploy"
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Start the Development Server">
+    ```bash
+    npm run dev
+    ```
+
+    Your API is now running locally at `http://localhost:8787`.
+  </Step>
+</Steps>
+
+## Understanding the API Code
+
+The boilerplate API in `apis/src/index.ts` is a TypeScript application that runs on Cloudflare Workers. It connects to your indexed database and exposes HTTP endpoints to query your data. Let's understand how this works:
+
+### Framework Setup
+
+The API uses **Hono**, a lightweight web framework perfect for edge computing:
+```typescript
+import { Hono } from "hono";
+import { drizzle } from "drizzle-orm/neon-http";
+```
+
+**Hono** handles HTTP requests and routing, while **Drizzle** provides a type-safe way to query your PostgreSQL database.
+
+### Environment Configuration
+
+The API expects your database connection string as an environment variable:
+```typescript
+type Bindings = {
+  DB_CONNECTION_STRING: string;
+};
+```
+
+This type definition ensures TypeScript knows what environment variables are available and provides autocomplete support.
+
+### Application Instance
+
+The Hono app is initialized with type bindings for environment variables:
+```typescript
+const app = new Hono<{ Bindings: Bindings }>();
+```
+
+This creates your web application instance that will handle incoming HTTP requests.
+
+### Database Connection Management
+
+A shared database client improves performance by reusing connections:
+```typescript
+let dbClient: ReturnType<typeof drizzle>;
+
+async function getDBClient(env: Bindings) {
+  if (!dbClient) {
+    dbClient = drizzle(env.DB_CONNECTION_STRING);
+  }
+  return dbClient;
+}
+```
+
+This pattern creates one database connection that's reused across all requests, rather than creating a new connection for each API call.
+
+## Adding a New Endpoint
+
+Let's modify the default API to create dedicated endpoints for the `pools` and `owner` data we indexed in the [Index On-Chain Data](./index-on-chain-data) guide.
+
+Replace the content of `apis/src/index.ts` with the following:
+
+```typescript
+import { Hono } from "hono";
+import { drizzle } from "drizzle-orm/neon-http";
+
+// Define environment variable types
+type Bindings = {
+  DB_CONNECTION_STRING: string;
+};
+
+// Shared database client instance
+let dbClient: ReturnType<typeof drizzle>;
+
+const app = new Hono<{ Bindings: Bindings }>();
+
+// Endpoint to get the 10 most recent Uniswap V3 pools
+app.get("/api/pools", async (c) => {
+  try {
+    const client = await getDBClient(c.env);
+    // Note: Drizzle's execute is used for raw SQL. For full type-safety, define a Drizzle schema.
+    const result = await client.execute('SELECT * FROM pool_created ORDER BY block_number DESC LIMIT 10');
+    return Response.json({
+      data: result.rows,
+    });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+
+// Endpoint to get the 10 most recent owner queries
+app.get("/api/owner-queries", async (c) => {
+  try {
+    const client = await getDBClient(c.env);
+    const result = await client.execute('SELECT * FROM owner_queried ORDER BY block_number DESC LIMIT 10');
+    return Response.json({
+      data: result.rows,
+    });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+
+// Lazily initializes and returns a shared, connected dbClient instance.
+async function getDBClient(env: Bindings) {
+  if (!env.DB_CONNECTION_STRING) {
+    throw new Error("Missing required environment variable: DB_CONNECTION_STRING");
+  }
+  if (!dbClient) {
+    dbClient = drizzle(env.DB_CONNECTION_STRING);
+  }
+  return dbClient;
+}
+
+export default app;
+```
+
+After saving these changes, you can test your new endpoints locally:
+*   `http://localhost:8787/api/pools`
+*   `http://localhost:8787/api/owner-queries`
+
+## Deploying Your API
+
+Once you are satisfied with your API, deploy it to the Sim IDX platform using the same command as before:
+
+```bash
+sim deploy
+```
+
+Sim IDX will bundle and deploy your TypeScript code to Cloudflare's global network. Your updated API will be live at the API URL provided in the deployment output.

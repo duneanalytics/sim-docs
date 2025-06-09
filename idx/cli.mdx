@@ -1,0 +1,171 @@
+---
+title: CLI Overview
+sidebarTitle: CLI
+---
+
+The Sim IDX CLI is your primary tool for interacting with the Sim IDX framework.
+You can use the CLI to initialize new projects, manage contract ABIs, test your listeners, and deploy your apps to the Sim IDX platform.
+
+This reference provides a comprehensive overview of all available commands, their functions, and potential error messages you might encounter.
+
+## Install the CLI
+
+To use the Sim IDX framework, you must first install the CLI and its dependencies.
+
+<Steps>
+<Step title="Download the CLI">
+  Download [the latest release](https://drive.google.com/drive/folders/137naBu5bFX-6stc8x9fTyggApnT3w9Xx) of Sim CLI for your platform.
+</Step>
+
+<Step title="Install Dependencies">
+  Install the required dependencies: Foundry and `solc-typed-ast`.
+  
+  ```bash
+  # Install Foundry (nightly version)
+  curl -L https://foundry.paradigm.xyz | bash && foundryup --install nightly
+  ```
+
+  <Info>
+    Sim IDX uses the nightly version of Foundry. We are working on simplifying this setup. If you encounter issues, consider using an Ubuntu environment.
+  </Info>
+  
+  ```bash
+  # Install solc-typed-ast
+  npm install -g solc-typed-ast
+  ```
+</Step>
+
+<Step title="Extract and Setup">
+  Extract the downloaded file and make it executable.
+  
+  ```bash
+  # Extract the tar file (replace with your downloaded filename)
+  tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
+  
+  # Make it executable
+  chmod +x ./sim
+  
+  # Move to system bin (optional - allows you to run 'sim' from anywhere)
+  sudo mv ./sim /usr/bin/sim
+  ```
+  
+  <Info>
+  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted executable before making it executable.
+  </Info>
+</Step>
+
+<Step title="Verify Installation">
+  Verify the CLI is working by checking its version.
+  ```bash
+  sim --version
+  ```
+</Step>
+</Steps>
+
+## Available Commands
+
+### `sim init`
+
+Initializes a new Sim IDX application in the current directory.
+This command creates the standard project structure, including a `sim.toml` configuration file, a sample listener, and a boilerplate API.
+
+```bash
+sim init
+```
+
+If the current directory is not empty, the command will fail to prevent overwriting existing files.
+Make sure you run `mkdir new-project` and create a new directory _before_ running the init command.
+
+### `sim build`
+
+Compiles the Solidity listener contracts located in the `listeners/` directory.
+
+```bash
+sim build
+```
+
+If there are compilation errors in your Solidity code, the build will fail.
+The output will provide details from the Solidity compiler to help you debug.
+
+### `sim test`
+
+Runs the Solidity tests for your listener contracts.
+The tests are located in `listeners/test/`.
+This command first compiles your contracts and then executes the tests using Foundry.
+
+```bash
+sim test
+```
+
+If any of the tests fail, the command will exit with an error.
+The output will show which tests failed and provide assertion details.
+
+### `sim authenticate`
+
+Saves your Sim IDX API key locally, allowing the CLI to authenticate with the platform for deployment.
+You can find your API key in in the [Sim dashboard](https://sim.dune.com/).
+
+```bash
+sim authenticate
+```
+
+This command will ask you to paste your API key.
+
+### `sim deploy`
+
+Deploys your entire app to the Sim IDX platform.
+This includes deploying the listener contract, provisioning the database, and deploying your custom APIs.
+
+```bash
+sim deploy
+```
+
+Deployment can fail due to an invalid or missing API key.
+Ensure you have authenticated correctly using `sim authenticate`.
+
+### `sim help`
+
+Displays help information and available commands for the Sim IDX CLI.
+This command shows usage instructions, available commands, and options.
+
+```bash
+sim help
+```
+
+You can also use `sim --help` or `sim -h` for the same functionality.
+
+### `sim abi`
+
+Provides a set of commands for managing contract ABIs and generating corresponding Solidity interfaces for use in your listener.
+
+### `sim abi add <file_path>`
+
+Adds a new JSON ABI file to your project's `abis/` directory and automatically regenerates the necessary Solidity interfaces. This makes the contract's functions and events available for use in your listener.
+
+```bash
+sim abi add abi/YourContract.json
+```
+
+The command will fail if the specified file path does not exist.
+
+<Note>
+Before running this command, you need to obtain the ABI JSON for the contract you want to index. You can find contract ABIs on sites like Etherscan or other blockchain explorers. Once you have the ABI JSON:
+
+1. Create a new file in your `abis/` directory (e.g., `abis/YourContract.json`)
+2. Copy and paste the ABI JSON content into this file
+3. Run `sim abi add abis/YourContract.json` with the path to your newly created file
+
+The command will then generate all the necessary Solidity interfaces, structs, and helper functions for use in your listener.
+</Note>
+
+### `sim abi codegen`
+
+Manually regenerates the Solidity interfaces from all ABI files currently in the `abis/` directory. This is useful if the generated files need to be refreshed.
+
+```bash
+sim abi codegen
+```
+
+<Note>
+For the most part, you don't need to run this command manually because it runs automatically after you execute `sim abi add`. This command regenerates all the functions, structs, and interfaces based on your ABIs so you can use them in your listener.
+</Note>

@@ -1,0 +1,149 @@
+---
+title: "Sim IDX Quickstart"
+sidebarTitle: "Quickstart"
+description: "Get started and deploy your first blockchain data API in minutes."
+---
+
+Sim IDX is a framework that radically simplifies the process of indexing blockchain data.
+You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim IDX automatically indexes that data and provides you with the tools to build custom APIs to query it.
+
+This guide will walk you through installing the CLI, initializing your first app, understanding the app structure, and deploying your first blockchain data API.
+
+## Install CLI
+
+The CLI is your primary tool for interacting with the Sim IDX framework.
+
+<Steps>
+<Step title="Download the CLI">
+  Download [the latest release ](https://drive.google.com/drive/folders/137naBu5bFX-6stc8x9fTyggApnT3w9Xx) of Sim CLI for your platform.
+</Step>
+
+<Step title="Install Dependencies">
+  Install the required dependencies:
+  
+  ```bash
+  # Install Foundry (nightly version)
+  curl -L https://foundry.paradigm.xyz | bash && foundryup --install nightly
+  ```
+
+  <Info>
+    Sim IDX uses the nightly version of Foundry. We're working to simplify this setup process. If you have trouble getting this working on your current system, consider setting up an Ubuntu machine. We'll have a Docker container available soon to make this even easier.
+  </Info>
+  
+  ```bash
+  # Install solc-typed-ast
+  npm install -g solc-typed-ast
+  ```
+
+  For the best development experience, also install [the Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) for Solidity code completion when editing listeners.
+
+</Step>
+
+<Step title="Extract and Setup">
+  Extract the downloaded file and make it executable:
+  
+  ```bash
+  # Extract the tar file (replace with your downloaded filename)
+  tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
+  
+  # Make it executable
+  chmod +x ./sim
+  
+  # Move to system bin (optional - allows you to run 'sim' from anywhere)
+  sudo mv ./sim /usr/bin/sim
+  ```
+  
+  <Info>
+  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted executable before making it executable.
+  </Info>
+</Step>
+
+<Step title="Verify Installation">
+  Verify the CLI is working:
+  ```bash
+  sim --version
+  ```
+  
+  You should see output similar to:
+  
+  ```
+  sim  (984668 2025-06-02T15:34:14.000000000Z)
+  ```
+</Step>
+</Steps>
+
+For a full reference of the CLI, see the [CLI Overview](/idx/cli).
+
+## Initialize Sample App
+
+Create and initialize your first Sim IDX app
+
+```bash
+mkdir my-first-idx-app
+cd my-first-idx-app
+sim init
+```
+
+This command initializes **a pre-configured sample app that indexes every new Uniswap V3 trading pool created on the Ethereum blockchain**.
+It sets up a complete project structure for you, including a listener contract, tests, and a boilerplate API.
+
+## Authentication
+
+Before you can deploy your app, you need to authenticate with Sim IDX using an API key.
+
+<Steps>
+<Step title="Get Your API Key">
+Visit the [Sim dashboard](https://sim.dune.com/) and navigate to the API Keys section to generate your API key.
+</Step>
+
+<Step title="Authenticate the CLI">
+Run the authentication command and paste your API key when prompted:
+```bash
+sim authenticate
+```
+You will be asked to paste your API key.
+</Step>
+</Steps>
+
+<Note>
+Your API key allows the CLI to deploy your apps and manage your Sim IDX resources. Keep it secure and don't share it publicly.
+</Note>
+
+## Deploy Your App
+
+Deploy your app to start indexing data and serve your API.
+
+<Steps>
+<Step title="Deploy">
+Deploy your listener, database, and API with a single command.
+```bash
+sim deploy
+```
+</Step>
+</Steps>
+
+After a successful deployment, the CLI will output your API URL and a database connection string.
+
+1.  **API URL**: `https://your-app.idx.sim.io`
+2.  **Database Connection String**: `postgres://username:password@host/database?sslmode=require`
+
+Your app is now live, indexing new Uniswap V3 pools in realtime
+
+## Next Steps
+
+You've deployed your first blockchain data indexer and API using Sim IDX in minutes.
+
+<Columns cols={2}>
+  <Card title="Customize Your Listener" href="/idx/listener">
+    Learn how to index custom events and functions
+  </Card>
+  <Card title="Explore Your Database" href="/idx/db">
+    Connect to and query your indexed data
+  </Card>
+  <Card title="Build Custom APIs" href="/idx/apis">
+    Create endpoints to serve your data
+  </Card>
+  <Card title="CLI Overview" href="/idx/cli">
+    Full reference of all CLI commands
+  </Card>
+</Columns>

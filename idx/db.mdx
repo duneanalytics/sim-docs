@@ -1,0 +1,55 @@
+---
+title: DB Inspection
+---
+
+After deploying your Sim IDX application with `sim deploy`, the framework automatically provisions a dedicated PostgreSQL database to store your indexed onchain data.
+The deployment output provides you with a read-only connection string to access this database directly.
+
+You can use this during development to verify your schema, inspect live data, and create queries while building your API.
+
+<Note>
+The database connection string provided after deployment is intended for development and debugging.
+Your deployed API will connect to a separate, production-ready database instance with the same schema.
+</Note>
+
+## Connecting to Your Database
+
+Use the database connection string from the `sim deploy` output to connect with any standard PostgreSQL client.
+
+```
+db_read_connection: "postgres://username:password@host/database?sslmode=require"
+```
+
+For example, using `psql`:
+
+```bash
+# Connect using the full connection string
+psql "your_connection_string_here"
+```
+
+<Info>
+You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more visual way to explore your data and schema.
+</Info>
+
+## Understanding the Schema
+
+The structure of your database is directly determined by the `event` definitions in your `Listener.sol` contract.
+
+*   **Tables**: Each `event` in your listener creates a corresponding table in the database. The table name is the `snake_case` version of the event's `PascalCase` name.
+*   **Columns**: The parameters of the event become the columns of the table.
+
+An event defined as `event PoolCreated(address pool, address token0, address token1)` will result in a table named `pool_created` with the columns `pool`, `token0`, and `token1`.
+
+When you list tables in your database, you will see tables corresponding to your events, as well as some internal tables with random character suffixes (e.g., `poolcreated_X3rbm4nC`). **You should only query the clean, snake_cased table names.**
+
+## Common Database Operations
+
+Here are some common `psql` commands you can use to inspect your database:
+
+| Operation              | `psql` Command                             | Description                                                               |
+| ---------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
+| **List Tables**        | `\dt`                                      | Shows all queryable tables in the public schema.                          |
+| **Describe Table**     | `\d "table_name"`                          | Displays the columns, types, and indexes for a specific table.            |
+| **View Sample Data**   | `SELECT * FROM "table_name" LIMIT 10;`     | Retrieves the first 10 rows from a table.                                 |
+| **Count Rows**         | `SELECT COUNT(*) FROM "table_name";`       | Counts the total number of records indexed in a table.                    |
+
