@@ -93,7 +93,7 @@ This pattern creates one database connection that's reused across all requests, 
 
 ## Adding a New Endpoint
 
-Let's modify the default API to create dedicated endpoints for the `pools` and `owner` data we indexed in the [Index On-Chain Data](./index-on-chain-data) guide.
+Let's modify the default API to create dedicated endpoints for the `pools` and `owner` data we indexed in the [Listener](/idx/listener) guide.
 
 Replace the content of `apis/src/index.ts` with the following:
 
@@ -116,7 +116,7 @@ app.get("/api/pools", async (c) => {
   try {
     const client = await getDBClient(c.env);
     // Note: Drizzle's execute is used for raw SQL. For full type-safety, define a Drizzle schema.
-    const result = await client.execute('SELECT * FROM pool_created ORDER BY block_number DESC LIMIT 10');
+    const result = await client.execute('SELECT * FROM poolcreated LIMIT 10');
     return Response.json({
       data: result.rows,
     });
@@ -130,7 +130,7 @@ app.get("/api/pools", async (c) => {
 app.get("/api/owner-queries", async (c) => {
   try {
     const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM owner_queried ORDER BY block_number DESC LIMIT 10');
+    const result = await client.execute('SELECT * FROM ownerqueried LIMIT 10');
     return Response.json({
       data: result.rows,
     });

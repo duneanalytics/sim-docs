@@ -10,52 +10,7 @@ This reference provides a comprehensive overview of all available commands, thei
 
 ## Install the CLI
 
-To use the Sim IDX framework, you must first install the CLI and its dependencies.
-
-<Steps>
-<Step title="Download the CLI">
-  Download [the latest release](https://drive.google.com/drive/folders/137naBu5bFX-6stc8x9fTyggApnT3w9Xx) of Sim CLI for your platform.
-</Step>
-
-<Step title="Install Dependencies">
-  Install the required dependencies: Foundry.
-  
-  ```bash
-  # Install Foundry (nightly version)
-  curl -L https://foundry.paradigm.xyz | bash && foundryup --install nightly
-  ```
-
-  <Info>
-    Sim IDX uses the nightly version of Foundry. We are working on simplifying this setup. If you encounter issues, consider using an Ubuntu environment.
-  </Info>
-</Step>
-
-<Step title="Extract and Setup">
-  Extract the downloaded file and make it executable.
-  
-  ```bash
-  # Extract the tar file (replace with your downloaded filename)
-  tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
-  
-  # Make it executable
-  chmod +x ./sim
-  
-  # Move to system bin (optional - allows you to run 'sim' from anywhere)
-  sudo mv ./sim /usr/bin/sim
-  ```
-  
-  <Info>
-  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted executable before making it executable.
-  </Info>
-</Step>
-
-<Step title="Verify Installation">
-  Verify the CLI is working by checking its version.
-  ```bash
-  sim --version
-  ```
-</Step>
-</Steps>
+For CLI installation instructions, refer to the [Quickstart guide](/idx-quickstart#install-cli).
 
 ## Available Commands
 
