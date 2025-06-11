@@ -35,12 +35,13 @@ You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more vi
 
 The structure of your database is directly determined by the `event` definitions in your `Listener.sol` contract.
 
-*   **Tables**: Each `event` in your listener creates a corresponding table in the database. The table name is the `snake_case` version of the event's `PascalCase` name.
-*   **Columns**: The parameters of the event become the columns of the table.
+*   **Views**: Each `event` in your listener creates a corresponding queryable view in the database. The view name is the lowercase `snake_case` version of the event name.
+*   **Columns**: The parameters of the event become the columns of the view.
+*   **Tables**: The underlying tables that store the data have random character suffixes (e.g., `poolcreated_X3rbm4nC`) and should not be queried directly.
 
-An event defined as `event PoolCreated(address pool, address token0, address token1)` will result in a table named `pool_created` with the columns `pool`, `token0`, and `token1`.
+An event defined as `event PoolCreated(address pool, address token0, address token1)` will result in a queryable view named `pool_created` with the columns `pool`, `token0`, and `token1`.
 
-When you list tables in your database, you will see tables corresponding to your events, as well as some internal tables with random character suffixes (e.g., `poolcreated_X3rbm4nC`). **You should only query the clean, snake_cased table names.**
+When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase snake_case names), not the tables with suffixes.**
 
 ## Common Database Operations
 
@@ -48,8 +49,7 @@ Here are some common `psql` commands you can use to inspect your database:
 
 | Operation              | `psql` Command                             | Description                                                               |
 | ---------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
-| **List Tables**        | `\dt`                                      | Shows all queryable tables in the public schema.                          |
-| **Describe Table**     | `\d "table_name"`                          | Displays the columns, types, and indexes for a specific table.            |
-| **View Sample Data**   | `SELECT * FROM "table_name" LIMIT 10;`     | Retrieves the first 10 rows from a table.                                 |
-| **Count Rows**         | `SELECT COUNT(*) FROM "table_name";`       | Counts the total number of records indexed in a table.                    |
-
+| **List Views**         | `\dv`                                       | Shows all queryable views in the public schema.                          |
+| **Describe View**      | `\d "view_name"`                           | Displays the columns, types, and structure for a specific view.           |
+| **View Sample Data**   | `SELECT * FROM "view_name" LIMIT 10;`      | Retrieves the first 10 rows from a view.                                  |
+| **Count Rows**         | `SELECT COUNT(*) FROM "view_name";`        | Counts the total number of records indexed in a view.                     |
