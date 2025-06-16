@@ -93,30 +93,22 @@ This pattern creates one database connection that's reused across all requests, 
 
 ## Adding a New Endpoint
 
-Let's modify the default API to create dedicated endpoints for the `pools` and `owner` data we indexed in the [Listener](/idx/listener) guide.
+Let's build three endpoints to serve our indexed data:
+- `/api/pools` - Get recent Uniswap V3 pools
+- `/api/owner-queries` - Get recent owner queries
+- `/api/pools/count` - Get total number of pools
 
-Replace the content of `apis/src/index.ts` with the following:
+### Creating the Pools Endpoint
+
+Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint will query the `poolcreated` table we created in our listener:
 
 ```typescript
-import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/neon-http";
-
-// Define environment variable types
-type Bindings = {
-  DB_CONNECTION_STRING: string;
-};
-
-// Shared database client instance
-let dbClient: ReturnType<typeof drizzle>;
-
-const app = new Hono<{ Bindings: Bindings }>();
-
 // Endpoint to get the 10 most recent Uniswap V3 pools
 app.get("/api/pools", async (c) => {
   try {
     const client = await getDBClient(c.env);
     // Note: Drizzle's execute is used for raw SQL. For full type-safety, define a Drizzle schema.
-    const result = await client.execute('SELECT * FROM poolcreated LIMIT 10');
+    const result = await client.execute('SELECT * FROM pool_created LIMIT 10');
     return Response.json({
       data: result.rows,
     });
@@ -125,12 +117,20 @@ app.get("/api/pools", async (c) => {
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 });
+```
 
+This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT 10` clause ensures we don't return too much data at once. In a production environment, you might want to add pagination and filtering options.
+
+### Adding the Owner Queries Endpoint
+
+Now let's add an endpoint to fetch the 10 most recent owner queries. This will query the `ownerqueried` table:
+
+```typescript
 // Endpoint to get the 10 most recent owner queries
 app.get("/api/owner-queries", async (c) => {
   try {
     const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM ownerqueried LIMIT 10');
+    const result = await client.execute('SELECT * FROM owner_queried LIMIT 10');
     return Response.json({
       data: result.rows,
     });
@@ -139,24 +139,38 @@ app.get("/api/owner-queries", async (c) => {
     return Response.json({ error: (e as Error).message }, { status: 500 });
   }
 });
-
-// Lazily initializes and returns a shared, connected dbClient instance.
-async function getDBClient(env: Bindings) {
-  if (!env.DB_CONNECTION_STRING) {
-    throw new Error("Missing required environment variable: DB_CONNECTION_STRING");
-  }
-  if (!dbClient) {
-    dbClient = drizzle(env.DB_CONNECTION_STRING);
-  }
-  return dbClient;
-}
-
-export default app;
 ```
 
-After saving these changes, you can test your new endpoints locally:
-*   `http://localhost:8787/api/pools`
-*   `http://localhost:8787/api/owner-queries`
+This endpoint follows the same pattern as the pools endpoint, but queries a different table. Both endpoints include error handling to ensure graceful failure if something goes wrong.
+
+### Creating the Pool Count Endpoint
+
+Finally, let's add an endpoint to get the total number of pools. This will be useful for pagination and analytics:
+
+```typescript
+// Endpoint to get the total number of pools
+app.get("/api/pools/count", async (c) => {
+  try {
+    const client = await getDBClient(c.env);
+    const result = await client.execute('SELECT COUNT(*) as total FROM pool_created');
+    return Response.json({
+      data: result.rows[0].total,
+    });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+```
+
+This endpoint uses a `COUNT` query to efficiently get the total number of pools without fetching all the data. The result is returned as a simple number.
+
+### Testing Your Endpoints
+
+After adding all three endpoints, you can test them locally:
+- `http://localhost:8787/api/pools` - Get recent pools
+- `http://localhost:8787/api/owner-queries` - Get recent owner queries
+- `http://localhost:8787/api/pools/count` - Get total pool count
 
 ## Deploying Your API
 
