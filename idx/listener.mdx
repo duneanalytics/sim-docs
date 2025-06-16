@@ -132,6 +132,53 @@ To index a different contract, you first need its ABI. You can typically find AB
 
 This command generates the necessary interfaces, structs, and helper functions in `listeners/lib/simidx/src/generated/`, allowing you to use it in your Listener.
 
+## Expanding Events with More Data
+
+You can update your events by adding more data fields to capture additional context.
+A common use case is including the block number when an event occurred.
+Let's modify the `PoolCreated` event to include this information.
+
+### 1. Update the Event Definition
+
+First, add the new field to your event definition:
+
+```solidity
+// Add blockNumber to track when the pool was created
+event PoolCreated(
+    address pool, 
+    address token0, 
+    address token1, 
+    uint256 fee,
+    uint256 blockNumber  // New field
+);
+```
+
+### 2. Update the Handler
+
+In your handler function, you can access the current block number using `block.number` and include it in the event emission:
+
+```solidity
+function onPostCreatePool(
+    UniswapV3Factory$function_createPoolInputs memory inputs, 
+    UniswapV3Factory$function_createPoolOutputs memory outputs
+)
+    external
+    override
+{
+    // Include block.number in the event emission
+    emit PoolCreated(
+        outputs.pool, 
+        inputs.tokenA, 
+        inputs.tokenB, 
+        inputs.fee,
+        block.number  // Add the current block number
+    );
+}
+```
+
+This modification will create a new column `blockNumber` in your `pool_created` table, allowing you to track exactly when each pool was created.
+You can use this same pattern to add any additional data you want to capture in your events.
+
 ## Indexing More Functions
 
 Let's extend the sample app to also index calls to the `owner()` view function on the Uniswap V3 Factory contract.
