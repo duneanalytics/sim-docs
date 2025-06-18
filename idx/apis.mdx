@@ -100,7 +100,7 @@ Let's build three endpoints to serve our indexed data:
 
 ### Creating the Pools Endpoint
 
-Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint will query the `poolcreated` table we created in our listener:
+Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint will query the `pool_created` table we created in our listener:
 
 ```typescript
 // Endpoint to get the 10 most recent Uniswap V3 pools
@@ -123,7 +123,7 @@ This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT
 
 ### Adding the Owner Queries Endpoint
 
-Now let's add an endpoint to fetch the 10 most recent owner queries. This will query the `ownerqueried` table:
+Now let's add an endpoint to fetch the 10 most recent owner queries. This will query the `owner_queried` table:
 
 ```typescript
 // Endpoint to get the 10 most recent owner queries
