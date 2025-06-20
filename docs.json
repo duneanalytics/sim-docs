@@ -72,7 +72,7 @@
           {
             "group": "Sim IDX",
             "pages": [
-              "idx-quickstart"
+              "idx"
             ]
           },
           {
@@ -85,10 +85,10 @@
             ]
           },
           {
-            "group": "Resources",
+            "group": "Templates",
             "pages": [
-              "idx/guides/usdc-transfers-approvals",
-              "idx/guides/erc20-transfers"
+              "idx/templates/contract-decoder",
+              "idx/templates/uniswap-v3-in-range-lps"
             ]
           }
         ]

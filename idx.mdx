@@ -7,7 +7,7 @@ description: "Get started and deploy your first blockchain data API in minutes."
 Sim IDX is a framework that radically simplifies the process of indexing blockchain data.
 You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim IDX automatically indexes that data and provides you with the tools to build custom APIs to query it.
 
-This guide will walk you through installing the CLI, initializing your first app, understanding the app structure, and deploying your first blockchain data API.
+This guide will walk you through installing the CLI, initializing a sample project, and running your first listener test.
 
 ## Install CLI
 
@@ -40,17 +40,19 @@ The CLI is your primary tool for interacting with the Sim IDX framework.
   ```bash
   # Extract the tar file (replace with your downloaded filename)
   tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
-  
+  ```
+
+  <Info>
+  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim`.
+  </Info>
+
+  ```bash
   # Make it executable
   chmod +x ./sim
   
   # Move to system bin (optional - allows you to run 'sim' from anywhere)
   sudo mv ./sim /usr/bin/sim
   ```
-  
-  <Info>
-  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim` on the extracted executable before making it executable.
-  </Info>
 </Step>
 
 <Step title="Verify Installation">
@@ -67,9 +69,11 @@ The CLI is your primary tool for interacting with the Sim IDX framework.
 </Step>
 </Steps>
 
+For a full reference of the CLI, see the [CLI Overview](/idx/cli).
+
 ## Initialize Sample App
 
-Let's create your first Sim IDX app that will index real blockchain data.
+Create and initialize your first Sim IDX app
 
 ```bash
 mkdir my-first-idx-app
@@ -77,522 +81,61 @@ cd my-first-idx-app
 sim init
 ```
 
-This command creates a new directory `my-first-idx-app` and initializes a **pre-configured sample app that tracks every new Uniswap V3 trading pool on Ethereum**.
+This command initializes **a pre-configured sample app that indexes every new Uniswap V3 trading pool created on the Ethereum blockchain**.
+It sets up a complete project structure for you, including a listener contract, tests, and a boilerplate API.
 
-### Sample App Explained
+## Test Your Listener
 
-The sample app demonstrates a complete indexing workflow by monitoring the Uniswap V3 Factory contract.
+Run a quick dry-run against mainnet to make sure everything is wired up correctly:
 
-- **Watches for new trading pools**: Every time someone creates a new Uniswap V3 pool (like USDC/ETH or DAI/USDC), your indexer captures it
-- **Extracts key data**: Pool address, token pair, fee tier, and creation details
-- **Makes it queryable**: All this data becomes instantly available via your generated API
-
-
-## App Structure Explained
-
-All Sim IDX apps have the following structure:
-
-```
-my-first-idx-app/
-├── sim.toml                        # App configuration (app name, etc.)
-├── abis/                           # Stores contract ABI files (JSON)
-├── apis/                           # Your custom API code
-└── listeners/                      # Foundry app for your listener contracts
-    ├── src/
-    │   └── Listener.sol            # YOUR PRIMARY EDITING TARGET!
-    ├── test/
-    │   └── Listener.t.sol          # Unit tests for your listener
-    └── lib/simidx/src/
-        └── Simidx.sol              # Core Sim IDX framework with DSL and generated interfaces
+```bash
+sim deploy test \
+  --start-block 22744766 \
+  --chain-id 1
 ```
 
-### Primary Development Folders
+When the command finishes you'll see a summary of indexed events and any database writes. If everything succeeds, your listener is working.
 
-The `abis/` and the `listeners/` folders are the two main folders you'll be working with directly.
+<Details title="Example output">
 
-### ABI Files
+```text
+✅ Compiled listener
+ℹ️  Replaying block 22744766 on chain 1…
 
-`abis/` contains JSON ABI files of smart contracts you want to index. The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract. If you want to add an additional ABI, first find the ABI for that contract by going to sites like Etherscan, then run `sim abi add YourContract.json`. That command will automatically generate structs, interfaces, and functions for use in your Listener. We'll cover this process in detail in the following sections.
-
-### Listener Development
-
-The `listeners/` directory is a Foundry app where you'll edit `src/Listener.sol` to define what onchain events to listen for and what data to extract. This is also where you'll define tests for your listener in `test/Listener.t.sol`.
-
-### Framework Libraries
-
-The `lib/simidx/src/` directory contains `Simidx.sol`, which provides the core Sim IDX framework including the DSL for triggers and auto-generated interfaces based on your ABIs. We'll explore this in detail in the next section.
-
-### Custom APIs
-
-The `apis/` directory is where you'll write custom TypeScript APIs to query your indexed data. After deployment, Sim IDX provides you with a database connection and hosts your API code.
-
-## How the Listener Works
-
-`Listener.sol` is a Solidity smart contract you write that specifies what on-chain data you want to index. The sample app already sets up `Listener.sol` to index successful `createPool` function calls on the Uniswap V3 Factory contract.
-
-Let's walk through each part of the sample app's listener to understand how it works.
-
-### Framework Imports
-
-First, we import the Sim IDX framework:
-
-```solidity
-import "simidx/Simidx.sol";
-```
-
-`Simidx.sol` is a file provided to you by the Sim IDX framework and it is always imported into your listener. It provides helper functions, structs, and interfaces that allow your listener to define triggers, handle blockchain events, and access contract interfaces based on your ABIs.
-
-### Listener Contract
-
-Next, we define our listener contract:
-
-```solidity
-contract Listener is UniswapV3Factory$function_OnPostCreatePool, ListenerDsl {
-```
-
-Your listener contract extends two things:
-
-**`ListenerDsl`** - This is a contract provided by Sim IDX that gives you access to helper functions that let you specify what blockchain events you want to listen to.
-
-**`UniswapV3Factory$function_OnPostCreatePool`** - This is a generated interface that comes from `Simidx.sol`. Normally you would need to run `sim abi add UniswapV3Factory.json` to generate these interfaces, but the sample app already takes care of that for you, so the interfaces have already been generated. This interface provides the structure for handling `createPool` function calls from the Uniswap V3 Factory contract. When you implement this interface, you're required to create an `onPostCreatePool` handler function with the correct parameters.
-
-### Event Definition
-
-After defining the contract, we define events for the data we want to index:
-
-```solidity
-event PoolCreated(address pool, address token0, address token1, uint256 fee);
-```
-
-Events define the structure of the blockchain data that will be indexed. The name you choose for your event (`PoolCreated`) will influence the database table name where your data will be stored. You can access variables in the handler function and pass them to your events. You can add as many events as you want and name them however you want, but know that the event names will influence the database table names.
-
-### Trigger Configuration
-
-The constructor is where we define our triggers:
-
-```solidity
-constructor() {
-    addTrigger(
-        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
-        UniswapV3Factory$postCreatePoolFunction(),
-        Listener.onPostCreatePool.selector
-    );
-}
-```
-
-A **Trigger** defines conditions that determine when a specific handler function should be invoked during EVM execution. The `addTrigger()` function (which is available because of `ListenerDsl` imported by `Simidx.sol`) takes three parameters: the chain and contract, the function to monitor on that contract, and the handler to call in the listener.
-
-**`ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984)`** - This is a helper method that comes from `Simidx.sol`. It specifies which blockchain and which contract to monitor:
-- `1` is the chain ID for Ethereum Mainnet
-- `0x1F98431c8aD98523631AE4a59f267346ea31F984` is the Uniswap V3 Factory contract address
-
-**`UniswapV3Factory$postCreatePoolFunction()`** - This is a generated helper function that comes from `Simidx.sol`. It specifies we want to trigger after the `createPool` function executes successfully on the Uniswap V3 Factory contract.
-
-**`Listener.onPostCreatePool.selector`** - This specifies which function in our listener contract should be called when the trigger conditions are met. `.selector` gets the function signature that Solidity uses to identify the function.
-
-### Handler Functions
-
-Finally, we implement the handler that processes the data:
-
-```solidity
-function onPostCreatePool(
-    UniswapV3Factory$function_createPoolInputs memory inputs, 
-    UniswapV3Factory$function_createPoolOutputs memory outputs
-)
-    external
-    override
 {
-    emit PoolCreated(outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee);
-}
-```
-
-A **Handler** is a Solidity function that is automatically invoked when the trigger conditions are met. In this case, it will be called after the Uniswap V3 Factory `createPool` function successfully completes. This function receives two parameters:
-
-- **inputs** - A struct containing the decoded parameters passed to `createPool()` (tokenA, tokenB, fee)
-- **outputs** - A struct containing the decoded return values from `createPool()` (the new pool's address)
-
-Both `UniswapV3Factory$function_createPoolInputs` and `UniswapV3Factory$function_createPoolOutputs` are structs that come from `Simidx.sol`, providing you type-safe access to the function's parameters and return values.
-
-Handler functions are where you emit the events that get indexed. In this function specifically, the handler processes the blockchain data and emits the `PoolCreated` event (the same event you defined above) containing the information we want to index. When you emit this event, Sim IDX captures it and indexes the data.
-
-
-## Index More Functions
-
-By default, the sample app listens to `createPool` function calls on the Uniswap V3 Factory contract, but you can index any function call on the contract. Sim IDX supports indexing all function calls, so you have access to much more than just pool creation events. 
-
-Let's add indexing for the `owner` function, which returns the current owner of the Uniswap V3 Factory contract.
-
-When you run `sim abi add`, Sim IDX automatically generates all the interfaces, structs, and helper functions you need.
-You can find these in `listeners/lib/simidx/src/generated/UniswapV3Factory.sol`.
-This generated file, which `Simidx.sol` imports, contains everything you need to index any function on the Uniswap V3 Factory contract:
-
-- Interfaces like `UniswapV3Factory$function_OnPostOwner`
-- Output structs like `UniswapV3Factory$function_ownerOutputs`
-- Helper functions like `UniswapV3Factory$postOwnerFunction()`
-
-<Note>
-In the sample app, this was already done for you when you ran `sim init` because the app already contains the Uniswap V3 Factory ABI.
-You only need to run `sim abi add` when adding new contract ABIs to your app.
-</Note>
-
-<Steps>
-<Step title="Extend the Contract Interface">
-First, extend your listener contract to implement the interface for the new function:
-
-```solidity
-contract Listener is UniswapV3Factory$function_OnPostCreatePool, UniswapV3Factory$function_OnPostOwner, ListenerDsl {
-```
-
-The `UniswapV3Factory$function_OnPostOwner` interface was automatically generated when the sample app was initiated. All the interfaces, structs, and functions you need are already available through `Simidx.sol` - no additional imports required.
-</Step>
-
-<Step title="Add the Trigger">
-Add a new trigger in your constructor:
-
-```solidity
-constructor() {
-    // ... existing createPool trigger ...
-    
-    addTrigger(
-        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
-        UniswapV3Factory$postOwnerFunction(),
-        Listener.onPostOwner.selector
-    );
-}
-```
-
-The `UniswapV3Factory$postOwnerFunction()` helper was automatically generated from the ABI and tells Sim IDX to trigger after the `owner` function executes successfully.
-</Step>
-
-<Step title="Define Your Event">
-Define an event for the owner data:
-
-```solidity
-event OwnerQueried(address indexed owner);
-```
-
-You can define as many events as you want and name them however you choose. Just remember that the event name will influence the database table name where your data is stored.
-</Step>
-
-<Step title="Implement the Handler">
-Create the handler function that processes the data:
-
-```solidity
-function onPostOwner(
-    UniswapV3Factory$function_ownerOutputs memory outputs
-) external override {
-    // outputs contain the current owner address
-    emit OwnerQueried(outputs.outArg0);
-}
-```
-
-The `UniswapV3Factory$function_ownerOutputs` struct was automatically generated from the ABI, providing type-safe access to the function's return values. Note that `owner` is a view function that doesn't take any inputs, so there's no inputs struct - only outputs.
-</Step>
-</Steps>
-
-<Tip>
-The [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) provides code completion, so you won't need to manually look at the generated file. You can just start typing and see all available options through autocomplete.
-</Tip>
-
-## Build, Test, and Deploy
-
-After making changes to `Listener.sol`, you're ready to compile your app, test it, and deploy it to the Sim IDX platform.
-
-<Steps>
-<Step title="Build Your App">
-Compile your Solidity contracts:
-```bash
-sim build
-```
-When successful, you'll see: `✓ Build completed successfully`
-</Step>
-
-<Step title="Test Your Listener">
-Run your Solidity tests:
-```bash
-sim test
-```
-The sample app includes tests in `listeners/test/Listener.t.sol` that you can run and modify. When successful, you'll see: `✓ All tests passed successfully`
-</Step>
-
-<Step title="Authenticate">
-Before deploying, authenticate with your API key. You can find your API key in the Sim dashboard:
-```bash
-sim authenticate
-```
-This will prompt you to paste your API key.
-</Step>
-
-<Step title="Deploy Your Application">
-Deploy your listener to start indexing:
-```bash
-sim deploy
-```
-</Step>
-</Steps>
-
-When you run `sim deploy`, several things happen:
-
-1. **Your listener gets deployed to the blockchain** - Sim IDX deploys your listener contract which starts monitoring the specified contracts and functions in realtime
-2. **Your database infrastructure gets provisioned** - A PostgreSQL database is created and configured to store the indexed data from your listener
-3. **Your APIs get deployed** - Your custom TypeScript API code gets deployed to Cloudflare Workers and becomes available at your API URL
-4. **Realtime indexing begins** - Your listener immediately starts capturing blockchain events and populating your database with live data
-
-After successful deployment, you'll receive two key pieces of information in the CLI:
-
-1. **API URL** - Where your custom API will be hosted:
-```
-api_url: "https://your-app.idx.dev.dune.com"
-```
-
-2. **Database Connection String** - PostgreSQL connection to your indexed data:
-
-```
-db_read_connection: "postgres://username:password@host/database?sslmode=require"
-```
-
-<Note>
-Copy this connection string - you'll need it to connect your API to the indexed data.
-</Note>
-
-Your app will begin indexing blockchain events according to your defined triggers, and you can now build custom APIs to query this data.
-
-## Inspect Your DB
-
-Before building custom APIs, you can inspect your indexed data directly using any PostgreSQL client. Use the database connection string from your deployment to connect and explore the PostgreSQL database that Sim IDX created for you:
-
-```bash
-# Using psql
-psql "your_connection_string_here"
-
-# List all tables
-\dt
-
-# Describe a table structure
-\d "pool_created"
-
-# View sample data
-SELECT * FROM "pool_created" LIMIT 5;
-```
-
-<Info>
-You can connect to this database using any PostgreSQL client like psql, DBeaver, or Beekeeper Studio to explore the schema and test queries during development.
-</Info>
-
-You'll see a variety of tables in your database when you inspect it. The tables you can query are the ones that correspond directly to your events in **snake_case format**. You'll also see other tables with random character suffixes (like `poolcreated_X3rbm4nC`) - these are internal tables that you cannot query.
-
-The table names follow a simple convention: your event name in PascalCase becomes a table name in snake_case. For example, `PoolCreated` becomes `pool_created`. Each table contains the fields from your event as columns.
-
-In our case:
-- **PoolCreated event** → `pool_created` table with columns: `pool`, `token0`, `token1`, `fee`
-- **OwnerQueried event** → `owner_queried` table with columns: `owner`
-
-<Note>
-This database is only for development and testing purposes. When you deploy your APIs, they will connect to a different production database.
-</Note>
-
-## Build Your API
-
-Now you can build custom APIs to query and serve your data however you want
-This is where the real power of Sim IDX comes in.
-Create tailored endpoints, add business logic, combine data sources, and build applications on top of your indexed blockchain data.
-
-Your Sim IDX app contains a serverless TypeScript app that you'll customize to query your data.
-Sim IDX uses Cloudflare Workers under the hood to serve and deploy your APIs, handling all the deployment and scaling for you.
-
-### Understanding the APIs Folder
-
-The `apis/` folder contains your custom API implementation:
-
-```
-apis/
-├── src/
-│   └── index.ts              # YOUR MAIN API FILE - Edit this!
-├── .dev.vars                 # Environment variables for local development  
-└── package.json              # API dependencies
-```
-
-- **`src/index.ts`** - Your main API implementation where you'll define endpoints and database queries
-- **`.dev.vars`** - Contains your database connection string for local development
-
-### Local Development Setup
-
-Before testing your API locally, you need to set up your database connection:
-
-1. **Navigate to the APIs directory:**
-```bash
-cd apis
-```
-
-2. **Create the environment file:**
-Create a `.dev.vars` file and add your database connection string from earlier when you ran `sim deploy`:
-```plaintext .dev.vars
-DB_CONNECTION_STRING=your_database_connection_string_from_sim_deploy
-```
-
-3. **Install dependencies:**
-```bash
-npm install
-```
-
-4. **Start the development server:**
-```bash
-npm run dev
-```
-
-Your API will be available at `http://localhost:8787`.
-
-### Understanding the Main API File
-
-Let's break down the `index.ts` file that comes with your sample app:
-
-**Import Hono and Drizzle:**
-```typescript index.ts
-import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/neon-http";
-```
-
-Hono is a lightweight web framework for building APIs, and Drizzle is a TypeScript ORM that provides type-safe database queries. These libraries make it easy to build robust APIs with excellent TypeScript support. We recommend that you use these libraries when building your APIs.
-
-**Type Bindings:**
-```typescript index.ts
-type Bindings = {
-  DB_CONNECTION_STRING: string;
-};
-```
-
-This defines the environment variables that your API expects. The `DB_CONNECTION_STRING` will be automatically injected when your API runs.
-
-**Database Client:**
-```typescript index.ts
-let dbClient: ReturnType<typeof drizzle>;
-```
-
-This creates a variable to hold your database client that will be shared across requests.
-
-**App Instance:**
-```typescript index.ts
-const app = new Hono<{ Bindings: Bindings }>();
-```
-
-This creates your Hono app instance with proper TypeScript bindings for environment variables.
-
-**Default Endpoint:**
-```typescript index.ts
-app.get("/*", async (c) => {
-  try {
-    const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM pool_created LIMIT 5');
-    return Response.json({
-      result: result,
-    });
-  } catch (e) {
-    console.error("Database operation failed:", e);
-    return Response.json({ error: (e as Error).message }, { status: 500 });
-  }
-});
-```
-
-This creates a catch-all endpoint that queries your `pool_created` table and returns the results as JSON.
-
-**Database Client Function:**
-```typescript index.ts
-async function getDBClient(env: Bindings) {
-  if (!env.DB_CONNECTION_STRING) {
-    throw new Error("Missing required environment variable: DB_CONNECTION_STRING");
-  }
-  if (!dbClient) {
-    dbClient = drizzle(env.DB_CONNECTION_STRING);
-  }
-  return dbClient;
-}
-```
-
-This function lazily initializes your database connection and reuses it across requests for better performance.
-
-**Export Default:**
-```typescript index.ts
-export default app;
-```
-
-This exports your app so it can be deployed by the Cloudflare Workers runtime.
-
-### Adding a New Endpoint
-
-Since we added the `owner` function indexing to our listener, let's add a corresponding API endpoint. Update your `index.ts` file:
-
-```typescript
-import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/neon-http";
-
-type Bindings = {
-  DB_CONNECTION_STRING: string;
-};
-
-let dbClient: ReturnType<typeof drizzle>;
-
-const app = new Hono<{ Bindings: Bindings }>();
-
-// Get pool creation data
-app.get("/api/pools", async (c) => {
-  try {
-    const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM pool_created ORDER BY pool DESC LIMIT 10');
-    return Response.json({
-      data: result.rows,
-      count: result.rows.length
-    });
-  } catch (e) {
-    console.error("Database operation failed:", e);
-    return Response.json({ error: (e as Error).message }, { status: 500 });
-  }
-});
-
-// Get owner query data  
-app.get("/api/owner-queries", async (c) => {
-  try {
-    const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM owner_queried ORDER BY owner DESC LIMIT 10');
-    return Response.json({
-      data: result.rows,
-      count: result.rows.length
-    });
-  } catch (e) {
-    console.error("Database operation failed:", e);
-    return Response.json({ error: (e as Error).message }, { status: 500 });
-  }
-});
-
-// Lazily initializes and returns a shared, connected dbClient instance.
-async function getDBClient(env: Bindings) {
-  if (!env.DB_CONNECTION_STRING) {
-    throw new Error("Missing required environment variable: DB_CONNECTION_STRING");
-  }
-  if (!dbClient) {
-    dbClient = drizzle(env.DB_CONNECTION_STRING);
-  }
-  return dbClient;
+  "events_processed": 1,
+  "db_writes": 1,
+  "triggers": [
+    {
+      "name": "PoolCreated",
+      "pool": "0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8",
+      "txHash": "0x…"
+    }
+  ]
 }
 
-export default app;
+✔ Test finished in 3 s
 ```
 
-You can test the endpoints:
-- `http://localhost:8787/api/pools` - Returns pool creation data
-- `http://localhost:8787/api/owner-queries` - Returns owner query data
+</Details>
 
-### Deploy Your API
-
-Once you've built and tested your API locally, deploy it:
-
-```bash
-sim deploy
-```
-
-Sim IDX handles the entire deployment process and will provide you with a live API URL where your endpoints will be accessible.
+If the command finishes without errors, your listener is working.
 
 ## Next Steps
 
-Congratulations! You've now seen the basics of creating, testing, and deploying a Sim IDX application.
+You've now got a working listener and a taste of how Sim IDX speeds up blockchain indexing.
 
-Happy indexing! If you have questions or feedback during this private beta, please reach out through the provided channels.
+<Columns cols={2}>
+  <Card title="Customize Your Listener" href="/idx/listener">
+    Learn how to index custom events and functions
+  </Card>
+  <Card title="Explore Your Database" href="/idx/db">
+    Connect to and query your indexed data
+  </Card>
+  <Card title="Build Custom APIs" href="/idx/apis">
+    Create endpoints to serve your data
+  </Card>
+  <Card title="CLI Overview" href="/idx/cli">
+    Full reference of all CLI commands
+  </Card>
+</Columns>
