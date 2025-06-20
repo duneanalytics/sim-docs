@@ -34,7 +34,7 @@ Activities are mostly indexed events. There are, of course, no events for native
 
 ## Data Finality & Re-orgs
 
-Sim's APIs are designed to automatically detect and handle blockchain re-organizations.
+Sim APIs are designed to automatically detect and handle blockchain re-organizations.
 We detect any potentially broken parent-child block relationships as soon as they arise and update our internal state to match the onchain state, typically within a few hundred milliseconds.
 This re-org handling is an automatic, non-configurable feature designed to provide the most reliable data.
 
