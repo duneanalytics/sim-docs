@@ -32,6 +32,12 @@ Each activity includes detailed information such as:
 Activities are mostly indexed events. There are, of course, no events for native token transfers (wen [7708](https://ethereum-magicians.org/t/eip-7708-eth-transfers-emit-a-log/20034)?). We do have a heuristic to catch very simple native token transfers, where the native token transfer is the entirety of the transaction, but unfortunately we don't currently catch native token transfers that happen within internal txns.
 </Callout>
 
+## Data Finality & Re-orgs
+
+Sim's APIs are designed to automatically detect and handle blockchain re-organizations.
+We detect any potentially broken parent-child block relationships as soon as they arise and update our internal state to match the onchain state, typically within a few hundred milliseconds.
+This re-org handling is an automatic, non-configurable feature designed to provide the most reliable data.
+
 ## Token Filtering
 
 We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
