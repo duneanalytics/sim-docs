@@ -5,53 +5,28 @@ description: "Get started and deploy your first blockchain data API in minutes."
 ---
 
 Sim IDX is a framework that radically simplifies the process of indexing blockchain data.
-You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim IDX automatically indexes that data and provides you with the tools to build custom APIs to query it.
+You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim IDX automatically indexes that data and provides you with the tools to query it and build custom APIs.
 
 This guide will walk you through installing the CLI, initializing a sample project, and running your first listener test.
 
 ## Install CLI
 
-The CLI is your primary tool for interacting with the Sim IDX framework.
-
 <Steps>
-<Step title="Download the CLI">
-  Download [the latest release ](https://drive.google.com/drive/folders/137naBu5bFX-6stc8x9fTyggApnT3w9Xx) of Sim CLI for your platform.
-</Step>
-
-<Step title="Install Dependencies">
-  Install the required dependencies:
-  
+<Step title="Download & Install the CLI">
   ```bash
-  # Install Foundry (nightly version)
-  curl -L https://foundry.paradigm.xyz | bash && foundryup --install nightly
+  curl -L https://simcli.dune.com | bash
   ```
 
   <Info>
-    Sim IDX uses the nightly version of Foundry. We're working to simplify this setup process. If you have trouble getting this working on your current system, consider setting up an Ubuntu machine. We'll have a Docker container available soon to make this even easier.
+    After the installer finishes, run `source ~/.bashrc` (or the appropriate profile file) so the `sim` executable is available in your <code>PATH</code>.
   </Info>
 
-  For the best development experience, also install [the Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) for Solidity code completion when editing listeners.
+  You'll see the following output:
 
-</Step>
-
-<Step title="Extract and Setup">
-  Extract the downloaded file and make it executable:
-  
-  ```bash
-  # Extract the tar file (replace with your downloaded filename)
-  tar -xvzf sim_v0.0.27_linux_amd64.tar.gz
-  ```
-
-  <Info>
-  **Mac users**: You must run `xattr -d com.apple.quarantine ./sim`.
-  </Info>
-
-  ```bash
-  # Make it executable
-  chmod +x ./sim
-  
-  # Move to system bin (optional - allows you to run 'sim' from anywhere)
-  sudo mv ./sim /usr/bin/sim
+  ```text
+  [INFO] Installing sim CLI v0.0.52
+  [INFO] Installing sim to /home/ubuntu/.local/bin/sim
+  [INFO] sim CLI installed successfully!
   ```
 </Step>
 
@@ -61,65 +36,77 @@ The CLI is your primary tool for interacting with the Sim IDX framework.
   sim --version
   ```
   
-  You should see output similar to:
+  You'll see:
   
   ```
-  sim  (984668 2025-06-02T15:34:14.000000000Z)
+  sim v0.0.52 (1ea90e 2025-06-21T10:18:43.000000000Z)
   ```
 </Step>
 </Steps>
 
-For a full reference of the CLI, see the [CLI Overview](/idx/cli).
+<Tip>For a full reference of the CLI, see the [CLI Overview](/idx/cli).</Tip>
+
 
 ## Initialize Sample App
 
-Create and initialize your first Sim IDX app
+First, create a new folder.
 
 ```bash
 mkdir my-first-idx-app
 cd my-first-idx-app
+```
+
+Next, initialize your new Sim IDX app.
+
+```bash
 sim init
 ```
 
 This command initializes **a pre-configured sample app that indexes every new Uniswap V3 trading pool created on the Ethereum blockchain**.
 It sets up a complete project structure for you, including a listener contract, tests, and a boilerplate API.
 
-## Test Your Listener
+<Info>
+  `sim init` also initializes a new Git repository and makes the first commit.
+  Make sure Git is installed and configured.
+</Info>
 
-Run a quick dry-run against mainnet to make sure everything is wired up correctly:
+## Authentication
+
+Create a new API key in the [Sim dashboard](https://sim.dune.com/) so you can authenticate in the CLI and test your new sample app.
+
+<Frame caption="To generate a new API key, visit the Keys page and click the New button.">
+  <img src="/images/idx/sim-idx-authentication.png" />
+</Frame>
+
+Give your new API key a unique name and select **Sim IDX CLI** for the key's purpose.
+After you've created your key, copy its value, and go back to the CLI.
+
+Run the following command:
 
 ```bash
-sim deploy test \
+sim authenticate
+```
+
+Paste the API key you created and press Enter.
+Once you've successfully authenticated, you'll see the following:
+
+```
+INFO sim::authenticate: Verifying API Key...
+INFO sim::authenticate: API Key verified successfully.
+INFO sim::authenticate: API Key successfully saved.
+```
+
+## Test Your Listener
+
+Now you can test your app to make sure your sample app's listener is working correctly:
+
+```bash
+sim listeners execute \
   --start-block 22744766 \
   --chain-id 1
 ```
 
 When the command finishes you'll see a summary of indexed events and any database writes. If everything succeeds, your listener is working.
-
-<Details title="Example output">
-
-```text
-✅ Compiled listener
-ℹ️  Replaying block 22744766 on chain 1…
-
-{
-  "events_processed": 1,
-  "db_writes": 1,
-  "triggers": [
-    {
-      "name": "PoolCreated",
-      "pool": "0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8",
-      "txHash": "0x…"
-    }
-  ]
-}
-
-✔ Test finished in 3 s
-```
-
-</Details>
-
-If the command finishes without errors, your listener is working.
 
 ## Next Steps
 
