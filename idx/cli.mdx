@@ -10,7 +10,7 @@ This reference provides a comprehensive overview of all available commands, thei
 
 ## Install the CLI
 
-For CLI installation instructions, refer to the [Quickstart guide](/idx-quickstart#install-cli).
+For CLI installation instructions, refer to the [Quickstart guide](/idx#install-cli).
 
 ## Available Commands
 
@@ -52,26 +52,14 @@ The output will show which tests failed and provide assertion details.
 
 ### `sim authenticate`
 
-Saves your Sim IDX API key locally, allowing the CLI to authenticate with the platform for deployment.
-You can find your API key in in the [Sim dashboard](https://sim.dune.com/).
+Saves your Sim IDX API key locally, allowing the CLI to authenticate with the platform.
+You can find and create API keys in the [Sim dashboard](https://sim.dune.com/).
 
 ```bash
 sim authenticate
 ```
 
 This command will ask you to paste your API key.
-
-### `sim deploy`
-
-Deploys your entire app to the Sim IDX platform.
-This includes deploying the listener contract, provisioning the database, and deploying your custom APIs.
-
-```bash
-sim deploy
-```
-
-Deployment can fail due to an invalid or missing API key.
-Ensure you have authenticated correctly using `sim authenticate`.
 
 ### `sim help`
 

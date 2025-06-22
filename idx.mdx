@@ -1,37 +1,49 @@
 ---
 title: "Sim IDX Quickstart"
 sidebarTitle: "Quickstart"
-description: "Get started and deploy your first blockchain data API in minutes."
+description: "Get started and set up your first blockchain data indexer in minutes."
 ---
 
 Sim IDX is a framework that radically simplifies the process of indexing blockchain data.
-You write simple Solidity "listener" contracts to specify what onchain data you're interested in, and Sim IDX automatically indexes that data and provides you with the tools to query it and build custom APIs.
-
 This guide will walk you through installing the CLI, initializing a sample project, and running your first listener test.
+
+<Frame caption="Write simple Solidity listeners. Sim IDX indexes your chosen onchain data and gives you ready-to-use DBs & APIs.">
+  <img src="/images/idx/Sim_IDX.png" />
+</Frame>
 
 ## Install CLI
 
 <Steps>
-<Step title="Download & Install the CLI">
+<Step title="Download & Install Dependencies">
+  First, ensure you have **Node.js v20.x or later** installed.
+  You can download it from [Nodejs.org](https://nodejs.org).
+  ```bash
+  # Check your node version
+  node -v 
+  ```
+</Step>
+<Step title="Install the CLI">
   ```bash
   curl -L https://simcli.dune.com | bash
   ```
 
-  <Info>
-    After the installer finishes, run `source ~/.bashrc` (or the appropriate profile file) so the `sim` executable is available in your <code>PATH</code>.
-  </Info>
-
   You'll see the following output:
 
   ```text
-  [INFO] Installing sim CLI v0.0.52
-  [INFO] Installing sim to /home/ubuntu/.local/bin/sim
+  [INFO] Installing sim CLI v0.0.53
+  [INFO] Installing sim to /root/.local/bin/sim
   [INFO] sim CLI installed successfully!
+  [INFO] Added sim CLI to PATH in /root/.bashrc
   ```
+
+  <Info>
+    After the installer finishes, run `source ~/.bashrc` (or the appropriate profile file) so the `sim` executable is available in your `PATH`.
+  </Info>
+
 </Step>
 
 <Step title="Verify Installation">
-  Verify the CLI is working:
+  Verify that the CLI is working:
   ```bash
   sim --version
   ```
@@ -39,13 +51,12 @@ This guide will walk you through installing the CLI, initializing a sample proje
   You'll see:
   
   ```
-  sim v0.0.52 (1ea90e 2025-06-21T10:18:43.000000000Z)
+  sim v0.0.53 (eaddf2 2025-06-22T18:01:14.000000000Z)
   ```
 </Step>
 </Steps>
 
 <Tip>For a full reference of the CLI, see the [CLI Overview](/idx/cli).</Tip>
-
 
 ## Initialize Sample App
 
@@ -63,12 +74,18 @@ sim init
 ```
 
 This command initializes **a pre-configured sample app that indexes every new Uniswap V3 trading pool created on the Ethereum blockchain**.
-It sets up a complete project structure for you, including a listener contract, tests, and a boilerplate API.
+It sets up a complete app structure for you, including a listener contract, tests, and a boilerplate API.
 
 <Info>
   `sim init` also initializes a new Git repository and makes the first commit.
-  Make sure Git is installed and configured.
+  Make sure Git is installed and configured. Otherwise the command might fail.
 </Info>
+
+After successfully running init, you'll see:
+
+```text
+INFO sim::init: Successfully initialized a new Sim IDX app
+```
 
 ## Authentication
 
@@ -79,9 +96,7 @@ Create a new API key in the [Sim dashboard](https://sim.dune.com/) so you can au
 </Frame>
 
 Give your new API key a unique name and select **Sim IDX CLI** for the key's purpose.
-After you've created your key, copy its value, and go back to the CLI.
-
-Run the following command:
+After you've created your key, copy its value, go back to the CLI, and run:
 
 ```bash
 sim authenticate
@@ -98,31 +113,28 @@ INFO sim::authenticate: API Key successfully saved.
 
 ## Test Your Listener
 
-Now you can test your app to make sure your sample app's listener is working correctly:
+Now you can test to make sure your sample app's listener is working correctly:
 
 ```bash
 sim listeners execute \
-  --start-block 22744766 \
+  --start-block 22757345 \
   --chain-id 1
 ```
 
-When the command finishes you'll see a summary of indexed events and any database writes. If everything succeeds, your listener is working.
+After the command finishes, you'll see a summary of indexed events.
+If everything succeeds, your listener is working correctly.
 
 ## Next Steps
 
-You've now got a working listener and a taste of how Sim IDX speeds up blockchain indexing.
+You've now got a working contract listener.
+Next, you'll deploy your app so it can index data continuously.
+If you'd like to go further, you can refine and extend your listener to capture even more onchain data.
 
 <Columns cols={2}>
-  <Card title="Customize Your Listener" href="/idx/listener">
-    Learn how to index custom events and functions
+  <Card title="App Deployment" href="/idx/deployment">
+    Learn how to deploy your Sim IDX app to production
   </Card>
-  <Card title="Explore Your Database" href="/idx/db">
-    Connect to and query your indexed data
-  </Card>
-  <Card title="Build Custom APIs" href="/idx/apis">
-    Create endpoints to serve your data
-  </Card>
-  <Card title="CLI Overview" href="/idx/cli">
-    Full reference of all CLI commands
+  <Card title="Listener Contracts" href="/idx/listener">
+    Dive deeper into writing and testing listener contracts
   </Card>
 </Columns>

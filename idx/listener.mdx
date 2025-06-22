@@ -19,11 +19,10 @@ my-first-idx-app/
 ├── apis/                           # Your custom API code
 └── listeners/                      # Foundry app for your listener contracts
     ├── src/
-    │   └── Listener.sol            # YOUR PRIMARY EDITING TARGET!
+    │   └── Main.sol                # YOUR PRIMARY EDITING TARGET!
     ├── test/
-    │   └── Listener.t.sol          # Unit tests for your listener
-    └── lib/simidx/src/
-        └── Simidx.sol              # Core Sim IDX framework with DSL and generated interfaces
+    │   └── Main.t.sol              # Unit tests for your listener
+    └── lib/                        # Libraries & generated code
 ```
 
 ### Primary Development Folders
@@ -34,15 +33,15 @@ The `abis/` and the `listeners/` folders are the two main folders you'll be work
 
 `abis/` contains JSON ABI files of smart contracts you want to index. The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
 
-If you want to add an additional ABI, first find the ABI for that contract by going to sites like Etherscan, then run `sim abi add YourContract.json`. That command will automatically generate structs, interfaces, and functions for use in your Listener.
+If you want to add an additional ABI, first find the ABI for that contract by going to sites like Etherscan, then run `sim abi add abis/YourContract.json`. That command will automatically generate structs, interfaces, and functions for use in your Listener.
 
 ### Listener Development
 
-The `listeners/` directory is a Foundry app where you'll edit `src/Listener.sol` to define what onchain events to listen for and what data to extract. This is also where you'll define tests for your listener in `test/Listener.t.sol`.
+The `listeners/` directory is a Foundry app where you'll edit `src/Main.sol` to define what onchain events to listen for and what data to extract. This is also where you'll define tests for your listener in `test/Main.t.sol`.
 
 ### Framework Libraries
 
-The `lib/simidx/src/` directory contains `Simidx.sol`, which provides the core Sim IDX framework including the DSL for triggers and auto-generated interfaces based on your ABIs.
+The `lib/sim-idx-sol/src/` directory contains `Simidx.sol`, which provides the core Sim IDX framework including the DSL for triggers and auto-generated interfaces based on your ABIs.
 
 ### Custom APIs
 
@@ -50,7 +49,7 @@ The `apis/` directory is where you'll write custom TypeScript APIs to query your
 
 ## Understanding the Listener Contract
 
-Your listener logic resides in `listeners/src/Listener.sol`.
+Your listener logic resides in `listeners/src/Main.sol`.
 This file is a Foundry-based Solidity contract.
 Let's break down the sample app's listener, which indexes new Uniswap V3 pools.
 
@@ -130,7 +129,7 @@ To index a different contract, you first need its ABI. You can typically find AB
     sim abi add path/to/MyContract.json
     ```
 
-This command generates the necessary interfaces, structs, and helper functions in `listeners/lib/simidx/src/generated/`, allowing you to use it in your Listener.
+This command generates the necessary interfaces, structs, and helper functions in `listeners/lib/sim-idx-generated/`, allowing you to use it in your Listener.
 
 ## Expanding Events with More Data
 
@@ -241,7 +240,7 @@ Install the [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?i
 
 ## Testing Your Listener
 
-Sim IDX uses Foundry for testing. You can write unit tests for your listener in `listeners/test/Listener.t.sol` to ensure it behaves as expected.
+Sim IDX uses Foundry for testing. You can write unit tests for your listener in `listeners/test/Main.t.sol` to ensure it behaves as expected.
 
 To run your tests, use the `sim test` command:
 
