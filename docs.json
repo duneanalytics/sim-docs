@@ -73,7 +73,8 @@
             "group": "Sim IDX",
             "pages": [
               "idx",
-              "idx/deployment"
+              "idx/deployment",
+              "idx/app-page"
             ]
           },
           {

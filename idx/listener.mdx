@@ -66,7 +66,6 @@ import "simidx/Simidx.sol";
 The listener contract inherits from `ListenerDsl` and one or more generated interfaces corresponding to the functions you want to index.
 
 ```solidity
-// Inherits from the DSL and a generated interface for createPool
 contract Listener is UniswapV3Factory$function_OnPostCreatePool, ListenerDsl {
 ```
 
@@ -89,9 +88,9 @@ In the `constructor`, you define **Triggers**. A trigger tells the indexer when 
 ```solidity
 constructor() {
     addTrigger(
-        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984), // Target
-        UniswapV3Factory$postCreatePoolFunction(), // Function to watch
-        Listener.onPostCreatePool.selector // Handler to call
+        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+        UniswapV3Factory$postCreatePoolFunction(),
+        Listener.onPostCreatePool.selector
     );
 }
 ```
@@ -148,7 +147,7 @@ event PoolCreated(
     address token0, 
     address token1, 
     uint256 fee,
-    uint256 blockNumber  // New field
+    uint256 blockNumber
 );
 ```
 
@@ -166,86 +165,11 @@ function onPostCreatePool(
 {
     // Include block.number in the event emission
     emit PoolCreated(
-        outputs.pool, 
-        inputs.tokenA, 
-        inputs.tokenB, 
+        outputs.pool,
+        inputs.tokenA,
+        inputs.tokenB,
         inputs.fee,
-        block.number  // Add the current block number
+        block.number
     );
 }
 ```
-
-This modification will create a new column `blockNumber` in your `pools_created` table, allowing you to track exactly when each pool was created.
-You can use this same pattern to add any additional data you want to capture in your events.
-
-## Indexing More Functions
-
-Let's extend the sample app to also index calls to the `owner()` view function on the Uniswap V3 Factory contract.
-
-<Steps>
-<Step title="Extend the Contract Interface">
-Update your listener contract to implement the generated interface for the `owner` function. The `UniswapV3Factory$function_OnPostOwner` interface is already available because the ABI was included in the sample app.
-
-```solidity
-contract Listener is 
-    UniswapV3Factory$function_OnPostCreatePool, 
-    UniswapV3Factory$function_OnPostOwner, // Add this interface
-    ListenerDsl 
-{
-    // ...
-```
-</Step>
-
-<Step title="Add the Trigger">
-In the `constructor`, add a new trigger for the `owner` function.
-
-```solidity
-constructor() {
-    // ... existing createPool trigger ...
-    
-    addTrigger(
-        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
-        UniswapV3Factory$postOwnerFunction(), // Generated helper for owner()
-        Listener.onPostOwner.selector
-    );
-}
-```
-</Step>
-
-<Step title="Define Your Event">
-Define a new event to structure the owner data. This will create an `owner_queried` table.
-
-```solidity
-event OwnerQueried(address indexed owner);
-```
-</Step>
-
-<Step title="Implement the Handler">
-Create the corresponding handler function. Since `owner()` is a view function with no inputs, the handler only receives an `outputs` struct.
-
-```solidity
-function onPostOwner(
-    UniswapV3Factory$function_ownerOutputs memory outputs
-) external override {
-    // The owner() function returns a single address
-    emit OwnerQueried(outputs.outArg0);
-}
-```
-</Step>
-</Steps>
-
-<Tip>
-Install the [Hardhat VSCode plugin](https://marketplace.visualstudio.com/items?itemName=NomicFoundation.hardhat-solidity) for Solidity code completion. It will help you discover the available generated interfaces, structs, and helpers as you type.
-</Tip>
-
-## Testing Your Listener
-
-Sim IDX uses Foundry for testing. You can write unit tests for your listener in `listeners/test/Main.t.sol` to ensure it behaves as expected.
-
-To run your tests, use the `sim test` command:
-
-```bash
-sim test
-```
-
-This will compile your contracts and run all tests defined in the test file, providing immediate feedback on your listener's logic.

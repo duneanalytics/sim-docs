@@ -15,13 +15,20 @@ Before you continue, complete the [Quickstart](/idx) to install the Sim CLI and 
   <img src="/images/idx/deployment/create-new-github-repository.png" />
 </Frame>
 
-Open GitHub and create a new repository named after the folder that contains your project.
+Open GitHub and [create a new repository](https://github.com/new) named after the folder that contains your project.
 In the Quickstart we used `my-first-idx-app`.
 
 ## Push app to GitHub
 
 When you ran `sim init`, besides initializing your app, the CLI created a Git repository and committed the first version of your code.
-Point the repo at GitHub and push the commit:
+Point the repo at GitHub and push the commit.
+
+<Frame caption="Push the first commit to GitHub">
+  <img src="/images/idx/deployment/push-from-existing-repo-github.png" />
+</Frame>
+
+Copy the code snippet from GitHub for pushing a code snippet from the command line.
+It should look like the following:
 
 ```bash
 # inside your project folder
@@ -30,10 +37,6 @@ git branch -M main
 git push -u origin main
 ```
 
-<Frame caption="Push the first commit to GitHub">
-  <img src="/images/idx/deployment/push-from-existing-repo-github.png" />
-</Frame>
-
 ## Import repo
 
 <Note>If you don't have access to IDX tab in the Sim dashboard yet, click Request Access to get enabled.</Note>
@@ -41,7 +44,7 @@ git push -u origin main
 Open the Sim dashboard at [sim.dune.com](https://sim.dune.com), select IDX in the sidebar and click Import Repo.
 The first time you do this you will have to install the Dune Sim GitHub App.
 
-<Frame caption="Create a new repository on GitHub">
+<Frame caption="Import your new GitHub repo into the Sim IDX dashboard">
   <img src="/images/idx/deployment/sim-dashboard-sim-idx.png" />
 </Frame>
 
@@ -63,14 +66,14 @@ After installation you return to the import screen and pick your repo.
 Review the settings for the App name, the optional description, then press Deploy.
 The dashboard will show the deployment with status Pending.
 
-## Trigger first build
+## Monitor deployment progress
 
-Each push to the repo will start a build. Make any change and push it to the main to see it in action:
+<Frame caption="Deployment building and ingesting data">
+  <img src="/images/idx/deployment/deployment-progress.png" />
+</Frame>
 
-```bash
-git commit -am "chore: trigger build"
-git push
-```
+Return to the [Sim dashboard](https://sim.dune.com/), click on your app in the IDX tab and watch the new deployment move from **Building → Ingesting → Ready**.
+Once the status shows **Ingesting**, your APIs and database are live and serving data.
 
 ## Next steps
 
