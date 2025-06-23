@@ -47,49 +47,35 @@ The boilerplate API in `apis/src/index.ts` is a TypeScript application that runs
 
 ### Framework Setup
 
-The API uses **Hono**, a lightweight web framework perfect for edge computing:
+The API uses the `sim-idx` helper library, which wraps **Hono** and **Drizzle** to simplify setup:
 ```typescript
-import { Hono } from "hono";
-import { drizzle } from "drizzle-orm/neon-http";
+import { App, db, types } from "sim-idx";
+import { eq, sql } from "drizzle-orm";
+import { poolCreated, ownerQueried } from "./db/schema/Listener";
 ```
 
 **Hono** handles HTTP requests and routing, while **Drizzle** provides a type-safe way to query your PostgreSQL database.
 
 ### Environment Configuration
 
-The API expects your database connection string as an environment variable:
-```typescript
-type Bindings = {
-  DB_CONNECTION_STRING: string;
-};
-```
-
-This type definition ensures TypeScript knows what environment variables are available and provides autocomplete support.
+`sim-idx` handles database credentials for you in both local development and deployed environments, so no additional environment variables are required.
 
 ### Application Instance
 
-The Hono app is initialized with type bindings for environment variables:
+Create the web application with a single call:
 ```typescript
-const app = new Hono<{ Bindings: Bindings }>();
+const app = App.create();
 ```
-
-This creates your web application instance that will handle incoming HTTP requests.
 
 ### Database Connection Management
 
-A shared database client improves performance by reusing connections:
+Instead of managing your own connection pool, call `db.client(c)` inside a request handler to reuse the shared Drizzle client:
 ```typescript
-let dbClient: ReturnType<typeof drizzle>;
-
-async function getDBClient(env: Bindings) {
-  if (!dbClient) {
-    dbClient = drizzle(env.DB_CONNECTION_STRING);
-  }
-  return dbClient;
-}
+const rows = await db.client(c)
+  .select()
+  .from(poolCreated)
+  .limit(10);
 ```
-
-This pattern creates one database connection that's reused across all requests, rather than creating a new connection for each API call.
 
 ## Adding a New Endpoint
 
@@ -106,12 +92,12 @@ Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. Th
 // Endpoint to get the 10 most recent Uniswap V3 pools
 app.get("/api/pools", async (c) => {
   try {
-    const client = await getDBClient(c.env);
-    // Note: Drizzle's execute is used for raw SQL. For full type-safety, define a Drizzle schema.
-    const result = await client.execute('SELECT * FROM pool_created LIMIT 10');
-    return Response.json({
-      data: result.rows,
-    });
+    const rows = await db.client(c)
+      .select()
+      .from(poolCreated)
+      .limit(10);
+
+    return Response.json({ data: rows });
   } catch (e) {
     console.error("Database operation failed:", e);
     return Response.json({ error: (e as Error).message }, { status: 500 });
@@ -129,11 +115,12 @@ Now let's add an endpoint to fetch the 10 most recent owner queries. This will q
 // Endpoint to get the 10 most recent owner queries
 app.get("/api/owner-queries", async (c) => {
   try {
-    const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT * FROM owner_queried LIMIT 10');
-    return Response.json({
-      data: result.rows,
-    });
+    const rows = await db.client(c)
+      .select()
+      .from(ownerQueried)
+      .limit(10);
+
+    return Response.json({ data: rows });
   } catch (e) {
     console.error("Database operation failed:", e);
     return Response.json({ error: (e as Error).message }, { status: 500 });
@@ -151,11 +138,11 @@ Finally, let's add an endpoint to get the total number of pools. This will be us
 // Endpoint to get the total number of pools
 app.get("/api/pools/count", async (c) => {
   try {
-    const client = await getDBClient(c.env);
-    const result = await client.execute('SELECT COUNT(*) as total FROM pool_created');
-    return Response.json({
-      data: result.rows[0].total,
-    });
+    const [{ total }] = await db.client(c)
+      .select({ total: sql<number>`COUNT(*)` })
+      .from(poolCreated);
+
+    return Response.json({ data: total });
   } catch (e) {
     console.error("Database operation failed:", e);
     return Response.json({ error: (e as Error).message }, { status: 500 });
@@ -163,21 +150,27 @@ app.get("/api/pools/count", async (c) => {
 });
 ```
 
-This endpoint uses a `COUNT` query to efficiently get the total number of pools without fetching all the data. The result is returned as a simple number.
+This endpoint uses an aggregate query to efficiently count pools without fetching every row.
 
 ### Testing Your Endpoints
 
 After adding all three endpoints, you can test them locally:
+
 - `http://localhost:8787/api/pools` - Get recent pools
 - `http://localhost:8787/api/owner-queries` - Get recent owner queries
 - `http://localhost:8787/api/pools/count` - Get total pool count
 
 ## Deploying Your API
 
-Once you are satisfied with your API, deploy it to the Sim IDX platform using the same command as before:
+<Columns cols={1}>
+  <Card title="App Deployment Guide" href="/idx/deployment">
+    Haven't connected your GitHub repo to Sim yet? Follow the App Deployment guide to link your project and trigger the first build.
+  </Card>
+</Columns>
 
-```bash
-sim deploy
-```
+Once your repository is connected, shipping updates is as simple as pushing code:
 
-Sim IDX will bundle and deploy your TypeScript code to Cloudflare's global network. Your updated API will be live at the API URL provided in the deployment output.
+- Push commits to the `main` branch to roll out a new **production** deployment.
+- Push to any other branch to spin up a **preview** deployment with its own URL — perfect for staging and pull-request reviews.
+
+Sim IDX automatically builds your Cloudflare Worker and updates the deployment status in the dashboard. No CLI command is required.

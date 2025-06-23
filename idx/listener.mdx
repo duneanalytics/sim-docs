@@ -27,7 +27,7 @@ my-idx-app/
 
 ### Primary Development Folders
 
-The `apis/` and `listeners/` folders are the two folders you will work with most often.
+The `abis/` and `listeners/` folders are the two folders you will work with most often.
 
 ### ABI Files
 
@@ -40,13 +40,29 @@ If you want to add an additional ABI and learn what happens when you run the com
 
 ## Understanding the Listener Contract
 
-Within `listeners/src/` you will find **`Main.sol`**, the primary Solidity file you will edit. When we refer to *the listener contract* we are talking about this file.
+A listener is Sim IDX's onchain router.
+**Triggers** decide *when* to run.
+The **Listener** contract decides *what* to store by emitting events.
+Sim IDX watches those events and turns them into DB rows for your app.
 
-`Main.sol` defines two contracts:
-1. **`Triggers`**: a lightweight contract that tells Sim IDX when to run your code.
-2. **`Listener`**: the contract where you write the logic that runs when a trigger fires.
+### Mental model
 
-Let's break the file down step by step.
+1. A transaction or log appears on-chain.
+2. Sim IDX checks whether it matches any trigger you defined during deployment.
+3. When there's a match, Sim IDX invokes the corresponding handler in your listener contract.
+4. The handler emits one or more events that capture the facts you care about.
+5. Sim IDX stores each event as a new row in the appropriate table of your app database.
+
+### File anatomy
+
+`Main.sol` lives in `listeners/src` and contains **two contracts**:
+
+| Contract   | Purpose                                                                 |
+|-----------|-------------------------------------------------------------------------|
+| `Triggers` | Registers triggers via `addTrigger`. No business logic.                 |
+| `Listener` | Implements handlers and emits events that define your database schema. |
+
+Let's break the file down step-by-step.
 
 ### Imports
 
@@ -144,35 +160,22 @@ Because you extended `UniswapV3Factory$OnCreatePoolFunction` you must implement 
 
 Each handler name follows the pattern of the function or event it processes. When this handler runs Sim IDX gives you three arguments: a transaction context, the decoded inputs and the decoded outputs. You can use this data to emit one or more events which Sim IDX writes to your application database.
 
----
+### From Events to DB
 
-## Adding another ABI
+When the handler emits `PoolCreated`, Sim IDX creates a database view of the same name in snake_case:
 
-1. Place the ABI JSON in `abis/` (e.g. `abis/MyContract.json`).
-2. Run:
+| chainId | caller                                     | pool                                       | token0                                     | token1                                     | fee   |
+|---------|--------------------------------------------|--------------------------------------------|--------------------------------------------|--------------------------------------------|-------|
+| 1       | 0x1f98431c8ad98523631ae4a59f267346ea31f984 | 0xf2c1e03841e06127db207fda0c3819ed9f788903 | 0x4a074a606ccc467c513933fa0b48cf37033cac1f | 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 | 10000 |
 
-```bash
-sim abi add abis/MyContract.json
-```
-
-The command regenerates `listeners/lib/sim-idx-generated/` and you can immediately write:
-
-```solidity
-import "sim-idx-generated/Generated.sol";
-
-contract Listener is MyContract$OnSomeEvent, MyContract$OnSomeFunction {
-    // ...
-}
-```
-
----
+If you add or remove parameters on the event, Sim IDX automatically adjusts the table.
 
 ## Capturing more data
 
-Need the block number? a log topic? manipulate multiple tables? Extend your event or emit additional ones.
+You can emit as many events as you like—each with whatever fields you care about—and you can update an event definition at any time. For example, let's add the block number to the existing `PoolCreated` event:
 
 ```solidity
-event PoolCreatedEx(
+event PoolCreated(
     uint64   chainId,
     address  caller,
     address  pool,
@@ -190,7 +193,7 @@ function onCreatePoolFunction(
     external
     override
 {
-    emit PoolCreatedEx(
+    emit PoolCreated(
         uint64(block.chainid),
         ctx.txn.call.callee,
         outputs.pool,
@@ -202,7 +205,26 @@ function onCreatePoolFunction(
 }
 ```
 
----
+## Adding another ABI
+
+1. Place the ABI JSON in `abis/` (e.g. `abis/MyContract.json`).
+2. Run:
+
+```bash
+sim abi add abis/MyContract.json
+```
+
+The command regenerates `listeners/lib/sim-idx-generated/`, **re-creates `Generated.sol`, and autogenerates all the enums, structs, interfaces, and helper functions you need to work with the ABI you just added**.
+
+After running the command you can open `listeners/src/Main.sol` and extend `Listener` with any of the freshly-generated `*OnSomeEvent` / `*OnSomeFunction` contracts.  Browsing `listeners/lib/sim-idx-generated/` is the quickest way to see every event and function that is now available to you.
+
+```solidity
+import "sim-idx-generated/Generated.sol";
+
+contract Listener is MyContract$OnSomeEvent, MyContract$OnSomeFunction {
+    // ...
+}
+```
 
 ## Testing your listener
 
@@ -214,10 +236,14 @@ sim test            # delegates to `forge test`
 
 will compile the listener, execute the tests, and surface any failures in the CLI just like in any other Solidity project.
 
----
+You can also run
+
+```bash
+sim listeners evaluate
+```
+
+to execute your listener against historical blockchain data before deploying it. See the [CLI docs](/idx/cli#sim-listeners-evaluate) for more details.
 
 ## Next steps
 
-* Add new ABIs and triggers to broaden the coverage of your application.
-* Explore the generated helpers in `lib/sim-idx-generated/` to see every function/event you can hook into.
-* Head over to [`idx/deployment.mdx`](./deployment.mdx) to learn how to ship your listener to production.
+From here you can broaden the coverage of your application by adding new ABIs and triggers or start exposing the indexed data through custom APIs. Once you're happy with your listener you can deploy the app following the [deployment guide](/idx/deployment), or head over to the [API development guide](/idx/apis) to build rich endpoints that power your applications.

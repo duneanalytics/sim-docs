@@ -2,7 +2,7 @@
 title: DB Inspection
 ---
 
-After deploying your Sim IDX application with `sim deploy`, the framework automatically provisions a dedicated PostgreSQL database to store your indexed onchain data.
+After deploying your Sim IDX app, the framework automatically provisions a dedicated PostgreSQL database to store your indexed on-chain data.
 The deployment output provides you with a read-only connection string to access this database directly.
 
 You can use this during development to verify your schema, inspect live data, and create queries while building your API.
@@ -14,7 +14,7 @@ Your deployed API will connect to a separate, production-ready database instance
 
 ## Connecting to Your Database
 
-Use the database connection string from the `sim deploy` output to connect with any standard PostgreSQL client.
+Use the [database connection string](/idx/app-page#db-connection) provided in your app's deployment to connect with any standard PostgreSQL client.
 
 ```
 db_read_connection: "postgres://username:password@host/database?sslmode=require"
@@ -33,7 +33,7 @@ You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more vi
 
 ## Understanding the Schema
 
-The structure of your database is directly determined by the `event` definitions in your `Listener.sol` contract.
+The structure of your database is directly determined by the `event` definitions in your `Main.sol` contract.
 
 *   **Views**: Each `event` in your listener creates a corresponding queryable view in the database. The view name is the lowercase `snake_case` version of the event name.
 *   **Columns**: The parameters of the event become the columns of the view.
