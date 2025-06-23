@@ -1,3 +1,83 @@
 ---
-title: "Deployment"
+title: "App Deployment"
+description: "Push your local Sim IDX project to GitHub, import it into the Sim dashboard and ship the first build."
 ---
+
+Deploying publishes your app on Sim's managed infrastructure so it can continuously index data and serve production-ready APIs. This guide shows how to connect a local project to GitHub, import it into the Sim dashboard and trigger the first build.
+
+<Info>
+Before you continue, complete the [Quickstart](/idx) to install the Sim CLI and initialise an app.
+</Info>
+
+## Create GitHub repo
+
+<Frame caption="Create a new repository on GitHub">
+  <img src="/images/idx/deployment/create-new-github-repository.png" />
+</Frame>
+
+Open GitHub and create a new repository named after the folder that contains your project.
+In the Quickstart we used `my-first-idx-app`.
+
+## Push app to GitHub
+
+When you ran `sim init`, besides initializing your app, the CLI created a Git repository and committed the first version of your code.
+Point the repo at GitHub and push the commit:
+
+```bash
+# inside your project folder
+git remote add origin https://github.com/your-username/my-first-idx-app.git
+git branch -M main
+git push -u origin main
+```
+
+<Frame caption="Push the first commit to GitHub">
+  <img src="/images/idx/deployment/push-from-existing-repo-github.png" />
+</Frame>
+
+## Import repo
+
+<Note>If you don't have access to IDX tab in the Sim dashboard yet, click Request Access to get enabled.</Note>
+
+Open the Sim dashboard at [sim.dune.com](https://sim.dune.com), select IDX in the sidebar and click Import Repo.
+The first time you do this you will have to install the Dune Sim GitHub App.
+
+<Frame caption="Create a new repository on GitHub">
+  <img src="/images/idx/deployment/sim-dashboard-sim-idx.png" />
+</Frame>
+
+## Install GitHub App
+
+<Frame caption="Select where to install the GitHub App">
+  <img src="/images/idx/deployment/install-dune-sim-github-app.png" />
+</Frame>
+
+Choose the GitHub account, select allow all or only the repositories you need and click Install.
+After installation you return to the import screen and pick your repo.
+
+## Configure & deploy
+
+<Frame caption="Review app settings and deploy">
+  <img src="/images/idx/deployment/new-app.png" />
+</Frame>
+
+Review the settings for the App name, the optional description, then press Deploy.
+The dashboard will show the deployment with status Pending.
+
+## Trigger first build
+
+Each push to the repo will start a build. Make any change and push it to the main to see it in action:
+
+```bash
+git commit -am "chore: trigger build"
+git push
+```
+
+## Next steps
+
+Your first build is now running. Head over to the [Dashboard](/idx/dashboard) page to learn where to find the database connection string, generated API endpoints and deployment status.
+
+<Columns cols={1}>
+  <Card title="Dashboard" href="/idx/dashboard">
+    Explore deployment details & endpoints
+  </Card>
+</Columns>
