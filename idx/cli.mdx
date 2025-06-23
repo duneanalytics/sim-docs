@@ -8,13 +8,9 @@ You can use the CLI to initialize new projects, manage contract ABIs, and test y
 
 This page provides an overview of all available commands, their functions, and potential error messages you might encounter.
 
-## Install the CLI
+## Install or Upgrade the CLI
 
-For CLI installation instructions, refer to the [Quickstart guide](/idx#install-cli).
-
-## Upgrade the CLI
-
-Upgrading to the latest version is as simple as rerunning the installer script.
+Installing the CLI or Upgrading to the latest version is as simple as rerunning the installer script.
 The installer will download the most recent release and replace your existing `sim` binary.
 
 ```bash
@@ -128,3 +124,58 @@ sim abi codegen
 <Note>
 In most cases, you don't need to run this command manually because it runs automatically after you execute `sim abi add`. Use it only when you want to force-regenerate the interfaces.
 </Note>
+
+### `sim listeners`
+
+A namespace for commands that interact with **listener contracts** during local development.
+Similar to `sim abi`, you must append a sub-command after `listeners`.
+
+```bash
+sim listeners <COMMAND>
+```
+
+### `sim listeners evaluate`
+
+Runs your listener locally against historical main-chain data so you can verify that triggers fire and events are emitted **before** you deploy the app.
+
+```bash
+sim listeners evaluate \
+  --start-block <START_BLOCK> \
+  --chain-id <CHAIN_ID> \
+  --end-block <END_BLOCK>
+```
+
+<Info>
+`evaluate` **does not** persist any data. It is purely a local dry-run to ensure your handler logic behaves as expected.
+</Info>
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--start-block` | Yes | First block to process. |
+| `--chain-id` | Conditional* | Chain ID to test against. If omitted, Sim tries to infer it from your `addTrigger` definitions. Required when your listener has triggers on multiple chains. |
+| `--end-block` | No | Last block to process. Provide this if you want to replay more than one block and observe state changes over a range. |
+
+The command compiles your listener, executes the triggers across the block range, and prints a summary such as:
+
+```text
+INFO deploy: {
+  "events": [
+    {
+      "name": "PoolCreated",
+      "fields": {
+        "pool": "70307790d81aba6a65de99c18865416e1eefc13e",
+        "caller": "1f98431c8ad98523631ae4a59f267346ea31f984",
+        "fee": "10000",
+        "token1": "c02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "chainId": "1",
+        "token0": "593e989f08e8d3ebea0ca5a17c7990d634812bc5"
+      },
+      "metadata": {
+        "block_number": 22757345,
+        "chain_id": 1
+      }
+    }
+  ],
+  "errors": []
+}
+```
