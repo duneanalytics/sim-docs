@@ -10,161 +10,189 @@ This guide covers the structure of a listener contract, how to add indexing for 
 
 ## App Structure Explained
 
-All Sim IDX apps have the following structure:
-
-```
-my-first-idx-app/
-├── sim.toml                        # App configuration (app name, etc.)
-├── abis/                           # Stores contract ABI files (JSON)
-├── apis/                           # Your custom API code
-└── listeners/                      # Foundry app for your listener contracts
+```text
+my-idx-app/
+├── sim.toml                       # App configuration
+├── abis/                          # JSON ABIs for the contracts you want to index
+├── apis/                          # Your TypeScript/Edge runtime APIs
+└── listeners/                     #   ← a Foundry project
     ├── src/
-    │   └── Main.sol                # YOUR PRIMARY EDITING TARGET!
+    │   └── Main.sol               # PRIMARY editing target
     ├── test/
-    │   └── Main.t.sol              # Unit tests for your listener
-    └── lib/                        # Libraries & generated code
+    │   └── Main.t.sol             # Unit tests for your listener
+    └── lib/
+        ├── sim-idx-sol/           # Core Sim IDX framework (DSL, context, helpers)
+        └── sim-idx-generated/     # Code generated from the ABIs you add
 ```
 
 ### Primary Development Folders
 
-The `abis/` and the `listeners/` folders are the two main folders you'll be working with directly.
+The `apis/` and `listeners/` folders are the two folders you will work with most often.
 
 ### ABI Files
 
-`abis/` contains JSON ABI files of smart contracts you want to index. The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
+The `abis/` folder contains JSON ABI files of smart contracts you want to index.
+The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
 
-If you want to add an additional ABI, first find the ABI for that contract by going to sites like Etherscan, then run `sim abi add abis/YourContract.json`. That command will automatically generate structs, interfaces, and functions for use in your Listener.
-
-### Listener Development
-
-The `listeners/` directory is a Foundry app where you'll edit `src/Main.sol` to define what onchain events to listen for and what data to extract. This is also where you'll define tests for your listener in `test/Main.t.sol`.
-
-### Framework Libraries
-
-The `lib/sim-idx-sol/src/` directory contains `Simidx.sol`, which provides the core Sim IDX framework including the DSL for triggers and auto-generated interfaces based on your ABIs.
-
-### Custom APIs
-
-The `apis/` directory is where you'll write custom TypeScript APIs to query your indexed data. After deployment, Sim IDX provides you with a database connection and hosts your API code.
+<Note>
+If you want to add an additional ABI and learn what happens when you run the command, see the [`sim abi add` CLI command docs](/idx/cli#sim-abi-add-<file-path>).
+</Note>
 
 ## Understanding the Listener Contract
 
-Your listener logic resides in `listeners/src/Main.sol`.
-This file is a Foundry-based Solidity contract.
-Let's break down the sample app's listener, which indexes new Uniswap V3 pools.
+Within `listeners/src/` you will find **`Main.sol`**, the primary Solidity file you will edit. When we refer to *the listener contract* we are talking about this file.
 
-### 1. Framework Import
+`Main.sol` defines two contracts:
+1. **`Triggers`**: a lightweight contract that tells Sim IDX when to run your code.
+2. **`Listener`**: the contract where you write the logic that runs when a trigger fires.
 
-All listeners begin by importing the core Sim IDX framework, which provides the necessary DSL and generated interfaces.
+Let's break the file down step by step.
+
+### Imports
 
 ```solidity
-import "simidx/Simidx.sol";
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
 ```
 
-### 2. Contract Definition
+These two imports pull in everything provided by the **Sim IDX framework**.
 
-The listener contract inherits from `ListenerDsl` and one or more generated interfaces corresponding to the functions you want to index.
+`Simidx.sol` provides the enums, structs, abstract contracts and helper functions you will use while writing your indexing logic.
+
+`Generated.sol` contains the Solidity code created by the `sim abi add` command. For the sample app this file includes the Uniswap V3 Factory interface located at `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`, which is generated automatically when you add that ABI.
+
+### Triggers contract
+
+A lightweight contract that tells Sim IDX when to run your code. Sim IDX does this through what we call a **trigger**. A trigger tells Sim IDX when to call one of your handlers for a function or event on an external contract.
 
 ```solidity
-contract Listener is UniswapV3Factory$function_OnPostCreatePool, ListenerDsl {
+contract Triggers is BaseTriggers {
 ```
 
--   **`ListenerDsl`**: Provides the `addTrigger()` helper function used to configure your indexer.
--   **`UniswapV3Factory$function_OnPostCreatePool`**: A generated interface that requires you to implement an `onPostCreatePool` handler function. These interfaces are generated automatically when you add an ABI with `sim abi add`.
-
-### 3. Event Definition
-
-Solidity events define the schema of the data you want to save. The event name maps to your database table name, and its parameters map to the table columns.
+`BaseTriggers` comes from `Simidx.sol`. It is an abstract contract that provides helper functions, most importantly `addTrigger`.
 
 ```solidity
-// This event will create a `pool_created` table in your database
-event PoolCreated(address pool, address token0, address token1, uint256 fee);
+    function triggers() external override {
 ```
 
-### 4. Trigger Configuration
-
-In the `constructor`, you define **Triggers**. A trigger tells the indexer when to execute your handler logic.
+`BaseTriggers` requires you to implement the `triggers` function. Inside this function you register every trigger your application needs.
 
 ```solidity
-constructor() {
-    addTrigger(
-        ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
-        UniswapV3Factory$postCreatePoolFunction(),
-        Listener.onPostCreatePool.selector
+        Listener listener = new Listener();
+```
+
+Here you create an instance of `Listener`, the second contract in `Main.sol`. We will look at this contract in the next section.
+
+```solidity
+        // Listen on Ethereum mainnet (chain 1) to Uniswap V3 Factory.createPool
+        addTrigger(
+            ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+            listener.triggerOnCreatePoolFunction()
+        );
+    }
+}
+```
+
+`addTrigger` takes two arguments. The first argument identifies the on chain target by chain identifier and contract address. The second argument is the handler selector that the listener contract exposes.
+
+Let's take a look at the Listener contract now.
+
+### Listener contract
+
+```solidity
+contract Listener is UniswapV3Factory$OnCreatePoolFunction {
+```
+
+`Listener` extends `UniswapV3Factory$OnCreatePoolFunction`, an interface generated automatically by `sim abi add` and made available through `Generated.sol`.
+
+After declaring the contract you define the events that you want to emit.
+
+```solidity
+    event PoolCreated(
+        uint64  chainId,
+        address caller,
+        address pool,
+        address token0,
+        address token1,
+        uint24  fee
     );
+```
+
+Emitting an event defines the shape of the database that Sim IDX creates. The event name becomes the table name and each parameter becomes a column.
+
+Next you implement the handler that the generated interface expects.
+
+```solidity
+    function onCreatePoolFunction(
+        FunctionContext                           memory ctx,
+        UniswapV3Factory$createPoolFunctionInputs memory inputs,
+        UniswapV3Factory$createPoolFunctionOutputs memory outputs
+    ) external override {
+        emit PoolCreated(
+            uint64(block.chainid),
+            ctx.txn.call.callee,
+            outputs.pool,
+            inputs.tokenA,
+            inputs.tokenB,
+            inputs.fee
+        );
+    }
 }
 ```
 
-The `addTrigger` function takes three arguments:
-1.  **Target**: The chain and contract address to monitor (e.g., Ethereum Mainnet, Uniswap V3 Factory).
-2.  **Function**: The specific contract function to watch, provided by a generated helper.
-3.  **Handler**: The selector of the function in your listener that will handle the data.
+Because you extended `UniswapV3Factory$OnCreatePoolFunction` you must implement `onCreatePoolFunction`.
 
-### 5. Handler Implementation
+Each handler name follows the pattern of the function or event it processes. When this handler runs Sim IDX gives you three arguments: a transaction context, the decoded inputs and the decoded outputs. You can use this data to emit one or more events which Sim IDX writes to your application database.
 
-A **Handler** is the function that gets executed when a trigger's conditions are met. It receives the inputs and outputs of the monitored on-chain function as typed structs. Inside the handler, you emit the event with the data you want to save.
+---
+
+## Adding another ABI
+
+1. Place the ABI JSON in `abis/` (e.g. `abis/MyContract.json`).
+2. Run:
+
+```bash
+sim abi add abis/MyContract.json
+```
+
+The command regenerates `listeners/lib/sim-idx-generated/` and you can immediately write:
 
 ```solidity
-function onPostCreatePool(
-    UniswapV3Factory$function_createPoolInputs memory inputs, 
-    UniswapV3Factory$function_createPoolOutputs memory outputs
-)
-    external
-    override
-{
-    // Extract data and emit the event to index it
-    emit PoolCreated(outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee);
+import "sim-idx-generated/Generated.sol";
+
+contract Listener is MyContract$OnSomeEvent, MyContract$OnSomeFunction {
+    // ...
 }
 ```
 
-## Adding a New Contract ABI
+---
 
-To index a different contract, you first need its ABI. You can typically find ABIs on block explorers like Etherscan.
+## Capturing more data
 
-1.  Save the ABI as a JSON file in the `abis` folder (e.g., `abi/MyContract.json`).
-2.  Add it to your project using the CLI:
-
-    ```bash
-    sim abi add path/to/MyContract.json
-    ```
-
-This command generates the necessary interfaces, structs, and helper functions in `listeners/lib/sim-idx-generated/`, allowing you to use it in your Listener.
-
-## Expanding Events with More Data
-
-You can update your events by adding more data fields to capture additional context.
-A common use case is including the block number when an event occurred.
-Let's modify the `PoolCreated` event to include this information.
-
-### 1. Update the Event Definition
-
-First, add the new field to your event definition:
+Need the block number? a log topic? manipulate multiple tables? Extend your event or emit additional ones.
 
 ```solidity
-// Add blockNumber to track when the pool was created
-event PoolCreated(
-    address pool, 
-    address token0, 
-    address token1, 
-    uint256 fee,
-    uint256 blockNumber
+event PoolCreatedEx(
+    uint64   chainId,
+    address  caller,
+    address  pool,
+    address  token0,
+    address  token1,
+    uint24   fee,
+    uint256  blockNumber       // new field
 );
-```
 
-### 2. Update the Handler
-
-In your handler function, you can access the current block number using `block.number` and include it in the event emission:
-
-```solidity
-function onPostCreatePool(
-    UniswapV3Factory$function_createPoolInputs memory inputs, 
-    UniswapV3Factory$function_createPoolOutputs memory outputs
+function onCreatePoolFunction(
+    FunctionContext memory ctx,
+    UniswapV3Factory$createPoolFunctionInputs  memory inputs,
+    UniswapV3Factory$createPoolFunctionOutputs memory outputs
 )
     external
     override
 {
-    // Include block.number in the event emission
-    emit PoolCreated(
+    emit PoolCreatedEx(
+        uint64(block.chainid),
+        ctx.txn.call.callee,
         outputs.pool,
         inputs.tokenA,
         inputs.tokenB,
@@ -173,3 +201,23 @@ function onPostCreatePool(
     );
 }
 ```
+
+---
+
+## Testing your listener
+
+Because `listeners/` is a Foundry project you can write standard Forge tests in `listeners/test/`. Running
+
+```bash
+sim test            # delegates to `forge test`
+```
+
+will compile the listener, execute the tests, and surface any failures in the CLI just like in any other Solidity project.
+
+---
+
+## Next steps
+
+* Add new ABIs and triggers to broaden the coverage of your application.
+* Explore the generated helpers in `lib/sim-idx-generated/` to see every function/event you can hook into.
+* Head over to [`idx/deployment.mdx`](./deployment.mdx) to learn how to ship your listener to production.
