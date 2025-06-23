@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Sim APIs",
+  "name": "Sim by Dune",
   "favicon": "/dune.png",
   "colors": {
     "primary": "#000000",
@@ -9,56 +9,90 @@
     "dark": "#000000"
   },
   "navigation": {
-    "groups": [
+    "tabs": [
       {
-        "group": "Sim APIs",
-        "pages": [
-          "index"
-        ]
-      },
-      {
-        "group": "EVM",
-        "pages": [
-          "evm/overview",
-          "evm/supported-chains",
+        "tab": "Sim APIs",
+        "groups": [
           {
-            "group": "Guides",
+            "group": "Sim APIs",
             "pages": [
-              {
-                "group": "Wallet",
-                "pages": [
-                  "evm/build-a-realtime-wallet",
-                  "evm/add-account-activity",
-                  "evm/show-nfts-collectibles"
-                ]
-              },
-              "evm/build-a-realtime-chat-agent"
+              "index"
             ]
           },
-          "evm/balances",
-          "evm/activity",
-          "evm/collectibles",
-          "evm/transactions",
-          "evm/token-info",
-          "evm/token-holders"
+          {
+            "group": "EVM",
+            "pages": [
+              "evm/overview",
+              "evm/supported-chains",
+              {
+                "group": "Guides",
+                "pages": [
+                  {
+                    "group": "Wallet",
+                    "pages": [
+                      "evm/build-a-realtime-wallet",
+                      "evm/add-account-activity",
+                      "evm/show-nfts-collectibles"
+                    ]
+                  },
+                  "evm/build-a-realtime-chat-agent"
+                ]
+              },
+              "evm/balances",
+              "evm/activity",
+              "evm/collectibles",
+              "evm/transactions",
+              "evm/token-info",
+              "evm/token-holders"
+            ]
+          },
+          {
+            "group": "SVM",
+            "pages": [
+              "svm/overview",
+              "svm/balances",
+              "svm/transactions"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "build-with-ai",
+              "token-filtering",
+              "error-handling",
+              "proxy",
+              "support"
+            ]
+          }
         ]
       },
       {
-        "group": "SVM",
-        "pages": [
-          "svm/overview",
-          "svm/balances",
-          "svm/transactions"
-        ]
-      },
-      {
-        "group": "Resources",
-        "pages": [
-          "build-with-ai",
-          "token-filtering",
-          "error-handling",
-          "proxy",
-          "support"
+        "tab": "Sim IDX",
+        "groups": [
+          {
+            "group": "Sim IDX",
+            "pages": [
+              "idx",
+              "idx/deployment",
+              "idx/app-page"
+            ]
+          },
+          {
+            "group": "IDX Framework",
+            "pages": [
+              "idx/cli",
+              "idx/listener",
+              "idx/db",
+              "idx/apis"
+            ]
+          },
+          {
+            "group": "Templates",
+            "pages": [
+              "idx/templates/contract-decoder",
+              "idx/templates/uniswap-v3-in-range-lps"
+            ]
+          }
         ]
       }
     ]

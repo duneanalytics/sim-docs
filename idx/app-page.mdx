@@ -1,0 +1,69 @@
+---
+title: "App Page"
+description: "Understand every section of your Sim IDX app's deployment: high-level metrics, build health, database access and automatically generated APIs."
+---
+
+The **App Page** is the central place to monitor your IDX app after it has been deployed.
+Here you can track ingestion progress, inspect generated endpoints, check build health and grab the database connection string.
+
+<Info>
+If you have not deployed your IDX app yet, follow the [Deployment guide](/idx/deployment) first.
+</Info>
+
+<Frame caption="Your app's individual deployment page">
+  <img src="/images/idx/deployment/individual-app.png" />
+</Frame>
+
+## Overview metrics
+
+At the very top you will see a stats bar that summarises your app's activity: the chains it indexes, the connected GitHub repository and API metrics such as total requests, peak RPS and success rate over the last 24 hours. The numbers update live so you can leave the tab open while you ship new endpoints.
+
+## Current deployment
+
+This card shows the build that is currently serving traffic.
+
+It displays the **Deployment ID** (unique UUID for this deployment), **Environment** (Production points to the `main` branch while Preview builds are generated for branches other than `main`), **Commit** (Git SHA together with the GitHub author), and **Last deployed** (relative timestamp).
+
+When a build is running the status badge moves from **Building → Ingesting → Ready**. Previous builds stay available in the [**Other deployments**](#other-deployments).
+
+### DB connection
+
+A Postgres **DB connection** string is issued for every deployment.
+It follows the pattern
+
+```text
+postgres://<user>:<password>@<host>:<port>/<database>
+```
+
+Paste it into `psql`, Supabase Studio, DBeaver or any other SQL client to explore your tables directly.
+
+### API base routes
+
+Two base URLs are generated:
+
+1. **Latest**: always points at the newest deployment, be it preview or production.
+2. **Production**: permanently mapped to the most recent production build in the `/main` branch.
+
+## Endpoints
+
+Every endpoint that you add to your API appears here with usage statistics and a status badge. Click an endpoint to view detailed usage metrics.
+
+## Events
+
+If your app emits events you will see an **Events** table. For each event you can view:
+
+- Status (*Running*, *Paused* or error).
+- Latest processed block.
+- Total records stored.
+- Disk size consumed in the DB.
+
+Click an event to open a detailed view that shows catch-up progress, the last five processed events and full logs.
+
+## Other deployments
+
+The **Other deployments** panel lists every build that ran for this app. For each row you can:
+
+- View the deployment hash, status, environment and commit.
+- Open build logs to debug failures.
+
+Clicking a deployment switches the entire App Page to that build, letting you inspect its endpoints, events and metrics in isolation.

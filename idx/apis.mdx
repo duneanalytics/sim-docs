@@ -1,0 +1,176 @@
+---
+title: API Development
+---
+
+With your onchain data indexed and stored in a PostgreSQL database, the final step is to build an API to serve it.
+Sim IDX provides a serverless TypeScript environment with **Cloudflare Workers**, allowing you to build and deploy fast, scalable APIs with minimal configuration.
+
+The boilerplate API in the `apis/` directory uses **Hono** as a lightweight web framework and **Drizzle** as a type-safe ORM for database queries.
+
+## Local Development Setup
+
+Before deploying, you can run and test your API locally.
+
+<Steps>
+  <Step title="Navigate to the API directory">
+    ```bash
+    cd apis
+    ```
+  </Step>
+
+  <Step title="Set Up Environment Variable">
+    Create a file named `.dev.vars` in the `apis/` directory. Add the database connection string you received from `sim deploy` to this file.
+
+    ```plaintext .dev.vars
+    DB_CONNECTION_STRING="your_database_connection_string_from_sim_deploy"
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    ```bash
+    npm install
+    ```
+  </Step>
+
+  <Step title="Start the Development Server">
+    ```bash
+    npm run dev
+    ```
+
+    Your API is now running locally at `http://localhost:8787`.
+  </Step>
+</Steps>
+
+## Understanding the API Code
+
+The boilerplate API in `apis/src/index.ts` is a TypeScript application that runs on Cloudflare Workers. It connects to your indexed database and exposes HTTP endpoints to query your data. Let's understand how this works:
+
+### Framework Setup
+
+The API uses the `sim-idx` helper library, which wraps **Hono** and **Drizzle** to simplify setup:
+```typescript
+import { App, db, types } from "sim-idx";
+import { eq, sql } from "drizzle-orm";
+import { poolCreated, ownerQueried } from "./db/schema/Listener";
+```
+
+**Hono** handles HTTP requests and routing, while **Drizzle** provides a type-safe way to query your PostgreSQL database.
+
+### Environment Configuration
+
+`sim-idx` handles database credentials for you in both local development and deployed environments, so no additional environment variables are required.
+
+### Application Instance
+
+Create the web application with a single call:
+```typescript
+const app = App.create();
+```
+
+### Database Connection Management
+
+Instead of managing your own connection pool, call `db.client(c)` inside a request handler to reuse the shared Drizzle client:
+```typescript
+const rows = await db.client(c)
+  .select()
+  .from(poolCreated)
+  .limit(10);
+```
+
+## Adding a New Endpoint
+
+Let's build three endpoints to serve our indexed data:
+- `/api/pools` - Get recent Uniswap V3 pools
+- `/api/owner-queries` - Get recent owner queries
+- `/api/pools/count` - Get total number of pools
+
+### Creating the Pools Endpoint
+
+Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint will query the `pool_created` table we created in our listener:
+
+```typescript
+// Endpoint to get the 10 most recent Uniswap V3 pools
+app.get("/api/pools", async (c) => {
+  try {
+    const rows = await db.client(c)
+      .select()
+      .from(poolCreated)
+      .limit(10);
+
+    return Response.json({ data: rows });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+```
+
+This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT 10` clause ensures we don't return too much data at once. In a production environment, you might want to add pagination and filtering options.
+
+### Adding the Owner Queries Endpoint
+
+Now let's add an endpoint to fetch the 10 most recent owner queries. This will query the `owner_queried` table:
+
+```typescript
+// Endpoint to get the 10 most recent owner queries
+app.get("/api/owner-queries", async (c) => {
+  try {
+    const rows = await db.client(c)
+      .select()
+      .from(ownerQueried)
+      .limit(10);
+
+    return Response.json({ data: rows });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+```
+
+This endpoint follows the same pattern as the pools endpoint, but queries a different table. Both endpoints include error handling to ensure graceful failure if something goes wrong.
+
+### Creating the Pool Count Endpoint
+
+Finally, let's add an endpoint to get the total number of pools. This will be useful for pagination and analytics:
+
+```typescript
+// Endpoint to get the total number of pools
+app.get("/api/pools/count", async (c) => {
+  try {
+    const [{ total }] = await db.client(c)
+      .select({ total: sql<number>`COUNT(*)` })
+      .from(poolCreated);
+
+    return Response.json({ data: total });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+```
+
+This endpoint uses an aggregate query to efficiently count pools without fetching every row.
+
+### Testing Your Endpoints
+
+After adding all three endpoints, you can test them locally:
+
+- `http://localhost:8787/api/pools` - Get recent pools
+- `http://localhost:8787/api/owner-queries` - Get recent owner queries
+- `http://localhost:8787/api/pools/count` - Get total pool count
+
+## Deploying Your API
+
+<Columns cols={1}>
+  <Card title="App Deployment Guide" href="/idx/deployment">
+    Haven't connected your GitHub repo to Sim yet? Follow the App Deployment guide to link your project and trigger the first build.
+  </Card>
+</Columns>
+
+Once your repository is connected, shipping updates is as simple as pushing code:
+
+- Push commits to the `main` branch to roll out a new **production** deployment.
+- Push to any other branch to spin up a **preview** deployment with its own URL — perfect for staging and pull-request reviews.
+
+Sim IDX automatically builds your Cloudflare Worker and updates the deployment status in the dashboard. No CLI command is required.

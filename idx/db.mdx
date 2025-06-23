@@ -1,0 +1,55 @@
+---
+title: DB Inspection
+---
+
+After deploying your Sim IDX app, the framework automatically provisions a dedicated PostgreSQL database to store your indexed on-chain data.
+The deployment output provides you with a read-only connection string to access this database directly.
+
+You can use this during development to verify your schema, inspect live data, and create queries while building your API.
+
+<Note>
+The database connection string provided after deployment is intended for development and debugging.
+Your deployed API will connect to a separate, production-ready database instance with the same schema.
+</Note>
+
+## Connecting to Your Database
+
+Use the [database connection string](/idx/app-page#db-connection) provided in your app's deployment to connect with any standard PostgreSQL client.
+
+```
+db_read_connection: "postgres://username:password@host/database?sslmode=require"
+```
+
+For example, using `psql`:
+
+```bash
+# Connect using the full connection string
+psql "your_connection_string_here"
+```
+
+<Info>
+You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more visual way to explore your data and schema.
+</Info>
+
+## Understanding the Schema
+
+The structure of your database is directly determined by the `event` definitions in your `Main.sol` contract.
+
+*   **Views**: Each `event` in your listener creates a corresponding queryable view in the database. The view name is the lowercase `snake_case` version of the event name.
+*   **Columns**: The parameters of the event become the columns of the view.
+*   **Tables**: The underlying tables that store the data have random character suffixes (e.g., `pool_created_X3rbm4nC`) and should not be queried directly.
+
+An event defined as `event PoolCreated(address pool, address token0, address token1)` will result in a queryable view named `pool_created` with the columns `pool`, `token0`, and `token1`.
+
+When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase snake_case names), not the tables with suffixes.**
+
+## Common Database Operations
+
+Here are some common `psql` commands you can use to inspect your database:
+
+| Operation              | `psql` Command                             | Description                                                               |
+| ---------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
+| **List Views**         | `\dv`                                       | Shows all queryable views in the public schema.                          |
+| **Describe View**      | `\d "view_name"`                           | Displays the columns, types, and structure for a specific view.           |
+| **View Sample Data**   | `SELECT * FROM "view_name" LIMIT 10;`      | Retrieves the first 10 rows from a view.                                  |
+| **Count Rows**         | `SELECT COUNT(*) FROM "view_name";`        | Counts the total number of records indexed in a view.                     |

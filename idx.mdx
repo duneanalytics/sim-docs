@@ -1,0 +1,148 @@
+---
+title: "Sim IDX Quickstart"
+sidebarTitle: "Quickstart"
+description: "Get started and set up your first blockchain data indexer in minutes."
+---
+
+Sim IDX is a framework that radically simplifies the process of indexing blockchain data.
+This guide will walk you through installing the CLI, initializing a sample project, and running your first listener test.
+
+<video
+  id="sim-idx-hero-video"
+  className="w-full aspect-video rounded-xl cursor-pointer"
+  autoPlay
+  muted
+  loop
+  playsInline
+  noZoom
+  controls
+  src="https://dby10v016ygc2zna.public.blob.vercel-storage.com/Sim_IDX_Overview_01-f59KA9bRJG48nHIyC9STP7YZ2a356S.mp4"
+/>
+
+## Install CLI
+
+<Steps>
+<Step title="Download & Install Dependencies">
+  First, ensure you have **Node.js v20.x or later** installed.
+  You can download it from [Nodejs.org](https://nodejs.org).
+  ```bash
+  # Check your node version
+  node -v 
+  ```
+</Step>
+<Step title="Install the CLI">
+  ```bash
+  curl -L https://simcli.dune.com | bash
+  ```
+
+  You'll see the following output:
+
+  ```text
+  [INFO] Installing sim CLI v0.0.53
+  [INFO] Installing sim to /root/.local/bin/sim
+  [INFO] sim CLI installed successfully!
+  [INFO] Added sim CLI to PATH in /root/.bashrc
+  ```
+
+  <Info>
+    After the installer finishes, run `source ~/.bashrc` (or the appropriate profile file) so the `sim` executable is available in your `PATH`.
+  </Info>
+
+</Step>
+
+<Step title="Verify Installation">
+  Verify that the CLI is working:
+  ```bash
+  sim --version
+  ```
+  
+  You'll see:
+  
+  ```
+  sim v0.0.53 (eaddf2 2025-06-22T18:01:14.000000000Z)
+  ```
+</Step>
+</Steps>
+
+<Tip>For a full reference of the CLI, see the [CLI Overview](/idx/cli).</Tip>
+
+## Initialize Sample App
+
+First, create a new folder.
+
+```bash
+mkdir my-first-idx-app
+cd my-first-idx-app
+```
+
+Next, initialize your new Sim IDX app.
+
+```bash
+sim init
+```
+
+This command initializes **a pre-configured sample app that indexes every new Uniswap V3 trading pool created across multiple chains including Ethereum, Base, and Unichain**.
+It sets up a complete app structure for you, including a listener contract, tests, and a boilerplate API.
+
+<Info>
+  `sim init` also initializes a new Git repository and makes the first commit.
+  Make sure Git is installed and configured. Otherwise the command might fail.
+</Info>
+
+After successfully running init, you'll see:
+
+```text
+INFO sim::init: Successfully initialized a new Sim IDX app
+```
+
+## Authentication
+
+Create a new API key in the [Sim dashboard](https://sim.dune.com/) so you can authenticate in the CLI and test your new sample app.
+
+<Frame caption="To generate a new API key, visit the Keys page and click the New button.">
+  <img src="/images/idx/sim-idx-authentication.png" />
+</Frame>
+
+Give your new API key a unique name and select **Sim IDX CLI** for the key's purpose.
+After you've created your key, copy its value, go back to the CLI, and run:
+
+```bash
+sim authenticate
+```
+
+Paste the API key you created and press Enter.
+Once you've successfully authenticated, you'll see the following:
+
+```
+INFO sim::authenticate: Verifying API Key...
+INFO sim::authenticate: API Key verified successfully.
+INFO sim::authenticate: API Key successfully saved.
+```
+
+## Test Your Listener
+
+Now you can test to make sure your sample app's listener is working correctly:
+
+```bash
+sim listeners evaluate \
+  --start-block 22757345 \
+  --chain-id 1
+```
+
+After the command finishes, you'll see a summary of indexed events.
+If everything succeeds, your listener is working correctly.
+
+## Next Steps
+
+You've now got a working contract listener.
+Next, you'll deploy your app so it can index data continuously.
+If you'd like to go further, you can refine and extend your listener to capture even more onchain data.
+
+<Columns cols={2}>
+  <Card title="App Deployment" href="/idx/deployment">
+    Learn how to deploy your Sim IDX app to production
+  </Card>
+  <Card title="Listener Contracts" href="/idx/listener">
+    Dive deeper into writing and testing listener contracts
+  </Card>
+</Columns>
