@@ -4,9 +4,9 @@ sidebarTitle: CLI
 ---
 
 The Sim IDX CLI is your primary tool for interacting with the Sim IDX framework.
-You can use the CLI to initialize new projects, manage contract ABIs, test your listeners, and deploy your apps to the Sim IDX platform.
+You can use the CLI to initialize new projects, manage contract ABIs, and test your listeners.
 
-This reference provides a comprehensive overview of all available commands, their functions, and potential error messages you might encounter.
+This page provides an overview of all available commands, their functions, and potential error messages you might encounter.
 
 ## Install the CLI
 
@@ -17,7 +17,9 @@ For CLI installation instructions, refer to the [Quickstart guide](/idx#install-
 ### `sim init`
 
 Initializes a new Sim IDX application in the current directory.
-This command creates the standard project structure, including a `sim.toml` configuration file, a sample listener, and a boilerplate API.
+This command creates the standard project structure.
+It includes a `sim.toml` configuration file, a sample listener, and a boilerplate API.
+The command initializes a new Git repository, and makes the first commit containing all generated files.
 
 ```bash
 sim init
@@ -26,9 +28,18 @@ sim init
 If the current directory is not empty, the command will fail to prevent overwriting existing files.
 Make sure you run `mkdir new-project` and create a new directory _before_ running the init command.
 
+You can optionally scaffold a project from one of the official templates using the `--template` flag.
+For example, to start from the [contract-decoder](https://github.com/duneanalytics/sim-idx-example-contract-decoder) template:
+
+```bash
+sim init --template=contract-decoder
+```
+
+If you omit `--template`, the command uses the default [**sample** template](https://github.com/duneanalytics/sim-idx-example-sample-app).
+
 ### `sim build`
 
-Compiles the Solidity listener contracts located in the `listeners/` directory.
+Builds your Foundry project by running `forge build` under the hood. This compiles every Solidity contract in your project—including the listener contracts inside `listeners/`—along with any imported libraries.
 
 ```bash
 sim build
@@ -59,7 +70,11 @@ You can find and create API keys in the [Sim dashboard](https://sim.dune.com/).
 sim authenticate
 ```
 
-This command will ask you to paste your API key.
+You will be asked to paste your API key and press **Enter**.
+
+<Note>
+For detailed, step-by-step instructions on obtaining your API key, see the [Quickstart guide](/idx#authentication).
+</Note>
 
 ### `sim help`
 
@@ -78,23 +93,20 @@ Provides a set of commands for managing contract ABIs and generating correspondi
 
 ### `sim abi add <file_path>`
 
-Adds a new JSON ABI file to your project's `abis/` directory and automatically regenerates the necessary Solidity interfaces. This makes the contract's functions and events available for use in your listener.
+Registers a contract ABI with your project and generates all the Solidity interfaces, structs, and helper functions your listener needs.
 
 ```bash
-sim abi add abi/YourContract.json
+sim abi add abis/YourContract.json
 ```
 
-The command will fail if the specified file path does not exist.
+Follow these steps _before_ running the command:
 
-<Note>
-Before running this command, you need to obtain the ABI JSON for the contract you want to index. You can find contract ABIs on sites like Etherscan or other blockchain explorers. Once you have the ABI JSON:
+1. Obtain the contract's ABI JSON from Etherscan or another blockchain explorer.
+2. Inside your project, create a new file in `abis/` (for example, `abis/YourContract.json`).
+3. Paste the ABI JSON into that file and save it.
+4. Run `sim abi add abis/YourContract.json` pointing to the file you just created.
 
-1. Create a new file in your `abis/` directory (e.g., `abis/YourContract.json`)
-2. Copy and paste the ABI JSON content into this file
-3. Run `sim abi add abis/YourContract.json` with the path to your newly created file
-
-The command will then generate all the necessary Solidity interfaces, structs, and helper functions for use in your listener.
-</Note>
+The command fails if the file path you provide does not exist.
 
 ### `sim abi codegen`
 
@@ -105,5 +117,5 @@ sim abi codegen
 ```
 
 <Note>
-For the most part, you don't need to run this command manually because it runs automatically after you execute `sim abi add`. This command regenerates all the functions, structs, and interfaces based on your ABIs so you can use them in your listener.
+In most cases, you don't need to run this command manually because it runs automatically after you execute `sim abi add`. Use it only when you want to force-regenerate the interfaces.
 </Note>
