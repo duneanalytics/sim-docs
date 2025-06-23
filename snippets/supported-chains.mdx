@@ -4,11 +4,8 @@ export const SupportedChains = ({ endpoint }) => {
   const setData = dataState[1];
 
   useEffect(function() {
-    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
+    fetch("https://sim-proxy.dune-d2f.workers.dev/v1/evm/supported-chains", {
       method: "GET",
-      headers: {
-        "X-Sim-Api-Key": "sim_qfIvSWu7c8WBXzfCQ0SeLBGJts204uyT",
-      },
     })
       .then(function(response) {
         return response.json();
@@ -28,7 +25,7 @@ export const SupportedChains = ({ endpoint }) => {
 
   var supportedChains = [];
   var totalChains = data.chains.length;
-  
+
   if (endpoint !== undefined) {
     for (var i = 0; i < data.chains.length; i++) {
       var chain = data.chains[i];

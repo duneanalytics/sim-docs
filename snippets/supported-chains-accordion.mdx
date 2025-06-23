@@ -2,28 +2,25 @@ export const SupportedChainsAccordion = () => {
   const dataState = useState(null);
   const data = dataState[0];
   const setData = dataState[1];
-  
+
   const countsState = useState({});
   const counts = countsState[0];
   const setCounts = countsState[1];
-  
+
   const loadingState = useState(true);
   const isLoading = loadingState[0];
   const setIsLoading = loadingState[1];
 
   useEffect(function() {
-    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
+    fetch("https://sim-proxy.dune-d2f.workers.dev/v1/evm/supported-chains", {
       method: "GET",
-      headers: {
-        "X-Sim-Api-Key": "sim_qfIvSWu7c8WBXzfCQ0SeLBGJts204uyT",
-      },
     })
       .then(function(response) {
         return response.json();
       })
       .then(function(responseData) {
         setData(responseData);
-        
+
         var balancesCount = 0;
         var activityCount = 0;
         var collectiblesCount = 0;
@@ -40,7 +37,7 @@ export const SupportedChainsAccordion = () => {
           if (chain.token_info && chain.token_info.supported) tokenInfoCount++;
           if (chain.token_holders && chain.token_holders.supported) tokenHoldersCount++;
         }
-        
+
         setCounts({
           balances: balancesCount,
           activity: activityCount,
@@ -49,7 +46,7 @@ export const SupportedChainsAccordion = () => {
           token_info: tokenInfoCount,
           token_holders: tokenHoldersCount
         });
-        
+
         setIsLoading(false);
       });
   }, []);
@@ -90,11 +87,11 @@ export const SupportedChainsAccordion = () => {
       </table>
     );
   }
-  
+
   if (isLoading) {
     return <div>Loading chain information...</div>;
   }
-  
+
   if (!data) {
     return <div>No data available</div>;
   }
