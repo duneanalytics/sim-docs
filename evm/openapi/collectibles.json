@@ -61,9 +61,19 @@
             "nullable": true,
             "description": "The symbol of the collectible."
           },
+          "metadata": {
+            "type": "object",
+            "nullable": true,
+            "description": "Additional metadata associated with the collectible, typically including attributes and media URLs."
+          },
           "balance": {
             "type": "string",
             "description": "The balance of this specific token ID held by the address. For ERC721, this is typically '1'."
+          },
+          "last_acquired": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the collectible was last acquired."
           }
         }
       },
@@ -189,7 +199,9 @@
                           "chain_id": 1,
                           "name": "NamefiNFT",
                           "symbol": "NFNFT",
-                          "balance": "1"
+                          "metadata": null,
+                          "balance": "1",
+                          "last_acquired": "2025-05-21T05:49:41.456977Z"
                         },
                         {
                           "contract_address": "0x01cde4e79913888e642300e705c283f1da0eadb8",
@@ -199,7 +211,9 @@
                           "chain_id": 1,
                           "name": "manatoken.net",
                           "symbol": "claim rewards on manatoken.net",
-                          "balance": "1"
+                          "metadata": null,
+                          "balance": "1",
+                          "last_acquired": "2025-05-21T05:49:41.456977Z"
                         },
                         {
                           "contract_address": "0x0a41db66c8f94ec56b55357c92e4f1e66d8ba06",
@@ -209,7 +223,9 @@
                           "chain_id": 1,
                           "name": null,
                           "symbol": null,
-                          "balance": "1"
+                          "metadata": null,
+                          "balance": "1",
+                          "last_acquired": "2025-05-21T05:49:41.456977Z"
                         }
                       ],
                       "next_offset": "KgAAAAAAAAAweGQ4ZGE2YmYyNjk2NGFmOWQ3ZWVkOWUwM2U1MzQxNWQzN2FhOTYwNDUBAAAAAAAAACoAAAAAAAAAMHg0OTVmOTQ3Mjc2NzQ5Y2U2NDZmNjhhYzhjMjQ4NDIwMDQ1Y2I3YjVlIAAAAAAAAAD7ygfi-RlYwIz6s5UYT_T8YI0_BgAAAAAAAHsAAAAnEAEAAAA",
