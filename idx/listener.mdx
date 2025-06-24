@@ -40,14 +40,13 @@ If you want to add an additional ABI and learn what happens when you run the com
 
 ## Understanding the Listener Contract
 
-A listener is Sim IDX's onchain router.
-**Triggers** decide *when* to run.
-The **Listener** contract decides *what* to store by emitting events.
-Sim IDX watches those events and turns them into DB rows for your app.
+A listener is a special contract Sim IDX simulates onchain.
+It has handler functions which are called when certain conditions are triggered onchain (e.g., when another contract calls a function, or a contract with a matching ABI emits an event).
+The Listener contract itself emits events which Sim IDX store in your app's database.
 
 ### Mental model
 
-1. A transaction or log appears on-chain.
+1. A transaction is executed onchain.
 2. Sim IDX checks whether it matches any trigger you defined during deployment.
 3. When there's a match, Sim IDX invokes the corresponding handler in your listener contract.
 4. The handler emits one or more events that capture the facts you care about.
@@ -80,7 +79,7 @@ For the sample app this file includes the generated Solidity bindings for the Un
 
 ### Triggers contract
 
-A lightweight contract that tells Sim IDX when to run your code. Sim IDX does this through what we call a **trigger**. A trigger tells Sim IDX when to call one of your handlers for a function or event on an external contract.
+A contract that tells Sim IDX when to run your code. Sim IDX does this through what we call a **trigger**. A trigger tells Sim IDX when to call one of your handlers for a function or event on an external contract.
 
 ```solidity
 contract Triggers is BaseTriggers {
@@ -137,7 +136,7 @@ After declaring the contract you define the events that you want to emit.
 
 Emitting an event defines the shape of the database that Sim IDX creates. The event name becomes the table name and each parameter becomes a column.
 
-Next you implement the handler that the generated interface expects.
+Next you implement the handler that the generated abstract contract expects.
 
 ```solidity
     function onCreatePoolFunction(
@@ -163,13 +162,16 @@ Each handler name follows the pattern of the function or event it processes. Whe
 
 ### From Events to DB
 
-When the handler emits `PoolCreated`, Sim IDX creates a database view of the same name in snake_case:
+When the handler emits `PoolCreated`, Sim IDX creates a database view of the event's name in snake_case.
+For example, `PoolCreated` becomes `pool_created`.
+
+Here's an example of the contents:
 
 | chainId | caller                                     | pool                                       | token0                                     | token1                                     | fee   |
 |---------|--------------------------------------------|--------------------------------------------|--------------------------------------------|--------------------------------------------|-------|
 | 1       | 0x1f98431c8ad98523631ae4a59f267346ea31f984 | 0xf2c1e03841e06127db207fda0c3819ed9f788903 | 0x4a074a606ccc467c513933fa0b48cf37033cac1f | 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 | 10000 |
 
-If you add or remove parameters on the event, Sim IDX automatically adjusts the table.
+If you add or remove parameters on the event and deploy your changes, Sim IDX automatically adjusts the table.
 
 ## Capturing more event data
 
@@ -295,7 +297,8 @@ function onOwnerChangedEvent(
 }
 ```
 
-Everything you need like the execution context and the decoded outputs is provided by the generated interface. Because the abstract contract's method is `external`, remember to mark this implementation with `override`.
+Everything you need like the execution context and the decoded outputs is provided by the generated bindings.
+Because the abstract contract's method is `external`, remember to mark this implementation with `override`.
 
 ### 5. Register the trigger
 
