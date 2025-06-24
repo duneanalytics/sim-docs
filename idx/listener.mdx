@@ -75,7 +75,8 @@ These two imports pull in everything provided by the **Sim IDX framework**.
 
 `Simidx.sol` provides the enums, structs, abstract contracts and helper functions you will use while writing your indexing logic.
 
-`Generated.sol` contains the Solidity code created by the `sim abi add` command. For the sample app this file includes the Uniswap V3 Factory interface located at `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`, which is generated automatically when you add that ABI.
+`Generated.sol` contains the Solidity code created by the `sim abi add` command.
+For the sample app this file includes the generated Solidity bindings for the Uniswap V3 Factory located at `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`.
 
 ### Triggers contract
 
@@ -119,7 +120,7 @@ Let's take a look at the Listener contract now.
 contract Listener is UniswapV3Factory$OnCreatePoolFunction {
 ```
 
-`Listener` extends `UniswapV3Factory$OnCreatePoolFunction`, an interface generated automatically by `sim abi add` and made available through `Generated.sol`.
+`Listener` extends `UniswapV3Factory$OnCreatePoolFunction`, an abstract contract generated automatically by `sim abi add` and made available through `Generated.sol`.
 
 After declaring the contract you define the events that you want to emit.
 
@@ -170,11 +171,15 @@ When the handler emits `PoolCreated`, Sim IDX creates a database view of the sam
 
 If you add or remove parameters on the event, Sim IDX automatically adjusts the table.
 
-## Capturing more data
+## Capturing more event data
 
-You can emit as many events as you like—each with whatever fields you care about—and you can update an event definition at any time. For example, let's add the block number to the existing `PoolCreated` event:
+You can define and emit as many events as you like—each with whatever properties you care about—and you can update an event definition at any time.  
 
-```solidity
+In the example below we modify the `Listener` contract in `listeners/src/Main.sol` to capture one additional piece of information: the block number in which the pool was created.
+
+### Extend the event
+
+```solidity Listener Contract Event Definition
 event PoolCreated(
     uint64   chainId,
     address  caller,
@@ -182,9 +187,16 @@ event PoolCreated(
     address  token0,
     address  token1,
     uint24   fee,
-    uint256  blockNumber       // new field
+    uint256  blockNumber        // new field
 );
+```
 
+Adding a parameter changes the shape of the table that Sim IDX creates for this event.
+`blockNumber` will appear as a new column after you push your changes.
+
+### Emit the new data
+
+```solidity Listener Contract Handler Definition
 function onCreatePoolFunction(
     FunctionContext memory ctx,
     UniswapV3Factory$createPoolFunctionInputs  memory inputs,
@@ -200,10 +212,114 @@ function onCreatePoolFunction(
         inputs.tokenA,
         inputs.tokenB,
         inputs.fee,
+        block.number               // pass the new value
+    );
+}
+```
+
+Once you've saved these changes you can [test your listener](#testing-your-listener) to check against real data and verify that everything works as expected.
+
+## Hooking into more functions and events
+
+When you'd like to index **additional** calls from the same contract, Sim IDX makes it easy. Each ABI you add is converted into a Solidity file inside `listeners/lib/sim-idx-generated/`. That file contains every helper function, struct, and *abstract* contract you'll need. All of these are exported through `Generated.sol`, which is imported at the top of `listeners/src/Main.sol`. It brings every generated hook into scope for your `Listener` contract.
+
+The workflow for tapping into an extra function or event is:
+
+1. **Discover the hook**: open the generated file (e.g. `UniswapV3Factory.sol`) and locate the *abstract contract* that corresponds to the function or event you care about.
+2. **Extend `Listener`** with that abstract contract.
+3. **Add a new event** that matches the data you want in your database.
+4. **Implement the handler** to emit the event.
+5. **Register the trigger** inside the `Triggers` contract.
+
+Below we walk through adding support for the `owner()` function on the Uniswap V3 Factory contract.
+
+### 1. Discover the hook
+
+In `listeners/lib/sim-idx-generated/UniswapV3Factory.sol` you will find:
+
+```solidity
+abstract contract UniswapV3Factory$OnOwnerFunction {
+    function onOwnerFunction(
+        FunctionContext memory ctx,
+        UniswapV3Factory$ownerFunctionOutputs memory outputs
+    ) virtual external;
+
+    function triggerOnOwnerFunction() view external returns (Trigger memory);
+}
+```
+
+This abstract contract represents the `owner()` function. Implementing its handler lets your listener react whenever that function is executed. The paired `triggerOnOwnerFunction()` helper returns the selector you'll reference in the `Triggers` contract.
+
+### 2. Extend the listener
+
+```solidity
+contract Listener is
+    UniswapV3Factory$OnCreatePoolFunction,  // existing
+    UniswapV3Factory$OnOwnerChangedEvent    // NEW
+{
+    // ...
+}
+```
+
+By inheriting from the new abstract contract you promise the compiler that you'll provide a concrete `onOwnerFunction` implementation, unlocking typed access to the decoded outputs.
+
+### 3. Define an event
+
+```solidity Listener Contract Event Definition
+event OwnerChanged(
+    uint64  chainId,
+    address oldOwner,
+    address newOwner,
+    uint256 blockNumber
+);
+```
+
+Events define your database schema. Here we record the queried owner plus a bit of useful context about the call.
+
+### 4. Implement the handler
+
+```solidity Listener Contract Handler Definition
+function onOwnerChangedEvent(
+    EventContext memory ctx, 
+    UniswapV3Factory$OwnerChangedEventParams memory inputs
+)
+    external
+    override
+{
+    emit OwnerChanged(
+        uint64(block.chainid),
+        inputs.oldOwner,
+        inputs.newOwner
         block.number
     );
 }
 ```
+
+Everything you need like the execution context and the decoded outputs is provided by the generated interface. Because the abstract contract's method is `external`, remember to mark this implementation with `override`.
+
+### 5. Register the trigger
+
+```solidity
+addTrigger(
+    ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnOwnerFunction()
+);
+```
+
+`Triggers.triggers()` is your trigger registry.
+Adding this additional `addTrigger` call tells Sim IDX to invoke your new handler whenever `owner()` is called on the Uniswap V3 factory contract.
+
+### 6. Test it out
+
+Save your changes, then [test your listener](#testing-your-listener) to replay historical data and confirm that `OwnerChanged` rows are appearing.
+
+```bash
+sim listeners evaluate \
+  --chain-id 1 \
+  --start-block 12369662
+```
+
+This replays block **12369662** on Ethereum Mainnet so you can confirm that `OwnerQueried` rows appear in the console.
 
 ## Adding another ABI
 
@@ -214,7 +330,7 @@ function onCreatePoolFunction(
 sim abi add abis/MyContract.json
 ```
 
-The command regenerates `listeners/lib/sim-idx-generated/`, **re-creates `Generated.sol`, and autogenerates all the enums, structs, interfaces, and helper functions you need to work with the ABI you just added**.
+The command regenerates `listeners/lib/sim-idx-generated/`, **re-creates `Generated.sol`, and autogenerates all the functions, structs, and abstract contracts you need to work with the ABI you just added**.
 
 After running the command you can open `listeners/src/Main.sol` and extend `Listener` with any of the freshly-generated `*OnSomeEvent` / `*OnSomeFunction` contracts.  Browsing `listeners/lib/sim-idx-generated/` is the quickest way to see every event and function that is now available to you.
 
