@@ -81,7 +81,7 @@ const rows = await db.client(c)
 
 Let's build three endpoints to serve our indexed data:
 - `/api/pools` - Get recent Uniswap V3 pools
-- `/api/owner-queries` - Get recent owner queries
+- `/api/owner-changed` - Get recent owner changed events
 - `/api/pools/count` - Get total number of pools
 
 ### Creating the Pools Endpoint
@@ -107,17 +107,27 @@ app.get("/api/pools", async (c) => {
 
 This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT 10` clause ensures we don't return too much data at once. In a production environment, you might want to add pagination and filtering options.
 
-### Adding the Owner Queries Endpoint
+### Adding the Owner Changed Endpoint
 
-Now let's add an endpoint to fetch the 10 most recent owner queries. This will query the `owner_queried` table:
+<Note>
+Before continuing, make sure you've added support for the `OwnerChanged` event in your listener contract by following the ["Hooking into more functions and events"](/idx/listener#hooking-into-more-functions-and-events) section of the Listener guide and then running:
+
+```bash
+sim build
+```
+
+Running `sim build` regenerates `apis/src/db/schema/Listener.ts` with a new `ownerChanged` table binding that we import below.
+</Note>
+
+Now let's add an endpoint to fetch the 10 most recent owner changed events. This will query the `owner_changed` table:
 
 ```typescript
-// Endpoint to get the 10 most recent owner queries
-app.get("/api/owner-queries", async (c) => {
+// Endpoint to get the 10 most recent owner changed events
+app.get("/api/owner-changed", async (c) => {
   try {
     const rows = await db.client(c)
       .select()
-      .from(ownerQueried)
+      .from(ownerChanged)
       .limit(10);
 
     return Response.json({ data: rows });
@@ -127,8 +137,6 @@ app.get("/api/owner-queries", async (c) => {
   }
 });
 ```
-
-This endpoint follows the same pattern as the pools endpoint, but queries a different table. Both endpoints include error handling to ensure graceful failure if something goes wrong.
 
 ### Creating the Pool Count Endpoint
 
@@ -157,7 +165,7 @@ This endpoint uses an aggregate query to efficiently count pools without fetchin
 After adding all three endpoints, you can test them locally:
 
 - `http://localhost:8787/api/pools` - Get recent pools
-- `http://localhost:8787/api/owner-queries` - Get recent owner queries
+- `http://localhost:8787/api/owner-changed` - Get recent owner changed events
 - `http://localhost:8787/api/pools/count` - Get total pool count
 
 ## Deploying Your API

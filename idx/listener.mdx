@@ -240,13 +240,10 @@ Below we walk through adding support for the `owner()` function on the Uniswap V
 In `listeners/lib/sim-idx-generated/UniswapV3Factory.sol` you will find:
 
 ```solidity
-abstract contract UniswapV3Factory$OnOwnerFunction {
-    function onOwnerFunction(
-        FunctionContext memory ctx,
-        UniswapV3Factory$ownerFunctionOutputs memory outputs
-    ) virtual external;
+abstract contract UniswapV3Factory$OnOwnerChangedEvent {
+    function onOwnerChangedEvent(EventContext memory ctx, UniswapV3Factory$OwnerChangedEventParams memory inputs) virtual external;
 
-    function triggerOnOwnerFunction() view external returns (Trigger memory);
+    function triggerOnOwnerChangedEvent() view external returns (Trigger memory) {}
 }
 ```
 
