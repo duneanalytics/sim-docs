@@ -1,6 +1,3 @@
-import React, { useState, useEffect } from 'react';
-import { AccordionGroup, Accordion } from '@mintlify/components';
-
 export const SupportedChainsAccordion = () => {
   const dataState = useState(null);
   const data = dataState[0];
