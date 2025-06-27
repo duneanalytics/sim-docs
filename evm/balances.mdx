@@ -13,7 +13,7 @@ The Token Balances API provides accurate and fast real time balances of the nati
 
 <Note>
   The Balances API only returns balances for certain low latency chains by default.
-  To fetch balances for _all_ supported chains, use the `?chains_ids=all` query parameter.
+  To fetch balances for _all_ supported chains, use the `?chain_ids=all` query parameter.
 </Note>
 
 <SupportedChains endpoint="balances" />
@@ -30,7 +30,7 @@ We also include the `pool_size` field in all responses, allowing you to implemen
 
 This endpoint is using cursor based pagination. You can use the `limit` query parameter to define the maximum page size.
 Results might at times be less than the maximum page size.
-The `next_offset` value is passed back by the initial response and can be used to fetch the next page of results, by passing it as the `offet` query parameter in the next request.
+The `next_offset` value is passed back by the initial response and can be used to fetch the next page of results, by passing it as the `offset` query parameter in the next request.
 
 <Warning>
   You can only use the value from `next_offset` to set the `offset` query parameter of the next page of results.
