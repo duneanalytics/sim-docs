@@ -11,11 +11,11 @@ Every Sim IDX app operates in one of two environments: **Production** or **Previ
 
 When you push a new commit to the `main` branch of your connected repo, a new production deployment is automatically created.
 
-A fresh, dedicated PostgreSQL database is provisioned for every production deployment.
-A new base URL for your APIs is created.
+A new, dedicated PostgreSQL database is provisioned for every deployment.
+A new base URL for your APIs is also created.
 
 <Note>
-A new base URL and DB connection string are created every time, so make sure you update it anywhere you're using them during development.
+If you're using these values during development, make sure you update them after every push.
 </Note>
 
 <Frame caption="The Current Deployment section of your App Page represents your latest production deployment.">
@@ -24,8 +24,8 @@ A new base URL and DB connection string are created every time, so make sure you
 
 ## Preview Environments
 
-When you push a commit to a new branch that's not main, Sim IDX automatically spins up a completely separate environment for it.
-Similarly to the production deployment, each one will get its own isolated database and unique API url.
+When you push a new commit to any branch that _is not_ `main`, Sim IDX automatically spins up a completely separate environment for it.
+Each preview deployment will get its own isolated database and unique API URL.
 
 <Frame caption="The Other Deployments section of your App Page is where you can find preview deployments.">
   <img src="/images/idx/deployment/other-deployments.png" />
