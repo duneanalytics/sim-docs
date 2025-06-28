@@ -1,0 +1,32 @@
+---
+title: Deployment Environments
+---
+
+Sim IDX streamlines your development and deployment lifecycle by integrating directly with your Git branching strategy.
+This allows you to build, test, and ship changes using isolated environments.
+
+Every Sim IDX app operates in one of two environments: **Production** or **Preview**.
+
+## Production Environment
+
+When you push a new commit to the `main` branch of your connected repo, a new production deployment is automatically created.
+
+A fresh, dedicated PostgreSQL database is provisioned for every production deployment.
+A new base URL for your APIs is created.
+
+<Note>
+A new base URL and DB connection string are created every time, so make sure you update it anywhere you're using them during development.
+</Note>
+
+<Frame caption="The Current Deployment section of your App Page represents your latest production deployment.">
+  <img src="/images/idx/deployment/current-deployment.png" />
+</Frame>
+
+## Preview Environments
+
+When you push a commit to a new branch that's not main, Sim IDX automatically spins up a completely separate environment for it.
+Similarly to the production deployment, each one will get its own isolated database and unique API url.
+
+<Frame caption="The Other Deployments section of your App Page is where you can find preview deployments.">
+  <img src="/images/idx/deployment/other-deployments.png" />
+</Frame>

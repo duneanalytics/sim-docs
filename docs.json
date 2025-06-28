@@ -73,8 +73,14 @@
             "group": "Sim IDX",
             "pages": [
               "idx",
-              "idx/deployment",
-              "idx/app-page"
+              {
+                "group": "Deployment",
+                "pages": [
+                  "idx/deployment",
+                  "idx/deployment-environments",
+                  "idx/app-page"
+                ]
+              }
             ]
           },
           {
