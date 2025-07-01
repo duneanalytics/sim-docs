@@ -56,6 +56,7 @@
           },
           {
             "group": "Resources",
+            "icon": "house",
             "pages": [
               "build-with-ai",
               "token-filtering",
@@ -93,10 +94,15 @@
             ]
           },
           {
-            "group": "Templates",
+            "group": "Guides",
             "pages": [
-              "idx/templates/contract-decoder",
-              "idx/templates/uniswap-v3-in-range-lps"
+              "idx/guides/swap-sample-abi"
+            ]
+          },
+          {
+            "group": "Resources",
+            "pages": [
+              "idx/resources/templates"
             ]
           }
         ]

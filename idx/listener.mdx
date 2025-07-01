@@ -8,7 +8,7 @@ By writing simple handlers for specific contract function calls or events, you i
 
 This guide covers the structure of a listener contract, how to add indexing for new functions, and how to test your logic.
 
-## App Structure Explained
+## App Folder Structure Explained
 
 ```text
 my-idx-app/
@@ -38,13 +38,13 @@ The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory 
 If you want to add an additional ABI and learn what happens when you run the command, see the [`sim abi add` CLI command docs](/idx/cli#sim-abi-add-<file-path>).
 </Note>
 
-## Understanding the Listener Contract
+## Understand the Listener Contract
 
 A listener is a special contract Sim IDX simulates onchain.
 It has handler functions which are called when certain conditions are triggered onchain (e.g., when another contract calls a function, or a contract with a matching ABI emits an event).
 The Listener contract itself emits events which Sim IDX store in your app's database.
 
-### Mental model
+### Mental Model
 
 1. A transaction is executed onchain.
 2. Sim IDX checks whether it matches any trigger you defined during deployment.
@@ -52,7 +52,7 @@ The Listener contract itself emits events which Sim IDX store in your app's data
 4. The handler emits one or more events that capture the facts you care about.
 5. Sim IDX stores each event as a new row in the appropriate table of your app database.
 
-### File anatomy
+### File Anatomy
 
 `Main.sol` lives in `listeners/src` and contains **two contracts**:
 
@@ -77,7 +77,7 @@ These two imports pull in everything provided by the **Sim IDX framework**.
 `Generated.sol` contains the Solidity code created by the `sim abi add` command.
 For the sample app this file includes the generated Solidity bindings for the Uniswap V3 Factory located at `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`.
 
-### Triggers contract
+### Triggers Contract
 
 A contract that tells Sim IDX when to run your code. Sim IDX does this through what we call a **trigger**. A trigger tells Sim IDX when to call one of your handlers for a function or event on an external contract.
 
@@ -113,7 +113,7 @@ Here you create an instance of `Listener`, the second contract in `Main.sol`. We
 
 Let's take a look at the Listener contract now.
 
-### Listener contract
+### Listener Contract
 
 ```solidity
 contract Listener is UniswapV3Factory$OnCreatePoolFunction {
@@ -173,13 +173,13 @@ Here's an example of the contents:
 
 If you add or remove parameters on the event and deploy your changes, Sim IDX automatically adjusts the table.
 
-## Capturing more event data
+## Capture More Event Data
 
 You can define and emit as many events as you like—each with whatever properties you care about—and you can update an event definition at any time.  
 
 In the example below we modify the `Listener` contract in `listeners/src/Main.sol` to capture one additional piece of information: the block number in which the pool was created.
 
-### Extend the event
+### Extend the Event
 
 ```solidity Listener Contract Event Definition
 event PoolCreated(
@@ -196,7 +196,7 @@ event PoolCreated(
 Adding a parameter changes the shape of the table that Sim IDX creates for this event.
 `blockNumber` will appear as a new column after you push your changes.
 
-### Emit the new data
+### Emit the New Data
 
 ```solidity Listener Contract Handler Definition
 function onCreatePoolFunction(
@@ -221,7 +221,7 @@ function onCreatePoolFunction(
 
 Once you've saved these changes you can [test your listener](#testing-your-listener) to check against real data and verify that everything works as expected.
 
-## Hooking into more functions and events
+## Hook into More Functions and Events
 
 When you'd like to index **additional** calls from the same contract, Sim IDX makes it easy. Each ABI you add is converted into a Solidity file inside `listeners/lib/sim-idx-generated/`. That file contains every helper function, struct, and *abstract* contract you'll need. All of these are exported through `Generated.sol`, which is imported at the top of `listeners/src/Main.sol`. It brings every generated hook into scope for your `Listener` contract.
 
@@ -321,45 +321,72 @@ sim listeners evaluate \
 
 This replays block **12369662** on Ethereum Mainnet so you can confirm that `OwnerQueried` rows appear in the console.
 
-## Adding another ABI
+## Add Another ABI
 
-1. Place the ABI JSON in `abis/` (e.g. `abis/MyContract.json`).
-2. Run:
+If you'd like to add another contract to your listener, here are the steps:
+
+1. Find the contract's ABI using a platform like Etherscan, Basescan, or another.
+2. Add the contract's ABI JSON into `abis/` (for example `abis/MyContract.json`).
+3. Run `sim abi add abis/MyContract.json` in your terminal.
+
+The command regenerates the bindings in `listeners/lib/sim-idx-generated/` and updates `Generated.sol`.
+Once it finishes, extend your `Main.sol` Listener with hooks and add triggers as usual.
+
+<Note>
+For a full list of flags, see the [`sim abi add` reference](/idx/cli#sim-abi-add-<file-path>).
+To walk through the process of adding a new ABI end-to-end, check the [Swap Sample ABI guide](/idx/guides/swap-sample-abi).
+</Note>
+
+## Test Your Listener
+
+Sim IDX gives you two ways to make sure your listener behaves as expected while you build.
+
+### Unit Tests with Foundry
+
+The listeners folder is a Foundry project.
+`sim test` is a thin wrapper around `forge test`.
+It will compile your `Main.sol` contract, execute all Forge unit tests inside the `listeners/test/`, and surface any failures with the familiar Foundry output.
+
+<Tip>
+LLMs are surprisingly good at scaffolding Forge tests.
+Paste an ABI snippet or an example transaction into ChatGPT and ask it to generate a starting test and then refine as needed.
+</Tip>
+
+### Historical Replay
+
+Once unit tests pass, use `sim listeners evaluate` to see how your listener reacts to real onchain data _before_ pushing your updates.
+This command compiles your listener and executes the transactions in any block range you specify on a specific chain.
 
 ```bash
-sim abi add abis/MyContract.json
+sim listeners evaluate \
+  --chain-id 1 \
+  --start-block 12369662 \
+  --end-block   12369670
 ```
 
-The command regenerates `listeners/lib/sim-idx-generated/`, **re-creates `Generated.sol`, and autogenerates all the functions, structs, and abstract contracts you need to work with the ABI you just added**.
+<Note>
+Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) to learn more about the flags you have available in the command.
+</Note>
 
-After running the command you can open `listeners/src/Main.sol` and extend `Listener` with any of the freshly-generated `*OnSomeEvent` / `*OnSomeFunction` contracts.  Browsing `listeners/lib/sim-idx-generated/` is the quickest way to see every event and function that is now available to you.
-
-```solidity
-import "sim-idx-generated/Generated.sol";
-
-contract Listener is MyContract$OnSomeEvent, MyContract$OnSomeFunction {
-    // ...
-}
-```
-
-## Testing your listener
-
-Because `listeners/` is a Foundry project you can write standard Forge tests in `listeners/test/`. Running
-
-```bash
-sim test            # delegates to `forge test`
-```
-
-will compile the listener, execute the tests, and surface any failures in the CLI just like in any other Solidity project.
-
-You can also run
-
-```bash
-sim listeners evaluate
-```
-
-to execute your listener against historical blockchain data before deploying it. See the [CLI docs](/idx/cli#sim-listeners-evaluate) for more details.
+Run evaluate after every meanginful change (or add it into your CI) to catch mismatches between your triggers and live onchain history early.
+No data is persisted.
+It's a dry-run to validate triggers and event schemas.
 
 ## Next steps
 
-From here you can broaden the coverage of your application by adding new ABIs and triggers or start exposing the indexed data through custom APIs. Once you're happy with your listener you can deploy the app following the [deployment guide](/idx/deployment), or head over to the [API development guide](/idx/apis) to build rich endpoints that power your applications.
+You've now seen how to create triggers, emit events, and validate your listener with historical replays.
+Here are a few great ways to level-up your Sim IDX app.
+
+<Columns cols={2}>
+  <Card title="Deployment Guide" href="/idx/deployment">
+    Push your app to a staging or production environment and watch it process live onchain activity.
+  </Card>
+
+  <Card title="API Development Guide" href="/idx/apis">
+    Build fast, type-safe endpoints that surface the data your listener captures.
+  </Card>
+
+  <Card title="Swap ABI Contract Guide" href="/idx/guides/swap-sample-abi">
+    Walk through adding an additional contract ABI and extending your listener.
+  </Card>
+</Columns>

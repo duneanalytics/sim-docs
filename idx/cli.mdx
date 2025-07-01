@@ -19,7 +19,7 @@ curl -L https://simcli.dune.com | bash
 
 ## Available Commands
 
-### `sim init`
+#### `sim init`
 
 Initializes a new Sim IDX application in the current directory.
 This command creates the standard project structure.
@@ -42,7 +42,7 @@ sim init --template=contract-decoder
 
 If you omit `--template`, the command uses the default [**sample** template](https://github.com/duneanalytics/sim-idx-example-sample-app).
 
-### `sim build`
+#### `sim build`
 
 Builds your Foundry project by running `forge build` under the hood. This compiles every Solidity contract in your project—including the listener contracts inside `listeners/`—along with any imported libraries.
 
@@ -53,7 +53,7 @@ sim build
 If there are compilation errors in your Solidity code, the build will fail.
 The output will provide details from the Solidity compiler to help you debug.
 
-### `sim test`
+#### `sim test`
 
 Runs the Solidity tests for your listener contracts.
 The tests are located in `listeners/test/`.
@@ -66,7 +66,7 @@ sim test
 If any of the tests fail, the command will exit with an error.
 The output will show which tests failed and provide assertion details.
 
-### `sim authenticate`
+#### `sim authenticate`
 
 Saves your Sim IDX API key locally, allowing the CLI to authenticate with the platform.
 You can find and create API keys in the [Sim dashboard](https://sim.dune.com/).
@@ -81,7 +81,7 @@ You will be asked to paste your API key and press **Enter**.
 For detailed, step-by-step instructions on obtaining your API key, see the [Quickstart guide](/idx#authentication).
 </Note>
 
-### `sim help`
+#### `sim help`
 
 Displays help information and available commands for the Sim IDX CLI.
 This command shows usage instructions, available commands, and options.
@@ -92,11 +92,11 @@ sim help
 
 You can also use `sim --help` or `sim -h` for the same functionality.
 
-### `sim abi`
+#### `sim abi`
 
 Provides a set of commands for managing contract ABIs and generating corresponding Solidity interfaces for use in your listener.
 
-### `sim abi add <file_path>`
+#### `sim abi add <file_path>`
 
 Registers a contract ABI with your project and generates all the Solidity interfaces, structs, and helper functions your listener needs.
 
@@ -113,7 +113,7 @@ Follow these steps _before_ running the command:
 
 The command fails if the file path you provide does not exist.
 
-### `sim abi codegen`
+#### `sim abi codegen`
 
 Manually regenerates the Solidity interfaces from all ABI files currently in the `abis/` directory. This is useful if the generated files need to be refreshed.
 
@@ -125,7 +125,7 @@ sim abi codegen
 In most cases, you don't need to run this command manually because it runs automatically after you execute `sim abi add`. Use it only when you want to force-regenerate the interfaces.
 </Note>
 
-### `sim listeners`
+#### `sim listeners`
 
 A namespace for commands that interact with **listener contracts** during local development.
 Similar to `sim abi`, you must append a sub-command after `listeners`.
@@ -134,7 +134,7 @@ Similar to `sim abi`, you must append a sub-command after `listeners`.
 sim listeners <COMMAND>
 ```
 
-### `sim listeners evaluate`
+#### `sim listeners evaluate`
 
 Runs your listener locally against historical main-chain data so you can verify that triggers fire and events are emitted **before** you deploy the app.
 

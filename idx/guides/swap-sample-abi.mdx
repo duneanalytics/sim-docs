@@ -1,0 +1,223 @@
+---
+title: "Replace the Sample Uniswap V3 Factory ABI with Another Contract's ABI"
+sidebarTitle: "Replace Sample ABI"
+description: "Replace the Uniswap V3 Factory ABI with another contract's ABI in the Sim IDX sample app"
+---
+
+This guide shows you how to swap out the Uniswap V3 Factory ABI bundled with the [**sample**](https://github.com/duneanalytics/sim-idx-example-sample-app) Sim IDX app and replace it with the ABI of any contract you would like to index. The sample app is what gets created by default when you run `sim init` without any additional [templates](/idx/resources/templates). The workflow mirrors the process you will follow in a real project: locate the ABI, register it with the CLI, extend your listener, and validate the new triggers against historical data.
+
+## 1. Remove the Uniswap V3 Factory ABI from the project
+
+Inside the sample repository you will find a file at `abis/UniswapV3Factory.json`. Because you are replacing this ABI entirely, delete the file (or move it out of `abis/`). Leaving it in place would cause the CLI to generate bindings for both Factory **and** USDC, which is not what you want for this walkthrough.
+
+```bash
+rm abis/UniswapV3Factory.json
+# Regenerate bindings
+sim abi codegen
+```
+
+Running [`sim abi codegen`](/idx/cli#sim-abi-codegen) removes the now-missing Factory bindings from `listeners/lib/sim-idx-generated/`.
+
+## 2. Locate the ABI for your target contract
+
+Start by obtaining the ABI for the contract you want to observe. The most common approach is to open the contract page on a blockchain explorer such as Etherscan, Basescan or Polygonscan and click the **Contract** tab. From there select **Contract ABI** and copy the full JSON blob to your clipboard.
+
+For the purposes of this guide we'll hook into the Ethereum USDC contract.
+
+<Frame>
+  <img src="/images/idx/guides/swap-abi/usdc-contract-abi.png" />
+</Frame>
+
+## 3. Add the new ABI JSON file
+
+Create a fresh file under `abis/` and paste the JSON you copied earlier. The filename should match the contract you are tracking, e.g. `abis/USDC.json`.
+
+```bash
+touch abis/USDC.json
+# then paste the JSON using your editor or:
+cat > abis/USDC.json  # Ctrl-D to save
+```
+
+You can just as easily create the file through your editor's GUI. Both approaches work the same.
+
+## 4. Generate Solidity bindings with `sim abi add`
+
+Run the command below in the root of your project to register the ABI and generate strongly-typed Solidity bindings. The CLI parses the JSON, creates the corresponding structs, abstract contracts and helper functions, and writes them into `listeners/lib/sim-idx-generated/`.
+
+```bash
+sim abi add abis/USDC.json
+```
+
+After the command completes you will see the updated files in `listeners/lib/sim-idx-generated/`. The generated Solidity bindings expose multiple *abstract contracts* that fire whenever a specific USDC function is called or event is emitted on-chain. You will extend one of these contracts in the next step.
+
+## 5. Update the listener contract to inherit the new functionality
+
+Open `listeners/src/Main.sol` and update the `Listener` contract so that it inherits from the abstract contracts generated for your ABI. For example, to react to the `Transfer` event of USDC the inheritance line might look like this:
+
+```solidity
+contract Listener is USDC$OnTransferEvent {
+    event USDCTransfer(
+        uint64  chainId,
+        address from,
+        address to,
+        uint256 value
+    );
+
+    function onTransferEvent(
+        EventContext memory /* ctx */,
+        USDC$TransferEventParams memory inputs
+    ) external override {
+        emit USDCTransfer(
+            uint64(block.chainid),
+            inputs.from,
+            inputs.to,
+            inputs.value
+        );
+    }
+}
+```
+
+Add or modify event definitions to capture the on-chain data you want persisted and implement each handler function required by the abstract contract. The Sim IDX framework will create the associated database tables automatically on deployment.
+
+## 6. Register triggers for the new contract
+
+In the `Triggers` contract within the same `Main.sol` file, replace the existing `addTrigger` call so that it points to the USDC contract address on Ethereum and references the helper selector exposed by the listener:
+
+```solidity
+addTrigger(
+    ChainIdContract(1, 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48), // USDC
+    listener.triggerOnTransferEvent()
+);
+```
+
+Want to listen on multiple networks (e.g. Base)? Simply add additional `addTrigger` calls with the appropriate `chainId` and contract address. You can find the list of supported chains at [sim.dune.com/chains](https://sim.dune.com/chains).
+
+## 7. Evaluate the listener against historical blocks
+
+Before deploying, replay historical chain data to confirm that the new triggers activate and that the listener emits the expected events. [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) compiles your listener, fetches on-chain transactions for the specified block range and prints a structured summary of events and errors.
+
+```bash
+sim listeners evaluate \
+  --chain-id 1 \
+  --start-block <BLOCK_NUMBER> \
+  # --end-block   <BLOCK_NUMBER>   # optional, evaluates a single block if omitted
+```
+
+Replace the placeholders with blocks that are known to interact with USDC. You can usually find them on the same explorer page where you copied the ABI. If the summary shows your custom events in `events` and `errors` is empty, the evaluation succeeded.
+
+## 8. Update the listener tests
+
+The default tests in `listeners/test/Main.t.sol` assert Uniswap V3 Factory behaviour. Because the listener now emits `USDCTransfer` events instead, the tests must be updated or `sim test` will fail and block deployment.
+
+Replace the contents of `listeners/test/Main.t.sol` with:
+
+```solidity Main.t.sol [expandable]
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import {Test, console} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
+import {Listener} from "../src/Main.sol";
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
+import {MockContexts} from "sim-idx-sol/test/MockContexts.sol";
+
+contract ListenerTest is Test {
+    Listener public listener;
+
+    function setUp() public {
+        listener = new Listener();
+        vm.recordLogs();
+    }
+
+    function test_USDCTransfer() public {
+        EventContext memory ctx = MockContexts.mockEventContext();
+
+        listener.onTransferEvent(
+            ctx,
+            USDC$TransferEventParams({
+                from: address(0x1111111111111111111111111111111111111111),
+                to: address(0x2222222222222222222222222222222222222222),
+                value: 123
+            })
+        );
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 1);
+        assertEq(entries[0].topics.length, 1);
+        assertEq(entries[0].topics[0], keccak256("USDCTransfer(uint64,address,address,uint256)"));
+        (uint64 chainId, address _from, address _to, uint256 _value) = abi.decode(entries[0].data, (uint64, address, address, uint256));
+        assertEq(chainId, 31337);
+        assertEq(_from, address(0x1111111111111111111111111111111111111111));
+        assertEq(_to, address(0x2222222222222222222222222222222222222222));
+        assertEq(_value, 123);
+    }
+
+    function testFuzz_USDCTransfer(address from, address to, uint256 value) public {
+        EventContext memory ctx = MockContexts.mockEventContext();
+
+        listener.onTransferEvent(
+            ctx,
+            USDC$TransferEventParams({from: from, to: to, value: value})
+        );
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries.length, 1);
+        assertEq(entries[0].topics.length, 1);
+        assertEq(entries[0].topics[0], keccak256("USDCTransfer(uint64,address,address,uint256)"));
+        (uint64 chainId, address _from, address _to, uint256 _value) = abi.decode(entries[0].data, (uint64, address, address, uint256));
+        assertEq(chainId, 31337);
+        assertEq(_from, from);
+        assertEq(_to, to);
+        assertEq(_value, value);
+    }
+}
+```
+
+Run `sim test` to confirm all tests pass.
+
+## 9. Rebuild and update the API endpoint
+
+Next, rebuild the project so that Drizzle schemas are regenerated from the new events:
+
+```bash
+sim build
+```
+
+`sim build` places the generated schema for your listener under `apis/src/db/schema/Listener.ts`. The existing `apis/src/index.ts` still imports `poolCreated` (an event from the old sample) which no longer exists.
+
+Update `apis/src/index.ts` so that it queries the new `usdcTransfer` table generated from your `USDCTransfer` event:
+
+```typescript
+import { eq } from "drizzle-orm";
+import { usdcTransfer } from "./db/schema/Listener"; // adjust path if needed
+import { types, db, App } from "@duneanalytics/sim-idx";
+
+const app = App.create();
+app.get("/*", async (c) => {
+  try {
+    const result = await db.client(c).select().from(usdcTransfer).limit(10);
+
+    return Response.json({
+      result,
+    });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+
+export default app;
+```
+
+After saving, run `sim dev` to verify the API serves data from the updated table.
+
+## Next steps
+
+With your listener, tests and API all pointing at USDC data, you're ready to deploy the application to Sim's managed infrastructure.
+
+<Columns cols={1}>
+  <Card title="Deploy your updated app" href="/idx/deployment">
+    Push the project to GitHub and ship the first build
+  </Card>
+</Columns>

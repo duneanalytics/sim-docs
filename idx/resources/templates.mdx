@@ -1,0 +1,33 @@
+---
+title: Templates
+---
+
+Sim IDX templates let you bootstrap fully-featured indexing apps in minutes.
+Each template ships with a production-ready listener contract, events, and REST API logic so you can focus on your custom business logic instead of boilerplate.
+
+## Contract Decoder
+
+Quickly decode and index data emitted by any smart contract.
+The template scaffolds a listener that listens to function calls and events (pre-configured for the Uniswap V3 Factory) and surfaces the decoded results via an API.
+
+```bash
+sim init --template=contract-decoder
+```
+
+<CardGroup cols={1}>
+<Card title="sim-idx-example-contract-decoder" icon="github" horizontal href="https://github.com/duneanalytics/sim-idx-example-contract-decoder">
+</Card>
+</CardGroup>
+
+## Uniswap V3 In-Range LPs
+
+Index Uniswap V3 liquidity provision events and query which positions are in-range at any block. The template exposes an `/lp-snapshot` endpoint that returns all active LP positions for a given pool.
+
+```bash
+sim init --template=univ3-lp
+```
+
+<CardGroup cols={1}>
+<Card title="sim-idx-example-univ3-lp" icon="github" horizontal href="https://github.com/duneanalytics/sim-idx-example-univ3-lp">
+</Card>
+</CardGroup>
