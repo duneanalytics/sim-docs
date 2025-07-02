@@ -96,7 +96,8 @@
           {
             "group": "Guides",
             "pages": [
-              "idx/guides/swap-sample-abi"
+              "idx/guides/swap-sample-abi",
+              "idx/guides/decode-any-contract"
             ]
           },
           {

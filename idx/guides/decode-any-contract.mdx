@@ -1,0 +1,167 @@
+---
+title: "Decode the Moonbirds NFT Contract"
+sidebarTitle: "Decode Any Contract"
+description: "Set up a new Sim IDX app using the contract-decoder template to decode all events and functions from the Moonbirds ERC721 contract on Ethereum."
+---
+
+This guide shows you how to use the [**contract-decoder**](/idx/resources/templates) template to set up a Sim IDX app that decodes an entire smart contract. We will configure the app to listen to and persist every event emitted by the Moonbirds ERC721 NFT contract on Ethereum.
+
+The [`contract-decoder`](https://github.com/duneanalytics/sim-idx-example-contract-decoder) template provides a shortcut to make this happen. Instead of manually defining each event you want to capture, it generates a special listener that automatically handles all events from a given contract ABI.
+
+## 1. Initialize the App from the Template
+
+First, create a new directory for your project and initialize a Sim IDX app using the `--template=contract-decoder` flag.
+
+```bash
+# Create and enter a new directory for your app
+mkdir moonbirds-decoded
+cd moonbirds-decoded
+
+# Initialize the app with the contract-decoder template
+sim init --template=contract-decoder
+```
+
+This command scaffolds a new project with a sample Uniswap V3 Factory ABI. In the next steps, we will replace it with the Moonbirds contract ABI.
+
+## 2. Remove the Sample ABI
+
+The template includes a default ABI at `abis/UniswapV3Factory.json`. Since we're replacing it, the first step is to delete this file.
+
+```bash
+rm abis/UniswapV3Factory.json
+```
+
+Removing the JSON file is not enough. The project still contains the Solidity bindings that were generated from it. To remove them, run `sim abi codegen`. This command re-scans the `abis/` directory and regenerates the bindings, effectively removing the ones for the now-deleted Uniswap ABI.
+
+```bash
+sim abi codegen
+```
+
+## 3. Add the Moonbirds Contract ABI
+
+Now, you need the ABI for the contract you want to decode. You can typically find a contract's ABI on a blockchain explorer like Etherscan. For this guide, we'll use the Moonbirds contract on Ethereum.
+
+1.  Navigate to the [Moonbirds contract on Etherscan](https://etherscan.io/address/0x23581767a106ae21c074b2276D25e5C3e136a68b#code).
+2.  Scroll down to the "Contract ABI" section and copy the entire JSON blob.
+3.  Create a new file in your project at `abis/Moonbirds.json` and paste the ABI into it.
+
+```bash
+# Create the new ABI file
+touch abis/Moonbirds.json
+
+# Then paste the JSON into the file using your editor.
+```
+
+With the ABI file in place, run [`sim abi add`](/idx/cli#sim-abi-add-<file-path>) to register it with your project and generate the necessary Solidity bindings.
+
+```bash
+sim abi add abis/Moonbirds.json
+```
+
+The CLI will parse the new ABI and generate a `Moonbirds.sol` file in `listeners/lib/sim-idx-generated/`. This file contains all the interfaces and helper contracts needed to interact with the Moonbirds contract in your listener.
+
+## 4. Configure the Listener to Decode All Events
+
+Open `listeners/src/Main.sol`. This is the core file where you define your indexing logic. We need to make two small changes to hook into the generated Moonbirds bindings.
+
+The `Moonbirds.sol` file generated in the previous step includes a special abstract contract called `Moonbirds$EmitAllEvents`. By inheriting from this contract, your listener automatically gains the ability to:
+1.  React to every event defined in the Moonbirds ABI.
+2.  Define and emit corresponding events that Sim IDX will use to create database tables.
+3.  Expose a helper function, `allTriggers()`, to register all event listeners at once.
+
+The event names are automatically converted to `snake_case` for your PostgreSQL table names. For example, an on-chain event named `RoleGranted` will have its data stored in a table named `role_granted`.
+
+Update `listeners/src/Main.sol` with the following code:
+
+```solidity
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
+
+contract Triggers is BaseTriggers {
+    function triggers() external virtual override {
+        Listener listener = new Listener();
+        // The allTriggers() helper registers every event from the ABI.
+        addTriggers(
+            // Moonbirds contract on Ethereum Mainnet (Chain ID 1)
+            ChainIdContract(1, 0x23581767a106ae21c074b2276D25e5C3e136a68b),
+            listener.allTriggers()
+        );
+    }
+}
+
+// Inherit from Moonbirds$EmitAllEvents to automatically handle all events.
+contract Listener is Moonbirds$EmitAllEvents {}
+```
+
+This is all the Solidity code required. The `Listener` contract inherits the decoding logic, and the `Triggers` contract points to the on-chain Moonbirds address, registering all its events for indexing.
+
+## 5. Evaluate the Listener Against Live Data
+
+Before deploying, you can test your listener against historical blockchain data using [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate). This command runs a local dry-run to confirm your triggers fire correctly and decode events as expected.
+
+Find a block number on Etherscan where a Moonbirds transaction occurred and use it for the `--start-block` flag.
+
+```bash
+sim listeners evaluate \
+  --chain-id=1 \
+  --start-block=22830504
+```
+
+If the setup is correct, the output will be a JSON object containing a list of decoded Moonbirds events in the `events` array and an empty `errors` array.
+
+## 6. Update the API to Query New Data
+
+When you ran `sim init`, a sample API was created in `apis/src/index.ts`. This API is configured to query data from the original Uniswap contract and will fail now that we've replaced the ABI. We need to update it to query one of the new tables created for the Moonbirds events.
+
+When you run `sim build`, Drizzle schemas for all your new event tables are automatically generated and placed in `apis/src/db/schema/Listener.ts`. You can inspect this file to see which tables are available to query.
+
+Let's update `apis/src/index.ts` to fetch the 10 most recent records from the `approval_for_all` table, which corresponds to the `ApprovalForAll` event.
+
+```typescript
+import { eq } from "drizzle-orm";
+import { approvalForAll } from "./db/schema/Listener"; // Import a schema from the new contract
+import {types, db, App} from "@duneanalytics/sim-idx";
+
+const app = App.create();
+
+app.get("/*", async (c) => {
+  try {
+    const client = db.client(c);
+
+    // Query one of the new tables generated from the Moonbirds ABI
+    const result = await client.select().from(approvalForAll).limit(10);
+
+    return Response.json({
+      result: result,
+    });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: (e as Error).message }, { status: 500 });
+  }
+});
+
+export default app;
+```
+
+## 7. Build the Project
+
+With the listener and API updated, run `sim build` to compile your contracts and API code.
+
+```bash
+sim build
+```
+
+The command should complete successfully. Unlike other templates, the `contract-decoder` template does not include listener tests that need to be updated, simplifying the development workflow.
+
+## Next steps
+
+Your app is now configured to decode the entire Moonbirds contract. The final step is to deploy it to Sim's managed infrastructure so it can begin indexing data and serving your API.
+
+<Columns cols={1}>
+  <Card title="Deploy your App" href="/idx/deployment">
+    Push the project to GitHub and ship the first build.
+  </Card>
+</Columns>
