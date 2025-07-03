@@ -38,11 +38,11 @@ You can retrieve the Markdown version of any documentation page by appending `.m
 You can also type `⌘C` or `Ctrl+C` to copy any page's Markdown content.
 Try it now.
 
-## Cursor Integration
+## Add Docs to Cursor
 
 To integrate our documentation directly into Cursor:
 
-1. Go to Cursor Settings -> Features -> Docs -> Add new doc.
+1. Go to Cursor Settings -> Indexing & Docs -> Add Add.
 2. Enter "docs.sim.dune.com" in the URL field.
 3. Provide a name (e.g., "@simdocs").
 4. Hit confirm. The documentation will sync automatically.
@@ -50,6 +50,84 @@ To integrate our documentation directly into Cursor:
 
 <Frame caption="Add our docs to Cursor to use it in your chats">
     <img src="/images/cursor-add-docs.png" />
+</Frame>
+
+## Cursor Rules for Sim IDX
+
+To speed up your [Sim IDX](/idx) development, you can use our Cursor Rules.
+By defining rules, you can teach the AI about Sim IDX's specific architecture, coding patterns, and project structure.
+This makes sure that any generated code, from Solidity listeners to TypeScript APIs, is consistent and adheres to best practices, saving you a lot of time with revisions.
+
+To set up a project rule for Sim IDX:
+
+1. Go to Cursor Settings -> Rules & Memories -> Project Rules -> Add Rule
+2. Name the file (e.g., `sim-idx-patterns.mdc`) and confirm. This will create the file in your project's `.cursor/rules` directory.
+3. Copy and paste the following content into the new rule file:
+
+````markdown sim-idx-patterns.mdc [expandable]
+---
+description: 
+globs: *.sol
+alwaysApply: false
+---
+# Sim Idx Project Rules
+
+Read the docs from here https://docs.sim.dune.com/llms-full.txt
+
+## Framework Overview
+- Sim idx is Dune's blockchain event indexing framework
+- Projects have two main components: Solidity listeners and TypeScript APIs  
+- Listeners hook into blockchain events, APIs serve indexed data
+
+## Project Structure
+- `listeners/` - Solidity contracts for event listening
+- `apis/` - TypeScript APIs using Hono + Drizzle
+- `abis/` - Contract ABI files for code generation
+- `sim.toml` - Project configuration
+
+## Solidity Listener Patterns
+
+### Contract Structure
+- Main contract extends `BaseTriggers` with `triggers()` function
+- Listener contracts implement generated event interfaces (e.g., `mUSDC$OnMintEvent`)
+- Always import: `import "sim-idx-sol/Simidx.sol";` and `import "sim-idx-generated/Generated.sol";`
+
+### Event Handling
+- Event handlers receive `EventContext` and typed params struct
+- Use `EventContext` to access transaction/block data: `ctx.txn.hash()`, `ctx.txn.chainId`
+- When you are handling an event, the events params are in generated structs: `inputs.minter`, `inputs.mintAmount`
+- Emit custom events or call external functions in handlers
+
+### Trigger Registration
+```solidity
+// Register event triggers
+addTrigger(
+    ChainIdContract(chainId, contractAddress),
+    listener.triggerOnEventName()
+);
+
+// Register function triggers  
+addTrigger(
+    ChainIdContract(chainId, contractAddress),
+    listener.triggerOnFunctionName()
+);
+```
+
+### Context Usage
+- `ctx.txn.hash()` - transaction hash
+- `ctx.txn.chainId` - chain ID
+- `ctx.txn.call.caller` - transaction sender
+- `ctx.txn.call.callee` - contract being called
+- `block.number`, `block.timestamp` - block data
+
+### Development Workflow
+- Generated code is in `lib/sim-idx-generated/`  
+- Never edit generated files directly
+- Test listeners with Foundry: `forge test`
+````
+
+<Frame caption="Create a new Project Rule in Cursor">
+    <img src="/images/idx/cursor-new-rule.png" />
 </Frame>
 
 ## OpenAPI Specifications
