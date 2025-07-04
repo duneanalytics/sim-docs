@@ -8,36 +8,6 @@ By writing simple handlers for specific contract function calls or events, you i
 
 This guide covers the structure of a listener contract, how to add indexing for new functions, and how to test your logic.
 
-## App Folder Structure Explained
-
-```text
-my-idx-app/
-├── sim.toml                       # App configuration
-├── abis/                          # JSON ABIs for the contracts you want to index
-├── apis/                          # Your TypeScript/Edge runtime APIs
-└── listeners/                     #   ← a Foundry project
-    ├── src/
-    │   └── Main.sol               # PRIMARY editing target
-    ├── test/
-    │   └── Main.t.sol             # Unit tests for your listener
-    └── lib/
-        ├── sim-idx-sol/           # Core Sim IDX framework (DSL, context, helpers)
-        └── sim-idx-generated/     # Code generated from the ABIs you add
-```
-
-### Primary Development Folders
-
-The `abis/` and `listeners/` folders are the two folders you will work with most often.
-
-### ABI Files
-
-The `abis/` folder contains JSON ABI files of smart contracts you want to index.
-The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
-
-<Note>
-If you want to add an additional ABI and learn what happens when you run the command, see the [`sim abi add` CLI command docs](/idx/cli#sim-abi-add-<file-path>).
-</Note>
-
 ## Understand the Listener Contract
 
 A listener is a special contract Sim IDX simulates onchain.
@@ -53,6 +23,10 @@ The Listener contract itself emits events which Sim IDX store in your app's data
 5. Sim IDX stores each event as a new row in the appropriate table of your app database.
 
 ### File Anatomy
+
+<Note>
+Before diving into listener development, make sure you understand the overall [app folder structure](/idx/app-structure) and how the `listeners/` folder fits into your Sim IDX application.
+</Note>
 
 `Main.sol` lives in `listeners/src` and contains **two contracts**:
 

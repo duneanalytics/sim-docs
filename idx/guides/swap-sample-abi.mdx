@@ -1,10 +1,10 @@
 ---
-title: "Replace the Sample Uniswap V3 Factory ABI with Another Contract's ABI"
+title: "Replace Sample ABI with Any Contract"
 sidebarTitle: "Replace Sample ABI"
-description: "Replace the Uniswap V3 Factory ABI with another contract's ABI in the Sim IDX sample app"
+description: "Replace the sample Uniswap V3 Factory ABI with any contract's ABI in your Sim IDX app."
 ---
 
-This guide shows you how to swap out the Uniswap V3 Factory ABI bundled with the [**sample**](https://github.com/duneanalytics/sim-idx-example-sample-app) Sim IDX app and replace it with the ABI of any contract you would like to index. The sample app is what gets created by default when you run `sim init` without any additional [templates](/idx/resources/templates). The workflow mirrors the process you will follow in a real project: locate the ABI, register it with the CLI, extend your listener, and validate the new triggers against historical data.
+This guide shows you how to swap out the Uniswap V3 Factory ABI bundled with the [**sample**](https://github.com/duneanalytics/sim-idx-example-sample-app) Sim IDX app and replace it with the ABI of any contract you would like to index. As an example, we'll use the USDC contract, but you can follow the same process for any contract. The sample app is what gets created by default when you run `sim init` without any additional [templates](/idx/resources/templates). The workflow mirrors the process you will follow in a real project: locate the ABI, register it with the CLI, extend your listener, and validate the new triggers against historical data.
 
 ## 1. Remove the Uniswap V3 Factory ABI from the project
 

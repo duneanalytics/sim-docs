@@ -87,6 +87,7 @@
             "group": "IDX Framework",
             "pages": [
               "idx/cli",
+              "idx/app-structure",
               "idx/listener",
               "idx/db",
               "idx/apis"
