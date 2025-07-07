@@ -3,39 +3,36 @@ title: Listener Contract
 sidebarTitle: Listener
 ---
 
-The core of a Sim IDX application is the **listener**, a Solidity contract that defines what onchain data to index.
-By writing simple handlers for specific contract function calls or events, you instruct the Sim IDX framework on which data to capture and store in your database.
+The core of a Sim IDX app is the **listener**, a Solidity contract that defines what onchain data to index. By writing simple handlers for specific contract function calls or events, you instruct the Sim IDX framework on which data to capture and store in your database.
 
 This guide covers the structure of a listener contract, how to add indexing for new functions, and how to test your logic.
 
 ## Understand the Listener Contract
 
-A listener is a special contract Sim IDX simulates onchain.
-It has handler functions which are called when certain conditions are triggered onchain (e.g., when another contract calls a function, or a contract with a matching ABI emits an event).
-The Listener contract itself emits events which Sim IDX store in your app's database.
+A listener is a special contract Sim IDX executes onchain. It has handler functions which are called when certain conditions are triggered onchain (e.g., when another contract calls a function, or a contract with a matching ABI emits an event). The Listener contract itself emits events which Sim IDX stores in your app's database.
 
 ### Mental Model
 
-1. A transaction is executed onchain.
-2. Sim IDX checks whether it matches any trigger you defined during deployment.
-3. When there's a match, Sim IDX invokes the corresponding handler in your listener contract.
-4. The handler emits one or more events that capture the facts you care about.
-5. Sim IDX stores each event as a new row in the appropriate table of your app database.
+1.  A transaction is executed onchain.
+2.  Sim IDX checks whether it matches any trigger you defined during deployment.
+3.  When there's a match, Sim IDX invokes the corresponding handler in your listener contract.
+4.  The handler emits one or more events that capture the facts you care about.
+5.  Sim IDX stores each event as a new row in the appropriate table of your app database.
 
 ### File Anatomy
 
 <Note>
-Before diving into listener development, make sure you understand the overall [app folder structure](/idx/app-structure) and how the `listeners/` folder fits into your Sim IDX application.
+Before diving into listener development, make sure you understand the overall [app folder structure](/idx/app-structure) and how the `listeners/` folder fits into your Sim IDX app.
 </Note>
 
-`Main.sol` lives in `listeners/src` and contains **two contracts**:
+The indexing logic is primarily located in `listeners/src/`.
 
-| Contract   | Purpose                                                                 |
-|-----------|-------------------------------------------------------------------------|
-| `Triggers` | Registers triggers via `addTrigger`. No business logic.                 |
-| `Listener` | Implements handlers and emits events that define your database schema. |
+| Contract    | Purpose                                                                                                                                     | Location               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `Triggers`  | Registers all triggers via `addTrigger`. Contains no business logic.                                                                        | Must be in `Main.sol`. |
+| Listener(s) | One or more contracts that implement handler logic and emit events. They can have any name and be defined in any `.sol` file within `src/`. | `listeners/src/`       |
 
-Let's break the file down step-by-step.
+Let's break the `Main.sol` file from the sample app down step-by-step.
 
 ### Imports
 
@@ -44,118 +41,76 @@ import "sim-idx-sol/Simidx.sol";
 import "sim-idx-generated/Generated.sol";
 ```
 
-These two imports pull in everything provided by the **Sim IDX framework**.
-
-`Simidx.sol` provides the enums, structs, abstract contracts and helper functions you will use while writing your indexing logic.
-
-`Generated.sol` contains the Solidity code created by the `sim abi add` command.
-For the sample app this file includes the generated Solidity bindings for the Uniswap V3 Factory located at `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`.
+These two imports pull in everything provided by the **Sim IDX framework**. `Simidx.sol` provides core helpers, while `Generated.sol` contains the Solidity code created from your ABIs.
 
 ### Triggers Contract
 
-A contract that tells Sim IDX when to run your code. Sim IDX does this through what we call a **trigger**. A trigger tells Sim IDX when to call one of your handlers for a function or event on an external contract.
+This contract tells Sim IDX when to run your code using a **trigger**, which specifies a target contract and the handler to call.
 
 ```solidity
 contract Triggers is BaseTriggers {
-```
-
-`BaseTriggers` comes from `Simidx.sol`. It is an abstract contract that provides helper functions, most importantly `addTrigger`.
-
-```solidity
-    function triggers() external override {
-```
-
-`BaseTriggers` requires you to implement the `triggers` function. Inside this function you register every trigger your application needs.
-
-```solidity
+    function triggers() external virtual override {
         Listener listener = new Listener();
-```
-
-Here you create an instance of `Listener`, the second contract in `Main.sol`. We will look at this contract in the next section.
-
-```solidity
-        // Listen on Ethereum mainnet (chain 1) to Uniswap V3 Factory.createPool
-        addTrigger(
-            ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
-            listener.triggerOnCreatePoolFunction()
-        );
+        addTrigger(chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnCreatePoolFunction());
+        addTrigger(chainContract(Chains.Unichain, 0x1F98400000000000000000000000000000000003), listener.triggerOnCreatePoolFunction());
+        addTrigger(chainContract(Chains.Base, 0x33128a8fC17869897dcE68Ed026d694621f6FDfD), listener.triggerOnCreatePoolFunction());
     }
 }
 ```
 
-`addTrigger` takes two arguments. The first argument identifies the on chain target by chain identifier and contract address. The second argument is the handler selector that the listener contract exposes.
-
-Let's take a look at the Listener contract now.
+-   **`BaseTriggers`**: An abstract contract from `Simidx.sol` that provides the `addTrigger` helper.
+-   **`triggers()`**: The required function where you register all your triggers.
+-   **`chainContract(...)`**: This helper function uses the `Chains` enum for readability. The sample app registers the same trigger for Ethereum, Base, and Unichain, demonstrating how to monitor a contract across multiple networks.
 
 ### Listener Contract
 
+This is where you implement your business logic. The sample app uses the name `Listener`.
+
 ```solidity
 contract Listener is UniswapV3Factory$OnCreatePoolFunction {
-```
+    event PoolCreated(uint64 chainId, address caller, address pool, address token0, address token1, uint24 fee);
 
-`Listener` extends `UniswapV3Factory$OnCreatePoolFunction`, an abstract contract generated automatically by `sim abi add` and made available through `Generated.sol`.
-
-After declaring the contract you define the events that you want to emit.
-
-```solidity
-    event PoolCreated(
-        uint64  chainId,
-        address caller,
-        address pool,
-        address token0,
-        address token1,
-        uint24  fee
-    );
-```
-
-Emitting an event defines the shape of the database that Sim IDX creates. The event name becomes the table name and each parameter becomes a column.
-
-Next you implement the handler that the generated abstract contract expects.
-
-```solidity
     function onCreatePoolFunction(
-        FunctionContext                           memory ctx,
-        UniswapV3Factory$createPoolFunctionInputs memory inputs,
-        UniswapV3Factory$createPoolFunctionOutputs memory outputs
-    ) external override {
-        emit PoolCreated(
-            uint64(block.chainid),
-            ctx.txn.call.callee,
-            outputs.pool,
-            inputs.tokenA,
-            inputs.tokenB,
-            inputs.fee
-        );
+        FunctionContext memory ctx,
+        UniswapV3Factory$CreatePoolFunctionInputs memory inputs,
+        UniswapV3Factory$CreatePoolFunctionOutputs memory outputs
+    )
+        external
+        override
+    {
+        emit PoolCreated(uint64(block.chainid), ctx.txn.call.callee, outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee);
     }
 }
 ```
 
-Because you extended `UniswapV3Factory$OnCreatePoolFunction` you must implement `onCreatePoolFunction`.
+-   **Inheritance**: The listener extends an abstract contract (`UniswapV3Factory$OnCreatePoolFunction`) that is automatically generated from your ABI. This provides the required handler function signature and typed structs for `inputs` and `outputs`.
+-   **Events**: Emitting an event like `PoolCreated` defines the shape of your database.
 
-Each handler name follows the pattern of the function or event it processes. When this handler runs Sim IDX gives you three arguments: a transaction context, the decoded inputs and the decoded outputs. You can use this data to emit one or more events which Sim IDX writes to your application database.
+While the sample app uses the generic name `Listener`, you can and should use more descriptive names for your contracts (e.g., `UniswapV3Listener`). For larger projects, you can even split logic into multiple listener contracts, each in its own `.sol` file within the `src/` directory.
+
+## Define and Emit Events
+
+Events are the bridge between your listener's logic and your database. When your listener emits an event, Sim IDX creates a database record.
 
 ### From Events to DB
 
-When the handler emits `PoolCreated`, Sim IDX creates a database view of the event's name in snake_case.
-For example, `PoolCreated` becomes `pool_created`.
+The framework automatically maps your event to a database view. The event name is converted to `snake_case` to become the view name, and each event parameter becomes a column.
 
-Here's an example of the contents:
+For example, the `PoolCreated` event from the sample app results in a queryable `pool_created` view:
 
-| chainId | caller                                     | pool                                       | token0                                     | token1                                     | fee   |
-|---------|--------------------------------------------|--------------------------------------------|--------------------------------------------|--------------------------------------------|-------|
-| 1       | 0x1f98431c8ad98523631ae4a59f267346ea31f984 | 0xf2c1e03841e06127db207fda0c3819ed9f788903 | 0x4a074a606ccc467c513933fa0b48cf37033cac1f | 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 | 10000 |
+| chain_id | caller                                     | pool                                       | token0                                     | token1                                     | fee   |
+|----------|--------------------------------------------|--------------------------------------------|--------------------------------------------|--------------------------------------------|-------|
+| 1        | 0x1f98431c8ad98523631ae4a59f267346ea31f984 | 0xf2c1e03841e06127db207fda0c3819ed9f788903 | 0x4a074a606ccc467c513933fa0b48cf37033cac1f | 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2 | 10000 |
 
-If you add or remove parameters on the event and deploy your changes, Sim IDX automatically adjusts the table.
+### Extending an Event
 
-## Capture More Event Data
+To capture more data, you simply add parameters to your event definition and update the `emit` statement in your handler. Let's modify the sample app to also record the block number.
 
-You can define and emit as many events as you like—each with whatever properties you care about—and you can update an event definition at any time.  
+**1. Extend the Event Definition**
 
-In the example below we modify the `Listener` contract in `listeners/src/Main.sol` to capture one additional piece of information: the block number in which the pool was created.
+Add the new `blockNumber` parameter to your `PoolCreated` event in `Main.sol`.
 
-### Extend the Event
-
-```solidity Listener Contract Event Definition
+```solidity
 event PoolCreated(
     uint64   chainId,
     address  caller,
@@ -163,24 +118,16 @@ event PoolCreated(
     address  token0,
     address  token1,
     uint24   fee,
-    uint256  blockNumber        // new field
+    uint256  blockNumber // new field
 );
 ```
 
-Adding a parameter changes the shape of the table that Sim IDX creates for this event.
-`blockNumber` will appear as a new column after you push your changes.
+**2. Emit the New Data**
 
-### Emit the New Data
+Pass the new value when you emit the event in your `onCreatePoolFunction` handler.
 
-```solidity Listener Contract Handler Definition
-function onCreatePoolFunction(
-    FunctionContext memory ctx,
-    UniswapV3Factory$createPoolFunctionInputs  memory inputs,
-    UniswapV3Factory$createPoolFunctionOutputs memory outputs
-)
-    external
-    override
-{
+```solidity
+function onCreatePoolFunction(...) external override {
     emit PoolCreated(
         uint64(block.chainid),
         ctx.txn.call.callee,
@@ -188,127 +135,223 @@ function onCreatePoolFunction(
         inputs.tokenA,
         inputs.tokenB,
         inputs.fee,
-        block.number               // pass the new value
+        block.number // pass the new value
     );
 }
 ```
 
-Once you've saved these changes you can [test your listener](#testing-your-listener) to check against real data and verify that everything works as expected.
+After deploying these changes, your `pool_created` table will automatically include the new `block_number` column.
 
-## Hook into More Functions and Events
+## Hook into Onchain Activity
 
-When you'd like to index **additional** calls from the same contract, Sim IDX makes it easy. Each ABI you add is converted into a Solidity file inside `listeners/lib/sim-idx-generated/`. That file contains every helper function, struct, and *abstract* contract you'll need. All of these are exported through `Generated.sol`, which is imported at the top of `listeners/src/Main.sol`. It brings every generated hook into scope for your `Listener` contract.
+Sim IDX can hook into contract events as well as function calls, both before and after they execute. This allows you to capture a wide range of onchain activity.
 
-The workflow for tapping into an extra function or event is:
+To add a new hook to your listener, you'll follow a simple, five-step process:
 
-1. **Discover the hook**: open the generated file (e.g. `UniswapV3Factory.sol`) and locate the *abstract contract* that corresponds to the function or event you care about.
-2. **Extend `Listener`** with that abstract contract.
-3. **Add a new event** that matches the data you want in your database.
-4. **Implement the handler** to emit the event.
-5. **Register the trigger** inside the `Triggers` contract.
+1.  **Discover the Hook**: Find the abstract contract for your target function or event in the generated files.
+2.  **Extend the Listener**: Add the abstract contract to your listener's inheritance list.
+3.  **Define a New Event**: Create a Solidity event to define your database schema.
+4.  **Implement the Handler**: Write the function required by the abstract contract to process the data and emit your event.
+5.  **Register the Trigger**: Call `addTrigger` in your `Triggers` contract to activate the hook.
 
-Below we walk through adding support for the `owner()` function on the Uniswap V3 Factory contract.
+Let's walk through an example of adding a new event hook to the sample app's `Listener` contract.
+We will extend the `Listener` to also index the `OwnerChanged` event from the Uniswap V3 Factory.
 
-### 1. Discover the hook
+### 1. Discover the Hook
 
-In `listeners/lib/sim-idx-generated/UniswapV3Factory.sol` you will find:
+Look inside `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`. You will find an abstract contract for the `OwnerChanged` event.
 
 ```solidity
 abstract contract UniswapV3Factory$OnOwnerChangedEvent {
     function onOwnerChangedEvent(EventContext memory ctx, UniswapV3Factory$OwnerChangedEventParams memory inputs) virtual external;
-
-    function triggerOnOwnerChangedEvent() view external returns (Trigger memory) {}
+    function triggerOnOwnerChangedEvent() view external returns (Trigger memory);
 }
 ```
 
-This abstract contract represents the `owner()` function. Implementing its handler lets your listener react whenever that function is executed. The paired `triggerOnOwnerFunction()` helper returns the selector you'll reference in the `Triggers` contract.
+### 2. Extend the Listener
 
-### 2. Extend the listener
+Add `UniswapV3Factory$OnOwnerChangedEvent` to the inheritance list of the `Listener` contract in `Main.sol`.
 
 ```solidity
 contract Listener is
-    UniswapV3Factory$OnCreatePoolFunction,  // existing
-    UniswapV3Factory$OnOwnerChangedEvent    // NEW
+    UniswapV3Factory$OnCreatePoolFunction, // existing
+    UniswapV3Factory$OnOwnerChangedEvent   // new
 {
-    // ...
+    // ... existing events and handlers
 }
 ```
 
-By inheriting from the new abstract contract you promise the compiler that you'll provide a concrete `onOwnerFunction` implementation, unlocking typed access to the decoded outputs.
+### 3. Define a New Event
 
-### 3. Define an event
+Inside the `Listener` contract, add a new event to define the schema for the `owner_changed` table.
 
-```solidity Listener Contract Event Definition
+```solidity
 event OwnerChanged(
     uint64  chainId,
     address oldOwner,
-    address newOwner,
-    uint256 blockNumber
+    address newOwner
 );
 ```
 
-Events define your database schema. Here we record the queried owner plus a bit of useful context about the call.
+### 4. Implement the Handler
 
-### 4. Implement the handler
+Implement the `onOwnerChangedEvent` function required by the abstract contract, also inside `Listener`.
 
-```solidity Listener Contract Handler Definition
+```solidity
 function onOwnerChangedEvent(
-    EventContext memory ctx, 
+    EventContext memory /*ctx*/,
     UniswapV3Factory$OwnerChangedEventParams memory inputs
-)
-    external
-    override
-{
+) external override {
     emit OwnerChanged(
         uint64(block.chainid),
         inputs.oldOwner,
         inputs.newOwner
-        block.number
     );
 }
 ```
 
-Everything you need like the execution context and the decoded outputs is provided by the generated bindings.
-Because the abstract contract's method is `external`, remember to mark this implementation with `override`.
+### 5. Register the Trigger
 
-### 5. Register the trigger
+Finally, add a new trigger for this handler in your `Triggers` contract.
 
 ```solidity
+// In Triggers.triggers()
 addTrigger(
-    ChainIdContract(1, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
-    listener.triggerOnOwnerFunction()
+    chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+    listener.triggerOnOwnerChangedEvent() // new trigger
 );
 ```
 
-`Triggers.triggers()` is your trigger registry.
-Adding this additional `addTrigger` call tells Sim IDX to invoke your new handler whenever `owner()` is called on the Uniswap V3 factory contract.
+## Function Hooks
 
-### 6. Test it out
+The framework supports both post-execution and pre-execution function hooks.
 
-Save your changes, then [test your listener](#testing-your-listener) to replay historical data and confirm that `OwnerChanged` rows are appearing.
+**Post-Execution:** This is what the sample app uses with `onCreatePoolFunction`. The handler is called *after* the contract's function completes, so it has access to both `inputs` and `outputs`.
 
-```bash
-sim listeners evaluate \
-  --chain-id 1 \
-  --start-block 12369662
+**Pre-Execution:** To react to a function *before* it executes, you use the corresponding `Pre-` abstract contract (e.g., `preCreatePoolFunction`). The handler receives a `PreFunctionContext` and only has access to the function's `inputs`, as outputs have not yet been generated.
+
+```solidity
+contract Listener is UniswapV3Factory$PreCreatePoolFunction {
+    // Fires *before* createPool executes
+    event PoolWillBeCreated(
+        uint64  chainId,
+        address token0,
+        address token1,
+        uint24  fee
+    );
+
+    function preCreatePoolFunction(
+        PreFunctionContext memory /*ctx*/,
+        UniswapV3Factory$CreatePoolFunctionInputs memory inputs
+    )
+        external
+        override
+    {
+        emit PoolWillBeCreated(
+            uint64(block.chainid),
+            inputs.tokenA,
+            inputs.tokenB,
+            inputs.fee
+        );
+    }
+}
+
+contract Triggers is BaseTriggers {
+    function triggers() external override {
+        Listener listener = new Listener();
+
+        address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984; // Uniswap V3 Factory (Ethereum)
+
+        addTrigger(chainContract(Chains.Ethereum, factory), listener.triggerPreCreatePoolFunction());
+    }
+}
 ```
 
-This replays block **12369662** on Ethereum Mainnet so you can confirm that `OwnerQueried` rows appear in the console.
+## Handle Name Conflicts
 
-## Add Another ABI
+When working with multiple ABIs, you may encounter functions or events with the same name, which can cause compilation errors. Sim IDX provides two solutions.
 
-If you'd like to add another contract to your listener, here are the steps:
+### 1. Multiple Listeners
 
-1. Find the contract's ABI using a platform like Etherscan, Basescan, or another.
-2. Add the contract's ABI JSON into `abis/` (for example `abis/MyContract.json`).
-3. Run `sim abi add abis/MyContract.json` in your terminal.
+The recommended approach is to split your logic into separate, dedicated listener contracts for each ABI. This keeps your code clean and modular.
 
-The command regenerates the bindings in `listeners/lib/sim-idx-generated/` and updates `Generated.sol`.
-Once it finishes, extend your `Main.sol` Listener with hooks and add triggers as usual.
+```solidity
+// In Triggers.triggers()
+Listener1 listener1 = new Listener1();
+Listener2 listener2 = new Listener2();
+
+addTrigger(..., listener1.triggerOnSwapFunction());
+addTrigger(..., listener2.triggerOnSwapFunction());
+
+// Separate listener contracts
+contract Listener1 is ABI1$OnSwapFunction { /* ... */ }
+contract Listener2 is ABI2$OnSwapFunction { /* ... */ }
+```
+
+### 2. Prefixed Naming for Shared State
+
+If you need to share state between handlers for conflicting functions within a single contract, you can configure `sim.toml` to prefix the generated names.
+
+Set `codegen_naming_convention = "abi_prefix"` in your `sim.toml` file.
+
+This changes the generated function names, allowing you to implement them both in the same contract:
+
+```solidity Example Listener with Shared State
+contract CombinedListener is ABI1$OnSwapFunction, ABI2$OnSwapFunction {
+    // Store every recipient that swaps via DEX #1
+    address[] public swapRecipients;
+
+    // Emit an alert for large swaps coming through DEX #2
+    event LargeSwap(address indexed dex, address indexed recipient, uint256 amountOut);
+
+    // Handler for ABI1 (e.g., Uniswap V2 style router)
+    function ABI1$onSwapFunction(
+        FunctionContext memory /*ctx*/,
+        ABI1$SwapFunctionInputs memory inputs
+    )
+        external
+        override
+    {
+        // Track who received tokens in this swap
+        swapRecipients.push(inputs.to);
+    }
+
+    // Handler for ABI2 (e.g., SushiSwap router)
+    function ABI2$onSwapFunction(
+        FunctionContext memory /*ctx*/,
+        ABI2$SwapFunctionInputs memory inputs
+    )
+        external
+        override
+    {
+        // Fire an event if the swap paid out at least 1 ETH worth of tokens
+        if (inputs.amountOut >= 1 ether) {
+            emit LargeSwap(msg.sender, inputs.to, inputs.amountOut);
+        }
+    }
+}
+
+contract Triggers is BaseTriggers {
+    function triggers() external override {
+        CombinedListener listener = new CombinedListener();
+
+        // DEX #1 (ABI1) on Ethereum
+        addTrigger(
+            chainContract(Chains.Ethereum, 0xAbCDEFabcdefABCdefABcdefaBCDEFabcdefAB),
+            listener.ABI1$triggerOnSwapFunction()
+        );
+
+        // DEX #2 (ABI2) on Ethereum
+        addTrigger(
+            chainContract(Chains.Ethereum, 0x1234561234561234561234561234561234561234),
+            listener.ABI2$triggerOnSwapFunction()
+        );
+    }
+}
+```
 
 <Note>
-For a full list of flags, see the [`sim abi add` reference](/idx/cli#sim-abi-add-<file-path>).
-To walk through the process of adding a new ABI end-to-end, check the [Swap Sample ABI guide](/idx/guides/swap-sample-abi).
+To learn more about the `codegen_naming_convention` property and other `sim.toml` configuration options, visit the [App Structure](/idx/app-structure#sim-toml) page.
 </Note>
 
 ## Test Your Listener
@@ -317,50 +360,32 @@ Sim IDX gives you two ways to make sure your listener behaves as expected while 
 
 ### Unit Tests with Foundry
 
-The listeners folder is a Foundry project.
-`sim test` is a thin wrapper around `forge test`.
-It will compile your `Main.sol` contract, execute all Forge unit tests inside the `listeners/test/`, and surface any failures with the familiar Foundry output.
-
-<Tip>
-LLMs are surprisingly good at scaffolding Forge tests.
-Paste an ABI snippet or an example transaction into ChatGPT and ask it to generate a starting test and then refine as needed.
-</Tip>
+The `listeners` folder is a Foundry project. `sim test` is a thin wrapper around `forge test`. It will compile your contracts, execute all Forge unit tests inside `listeners/test/`, and surface any failures.
 
 ### Historical Replay
 
-Once unit tests pass, use `sim listeners evaluate` to see how your listener reacts to real onchain data _before_ pushing your updates.
-This command compiles your listener and executes the transactions in any block range you specify on a specific chain.
+Use `sim listeners evaluate` to see how your listener reacts to real onchain data *before* pushing your updates. This command compiles your listener and executes the transactions in any block range you specify.
 
 ```bash
 sim listeners evaluate \
   --chain-id 1 \
   --start-block 12369662 \
-  --end-block   12369670
+  --end-block 12369670
 ```
 
 <Note>
-Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) to learn more about the flags you have available in the command.
+Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation to learn more about the available flags.
 </Note>
 
-Run evaluate after every meanginful change (or add it into your CI) to catch mismatches between your triggers and live onchain history early.
-No data is persisted.
-It's a dry-run to validate triggers and event schemas.
+## Next Steps
 
-## Next steps
-
-You've now seen how to create triggers, emit events, and validate your listener with historical replays.
-Here are a few great ways to level-up your Sim IDX app.
+You've now seen how to create triggers, emit events, and validate your listener. Here are a few great ways to level-up your Sim IDX app.
 
 <Columns cols={2}>
   <Card title="Deployment Guide" href="/idx/deployment">
     Push your app to a staging or production environment and watch it process live onchain activity.
   </Card>
-
   <Card title="API Development Guide" href="/idx/apis">
     Build fast, type-safe endpoints that surface the data your listener captures.
-  </Card>
-
-  <Card title="Swap ABI Contract Guide" href="/idx/guides/swap-sample-abi">
-    Walk through adding an additional contract ABI and extending your listener.
   </Card>
 </Columns>

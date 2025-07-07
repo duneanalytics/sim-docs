@@ -1,11 +1,8 @@
 ---
 title: App Folder Structure
 sidebarTitle: App Structure
+description: Understand the folder structure of a Sim IDX app.
 ---
-
-Understanding the structure of a Sim IDX application is essential for effective development. This guide covers the folder structure and what each component does.
-
-## Folder Structure Overview
 
 ```text
 my-idx-app/
@@ -20,7 +17,7 @@ my-idx-app/
 │               └── Listener.ts    # Schema generated from listener events
 └── listeners/                     # Foundry project for indexing logic
     ├── src/
-    │   └── Main.sol               # PRIMARY editing target
+    │   └── Main.sol               # Triggers contract and main listener logic
     ├── test/
     │   └── Main.t.sol             # Unit tests for your listener
     └── lib/
@@ -28,19 +25,38 @@ my-idx-app/
         └── sim-idx-generated/     # Code generated from the ABIs you add
 ```
 
+Running `sim init` creates a new Sim IDX app with the folder structure shown above.
+The following sections explain each folder's purpose and contents in detail.
+
+## App Folder Structure
+
 #### sim.toml
 
-The `sim.toml` file is your app's main configuration file.
+The `sim.toml` file is your app's main configuration file. It contains your app's `name` and a `[listeners]` table for configuring code generation.
 
-You can set your app's `name`, which is used only internally. The `codegen_naming_convention` field supports two values. These are `abi_prefix` (default) and `plain`. It toggles whether generated handler names are prefixed to avoid clashes.
+```toml
+[app]
+name = "my-test"
+```
+
+The `name` field is used internally by Sim IDX for resource naming and deployment.
+
+```toml
+[listeners]
+codegen_naming_convention = "plain"
+```
+
+The `codegen_naming_convention` field in the `[listeners]` table controls how function and type names are generated from your ABIs. This manages potential name conflicts when you index multiple contracts. It supports two values:
+
+*   **`"plain"` (Default):** Generates clean names without any prefixes (e.g., `onSwapFunction`). This is the most common setting, especially when you split logic for different ABIs into separate listener contracts.
+*   **`"abi_prefix"`:** Prefixes generated names with the ABI's name (e.g., `ABI1$onSwapFunction`). Use this option to prevent compilation errors when a single listener contract must handle functions with the same name from two different ABIs.
 
 #### abis/
 
-The `abis/` folder contains JSON ABI files of smart contracts you want to index.
-The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
+The `abis/` folder contains JSON ABI files of smart contracts you want to index. The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
 
 <Note>
-When you add a new ABI with [`sim abi add`](/idx/cli#sim-abi-add-<file-path>), it automatically generates Solidity bindings in `listeners/lib/sim-idx-generated/`.
+When you add a new ABI with the [`sim abi add`](/idx/cli#sim-abi-add-<file-path>) CLI command, it automatically generates Solidity bindings in `listeners/lib/sim-idx-generated/`.
 </Note>
 
 #### apis/
@@ -57,9 +73,9 @@ The `src/index.ts` file defines your HTTP routes, while `src/db/schema/Listener.
 
 #### listeners/
 
-The `listeners/` folder is a Foundry project that contains everything related to on-chain indexing. Inside `src/Main.sol` you register triggers in a `Triggers` contract and implement handler logic in one or more Listener contracts. Unit tests live in `test/Main.t.sol`.
+The `listeners/` folder is a Foundry project that contains everything related to on-chain indexing. The `Triggers` contract must be defined in `src/Main.sol`, but handler logic can be implemented in one or more listener contracts, which can have any name and be defined across multiple `.sol` files in the `src/` directory. **Unit tests live under the `test/` directory. Foundry will discover any file ending in `.t.sol`, so you can add as many unit-test files as you need (e.g., `Main.t.sol`, `SwapHandlers.t.sol`, etc.).**
 
-During `sim build` the framework inserts core helpers into `lib/sim-idx-sol/` and writes ABI-specific bindings into `lib/sim-idx-generated/`. These generated files should never be edited directly. If two ABIs define the same function or event you can either split the logic into multiple Listener contracts (preferred) or switch `codegen_naming_convention` to `abi_prefix` so the generated names no longer collide.
+During `sim build`, the framework inserts core helpers into `lib/sim-idx-sol/` and writes ABI-specific bindings into `lib/sim-idx-generated/`. These generated files should not be edited directly.
 
 <Columns cols={1}>
   <Card title="Listener Development" href="/idx/listener">
@@ -69,11 +85,11 @@ During `sim build` the framework inserts core helpers into `lib/sim-idx-sol/` an
 
 ## Development Workflow
 
-Understanding how these folders work together:
+Here's how these folders work together:
 
-1. **Add Contract ABI** → `abis/YourContract.json`
-2. **Generate Bindings** → `sim abi add` creates Solidity bindings and database schema
-3. **Extend Listener** → Implement handlers in `listeners/src/Main.sol`
-4. **Test Logic** → Write tests in `listeners/test/Main.t.sol`
-5. **Build APIs** → Use generated schema in `apis/src/` to query your data
-6. **Deploy** → Push your changes to a branch (or `main`) and follow the steps in the [deployment guide](/idx/deployment) to promote them to a live environment
+1.  **Add Contract ABI** → `abis/YourContract.json`
+2.  **Generate Bindings** → `sim abi add` creates Solidity bindings
+3.  **Extend Listener** → Implement handlers in `listeners/src/`
+4.  **Test Logic** → Write tests in `listeners/test/` (e.g., any `*.t.sol` files)
+5.  **Build APIs** → Use generated schema in `apis/src/` to query your data
+6.  **Deploy** → Push your changes to a branch (or `main`) and follow the steps in the [deployment guide](/idx/deployment) to promote them to a live environment

@@ -36,12 +36,12 @@ You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more vi
 The structure of your database is directly determined by the `event` definitions in your `Main.sol` contract.
 
 *   **Views**: Each `event` in your listener creates a corresponding queryable view in the database. The view name is the lowercase `snake_case` version of the event name.
-*   **Columns**: The parameters of the event become the columns of the view.
+*   **Columns**: The parameters of the event become the columns of the view, and each column name is converted to lowercase `snake_case`.
 *   **Tables**: The underlying tables that store the data have random character suffixes (e.g., `pool_created_X3rbm4nC`) and should not be queried directly.
 
 An event defined as `event PoolCreated(address pool, address token0, address token1)` will result in a queryable view named `pool_created` with the columns `pool`, `token0`, and `token1`.
 
-When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase snake_case names), not the tables with suffixes.**
+When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase `snake_case` names) and remember that every column name follows the same `snake_case` convention.**
 
 ## Common Database Operations
 
