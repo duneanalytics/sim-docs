@@ -1,0 +1,265 @@
+---
+title: Listener Patterns
+sidebarTitle: Listener Patterns
+---
+
+After learning about listeners in the [Listener Basics](/idx/listener) guide, you can use more advanced patterns to build sophisticated indexers.
+This page explores core Sim IDX concepts that give you more flexibility in how you trigger listeners and structure your onchain data.
+
+We will cover advanced triggering, handling name conflicts, calling other contracts via interfaces, and solving stack too deep errors.
+
+## Trigger on an ABI
+
+The `chainAbi` helper allows you to trigger your listener on any contract that matches a specific ABI signature. This is incredibly powerful for monitoring activity across all instances of a particular standard, like ERC-721 or Uniswap V3 pools, without needing to list every contract address explicitly.
+
+The example below shows how to trigger the `onBurnEvent` handler for any contract on Ethereum that matches the `UniswapV3Pool` ABI. The `UniswapV3Pool$Abi()` is a helper struct that is automatically generated from that ABI file.
+
+```solidity Main.sol
+contract Triggers is BaseTriggers {
+    function triggers() external virtual override {
+        UniswapPoolListener listener = new UniswapPoolListener();
+        // Trigger on any contract on Ethereum matching the UniswapV3Pool ABI
+        addTrigger(chainAbi(Chains.Ethereum, UniswapV3Pool$Abi()), listener.triggerOnBurnEvent());
+    }
+}
+```
+
+```solidity Listener.sol
+contract UniswapPoolListener is UniswapV3Pool$OnBurnEvent {
+    event PoolBurn(address indexed poolAddress, address owner, int24 tickLower, int24 tickUpper, uint128 amount);
+
+    function onBurnEvent(EventContext memory ctx, UniswapV3Pool$BurnEventParams memory inputs) external override {
+        // Only emit an event if the burn amount is greater than zero
+        if (inputs.amount > 0) {
+            emit PoolBurn(
+                ctx.txn.call.callee, // The address of the pool that emitted the event
+                inputs.owner,
+                inputs.tickLower,
+                inputs.tickUpper,
+                inputs.amount
+            );
+        }
+    }
+}
+```
+
+## Trigger Globally
+
+The `chainGlobal` helper creates triggers that are not tied to any specific contract or ABI. This can be used to set up block-level handlers with `onBlock` for tasks that need to run once per block, such as creating periodic data snapshots, calculating time-weighted averages, or performing end-of-block settlements.
+
+The framework provides a built-in abstract contract, `Raw$OnBlock`, for this purpose. First, add it to your listener's inheritance list, then implement the `onBlock` handler and register the trigger.
+
+```solidity Main.sol
+contract Triggers is BaseTriggers {
+    function triggers() external virtual override {
+        MyBlockListener listener = new MyBlockListener();
+        addTrigger(chainGlobal(Chains.Ethereum), listener.triggerOnBlock());
+    }
+}
+```
+
+```solidity MyBlockListener.sol
+contract MyBlockListener is Raw$OnBlock {
+    event BlockProcessed(uint256 blockNumber, uint256 timestamp);
+
+    function onBlock(RawBlockContext memory /*ctx*/) external override {
+        emit BlockProcessed(block.number, block.timestamp);
+    }
+}
+```
+
+The framework also provides abstract contracts for `Raw$OnCall` and `Raw$OnLog`, allowing you to create global hooks for every function call or every event log on a chain.
+
+## Using Interfaces
+
+Often, your handler is triggered by one contract, but you need to fetch additional data from another contract to enrich your event. For example, a `Swap` event on a pool tells you a swap occurred, but you need to call the pool contract directly to get its current `slot0` state. Solidity interfaces allow your listener to do this.
+
+### 1. Define the Interface
+It's best practice to create an `interfaces` directory (e.g., `listeners/src/interfaces/`) and define the interface in a new `.sol` file.
+
+```solidity listeners/src/interfaces/IUniswapV3Pool.sol
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+interface IUniswapV3Pool {
+    function slot0()
+        external
+        view
+        returns (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 observationCardinality,
+            uint16 observationCardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        );
+    // ... other functions
+}
+```
+
+### 2. Import and Use the Interface
+In your listener, import the interface. You can then cast a contract's address to the interface type to call its functions.
+
+```solidity
+import {IUniswapV3Pool} from "./interfaces/IUniswapV3Pool.sol";
+
+contract Listener is UniswapV3Pool$OnSwapEvent {
+    // ...
+    function onSwapEvent(EventContext memory ctx, ...) external override {
+        // Cast the address of the contract that triggered the event
+        // to the IUniswapV3Pool interface to call its functions.
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(ctx.txn.call.callee).slot0();
+    }
+}
+```
+
+## Handle Name Conflicts
+
+When working with multiple ABIs, you may encounter functions or events with the same name, which can cause compilation errors. Sim IDX provides two solutions.
+
+### 1. Multiple Listeners
+
+The recommended approach is to split your logic into separate, dedicated listener contracts for each ABI. This keeps your code clean and modular.
+
+```solidity
+// In Triggers.triggers()
+Listener1 listener1 = new Listener1();
+Listener2 listener2 = new Listener2();
+
+addTrigger(..., listener1.triggerOnSwapFunction());
+addTrigger(..., listener2.triggerOnSwapFunction());
+
+// Separate listener contracts
+contract Listener1 is ABI1$OnSwapFunction { /* ... */ }
+contract Listener2 is ABI2$OnSwapFunction { /* ... */ }
+```
+
+### 2. Prefixed Naming for Shared State
+
+If you need to share state between handlers for conflicting functions within a single contract, you can configure `sim.toml` to prefix the generated names.
+
+Set `codegen_naming_convention = "abi_prefix"` in your `sim.toml` file.
+
+This changes the generated function names, allowing you to implement them both in the same contract:
+
+```solidity Example Listener with Shared State
+contract CombinedListener is ABI1$OnSwapFunction, ABI2$OnSwapFunction {
+    // Store every recipient that swaps via DEX #1
+    address[] public swapRecipients;
+
+    // Emit an alert for large swaps coming through DEX #2
+    event LargeSwap(address indexed dex, address indexed recipient, uint256 amountOut);
+
+    // Handler for ABI1 (e.g., Uniswap V2 style router)
+    function ABI1$onSwapFunction(
+        FunctionContext memory /*ctx*/,
+        ABI1$SwapFunctionInputs memory inputs
+    )
+        external
+        override
+    {
+        // Track who received tokens in this swap
+        swapRecipients.push(inputs.to);
+    }
+
+    // Handler for ABI2 (e.g., SushiSwap router)
+    function ABI2$onSwapFunction(
+        FunctionContext memory /*ctx*/,
+        ABI2$SwapFunctionInputs memory inputs
+    )
+        external
+        override
+    {
+        // Fire an event if the swap paid out at least 1 ETH worth of tokens
+        if (inputs.amountOut >= 1 ether) {
+            emit LargeSwap(msg.sender, inputs.to, inputs.amountOut);
+        }
+    }
+}
+
+contract Triggers is BaseTriggers {
+    function triggers() external override {
+        CombinedListener listener = new CombinedListener();
+
+        // DEX #1 (ABI1) on Ethereum
+        addTrigger(
+            chainContract(Chains.Ethereum, 0xAbCDEFabcdefABCdefABcdefaBCDEFabcdefAB),
+            listener.ABI1$triggerOnSwapFunction()
+        );
+
+        // DEX #2 (ABI2) on Ethereum
+        addTrigger(
+            chainContract(Chains.Ethereum, 0x1234561234561234561234561234561234561234),
+            listener.ABI2$triggerOnSwapFunction()
+        );
+    }
+}
+```
+
+<Note>
+To learn more about the `codegen_naming_convention` property and other `sim.toml` configuration options, visit the [App Structure](/idx/app-structure#sim-toml) page.
+</Note>
+
+## Emit Large Events
+
+You may encounter a `Stack too deep` compilation error if your event contains more than 16 parameters, or if your handler function declares too many local variables. This is due to a fundamental limit in the Solidity EVM.
+
+The solution is to use a pattern called **Struct Flattening**. You group your event parameters into a `struct` and then define your event to take this `struct` as a single, **unnamed** parameter. Sim IDX recognizes this specific pattern and will automatically "flatten" the struct's members into individual columns in your database. This gives you the best of both worlds: code that compiles and a clean, relational database schema.
+
+<Steps>
+  <Step title="Define a Struct">
+    Create a struct containing all the fields you want in your database table.
+
+    ```solidity
+    struct EmitSwapData {
+        uint64 chainId;
+        bytes32 txnHash;
+        uint64 blockNumber;
+        uint64 blockTimestamp;
+        bytes32 poolId;
+        address fromToken;
+        uint256 fromTokenAmt;
+        string fromTokenSymbol;
+        string fromTokenName;
+        uint64 fromTokenDecimals;
+        address toToken;
+        uint256 toTokenAmt;
+        string toTokenSymbol;
+        string toTokenName;
+        uint64 toTokenDecimals;
+        address txnOriginator;
+        address recipient;
+        address poolManager;
+    }
+    ```
+  </Step>
+
+  <Step title="Update Event Definition">
+    Change your event to accept the struct as a single, **unnamed** parameter. This is the crucial step that enables struct flattening.
+
+    ```solidity
+    // Incorrect: event Swap(EmitSwapData emitData);
+    // Correct:
+    event Swap(EmitSwapData);
+    ```
+  </Step>
+
+  <Step title="Populate and Emit the Struct">
+    In your handler, create an instance of the struct, populate its fields, and emit it.
+
+    ```solidity
+    function onSwapFunction(...) external override {
+        // ...
+        EmitSwapData memory emitData;
+        emitData.chainId = uint64(block.chainid);
+        emitData.txnHash = ctx.txn.hash;
+        // ... populate all other fields
+
+        emit Swap(emitData);
+    }
+    ```
+  </Step>
+</Steps>
+
+By following this pattern, you can define events with any number of parameters while keeping your code compliant with the EVM's limitations.

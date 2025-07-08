@@ -88,7 +88,13 @@
             "pages": [
               "idx/cli",
               "idx/app-structure",
-              "idx/listener",
+              {
+                "group": "Listener",
+                "pages": [
+                  "idx/listener",
+                  "idx/listener/patterns"
+                ]
+              },
               "idx/db",
               "idx/apis"
             ]

@@ -73,7 +73,7 @@ The event names are automatically converted to `snake_case` for your PostgreSQL 
 
 Update `listeners/src/Main.sol` with the following code:
 
-```solidity
+```solidity Main.sol
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
@@ -86,7 +86,7 @@ contract Triggers is BaseTriggers {
         // The allTriggers() helper registers every event from the ABI.
         addTriggers(
             // Moonbirds contract on Ethereum Mainnet (Chain ID 1)
-            ChainIdContract(1, 0x23581767a106ae21c074b2276D25e5C3e136a68b),
+            chainContract(Chains.Ethereum, 0x23581767a106ae21c074b2276D25e5C3e136a68b),
             listener.allTriggers()
         );
     }

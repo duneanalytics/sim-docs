@@ -1,6 +1,6 @@
 ---
 title: Listener Contract
-sidebarTitle: Listener
+sidebarTitle: Listener Basics
 ---
 
 The core of a Sim IDX app is the **listener**, a Solidity contract that defines what onchain data to index. By writing simple handlers for specific contract function calls or events, you instruct the Sim IDX framework on which data to capture and store in your database.
@@ -267,92 +267,9 @@ contract Triggers is BaseTriggers {
 }
 ```
 
-## Handle Name Conflicts
+## Add New ABI
 
-When working with multiple ABIs, you may encounter functions or events with the same name, which can cause compilation errors. Sim IDX provides two solutions.
 
-### 1. Multiple Listeners
-
-The recommended approach is to split your logic into separate, dedicated listener contracts for each ABI. This keeps your code clean and modular.
-
-```solidity
-// In Triggers.triggers()
-Listener1 listener1 = new Listener1();
-Listener2 listener2 = new Listener2();
-
-addTrigger(..., listener1.triggerOnSwapFunction());
-addTrigger(..., listener2.triggerOnSwapFunction());
-
-// Separate listener contracts
-contract Listener1 is ABI1$OnSwapFunction { /* ... */ }
-contract Listener2 is ABI2$OnSwapFunction { /* ... */ }
-```
-
-### 2. Prefixed Naming for Shared State
-
-If you need to share state between handlers for conflicting functions within a single contract, you can configure `sim.toml` to prefix the generated names.
-
-Set `codegen_naming_convention = "abi_prefix"` in your `sim.toml` file.
-
-This changes the generated function names, allowing you to implement them both in the same contract:
-
-```solidity Example Listener with Shared State
-contract CombinedListener is ABI1$OnSwapFunction, ABI2$OnSwapFunction {
-    // Store every recipient that swaps via DEX #1
-    address[] public swapRecipients;
-
-    // Emit an alert for large swaps coming through DEX #2
-    event LargeSwap(address indexed dex, address indexed recipient, uint256 amountOut);
-
-    // Handler for ABI1 (e.g., Uniswap V2 style router)
-    function ABI1$onSwapFunction(
-        FunctionContext memory /*ctx*/,
-        ABI1$SwapFunctionInputs memory inputs
-    )
-        external
-        override
-    {
-        // Track who received tokens in this swap
-        swapRecipients.push(inputs.to);
-    }
-
-    // Handler for ABI2 (e.g., SushiSwap router)
-    function ABI2$onSwapFunction(
-        FunctionContext memory /*ctx*/,
-        ABI2$SwapFunctionInputs memory inputs
-    )
-        external
-        override
-    {
-        // Fire an event if the swap paid out at least 1 ETH worth of tokens
-        if (inputs.amountOut >= 1 ether) {
-            emit LargeSwap(msg.sender, inputs.to, inputs.amountOut);
-        }
-    }
-}
-
-contract Triggers is BaseTriggers {
-    function triggers() external override {
-        CombinedListener listener = new CombinedListener();
-
-        // DEX #1 (ABI1) on Ethereum
-        addTrigger(
-            chainContract(Chains.Ethereum, 0xAbCDEFabcdefABCdefABcdefaBCDEFabcdefAB),
-            listener.ABI1$triggerOnSwapFunction()
-        );
-
-        // DEX #2 (ABI2) on Ethereum
-        addTrigger(
-            chainContract(Chains.Ethereum, 0x1234561234561234561234561234561234561234),
-            listener.ABI2$triggerOnSwapFunction()
-        );
-    }
-}
-```
-
-<Note>
-To learn more about the `codegen_naming_convention` property and other `sim.toml` configuration options, visit the [App Structure](/idx/app-structure#sim-toml) page.
-</Note>
 
 ## Test Your Listener
 
@@ -382,6 +299,9 @@ Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentat
 You've now seen how to create triggers, emit events, and validate your listener. Here are a few great ways to level-up your Sim IDX app.
 
 <Columns cols={2}>
+  <Card title="Listener Patterns" href="/idx/listener/patterns">
+    Learn about more advanced patterns for building your listener.
+  </Card>
   <Card title="Deployment Guide" href="/idx/deployment">
     Push your app to a staging or production environment and watch it process live onchain activity.
   </Card>
