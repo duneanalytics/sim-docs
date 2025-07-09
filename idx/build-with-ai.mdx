@@ -1,4 +1,142 @@
 ---
-title: "Build with AI"
-url: "https://docs.sim.dune.com/build-with-ai"
+title: Build with AI for Sim IDX
+sidebarTitle: Build with AI
+description: Build Sim IDX apps faster using LLMs and AI assistants.
 ---
+
+We provide several resources to help you use LLMs and AI coding assistants to build Sim IDX apps much faster. Using AI, you can automate boilerplate, enforce best practices, and focus on the unique logic of your app.
+
+## Cursor Rules for Sim IDX
+
+To supercharge your Sim IDX development, you can use our official Cursor Rules. By defining rules, you can teach the LLM that you use in Cursor about Sim IDX's specific architecture, coding patterns, and app structure. This makes sure that any generated code, from Solidity listeners to TypeScript APIs, is consistent and follows best practices, saving you significant time on revisions.
+
+When you create a new app with `sim init`, a Cursor Rules file is automatically created for you in `.cursor/rules/sim-idx.mdc`. This file contains basic instructions for the LLM. For a more comprehensive experience, we recommend replacing the default content with the rules below.
+
+To set up the rule:
+
+1.  Open the `.cursor/rules/sim-idx.mdc` file in your app.
+2.  If the file doesn't exist, create it by going to **Cursor Settings -> Rules & Memories -> Project Rules -> Add Rule**.
+3.  Copy and paste the following content into the file:
+
+````markdown sim-idx.mdc [expandable]
+---
+description: 
+globs: *.sol
+alwaysApply: false
+---
+# Sim Idx Project Rules
+
+Read the docs from here https://docs.sim.dune.com/llms-full.txt
+
+## Framework Overview
+- Sim idx is Dune's blockchain event indexing framework
+- Projects have two main components: Solidity listeners and TypeScript APIs  
+- Listeners hook into blockchain events, APIs serve indexed data
+
+## Project Structure
+- `listeners/` - Solidity contracts for event listening
+- `apis/` - TypeScript APIs using Hono + Drizzle
+- `abis/` - Contract ABI files for code generation
+- `sim.toml` - Project configuration
+
+## Solidity Listener Patterns
+
+### Contract Structure
+- Main contract extends `BaseTriggers` with `triggers()` function
+- Listener contracts implement generated event interfaces (e.g., `mUSDC$OnMintEvent`)
+- Always import: `import "sim-idx-sol/Simidx.sol";` and `import "sim-idx-generated/Generated.sol";`
+
+### Event Handling
+- Event handlers receive `EventContext` and typed params struct
+- Use `EventContext` to access transaction/block data: `ctx.txn.hash()`, `ctx.txn.chainId`
+- When you are handling an event, the events params are in generated structs: `inputs.minter`, `inputs.mintAmount`
+- Emit custom events or call external functions in handlers
+
+### Trigger Registration
+```solidity
+// Register event triggers
+addTrigger(
+    ChainIdContract(chainId, contractAddress),
+    listener.triggerOnEventName()
+);
+
+// Register function triggers  
+addTrigger(
+    ChainIdContract(chainId, contractAddress),
+    listener.triggerOnFunctionName()
+);
+```
+
+### Context Usage
+- `ctx.txn.hash()` - transaction hash
+- `ctx.txn.chainId` - chain ID
+- `ctx.txn.call.caller` - transaction sender
+- `ctx.txn.call.callee` - contract being called
+- `block.number`, `block.timestamp` - block data
+
+### Development Workflow
+- Generated code is in `lib/sim-idx-generated/`  
+- Never edit generated files directly
+- Test listeners with Foundry: `forge test`
+````
+
+<Frame caption="Create a new Project Rule in Cursor or edit the existing one.">
+    <img src="/images/idx/cursor-new-rule.png" />
+</Frame>
+
+## Develop with AI Agents
+
+We highly recommend using AI agents to accelerate your Sim IDX development. Cursor's **Background Agents** are particularly useful for this.
+
+Background Agents are asynchronous assistants that can work on your codebase in a remote environment. You can assign them tasks like writing new listeners, building out API endpoints, or fixing bugs, and they will work in the background, pushing changes to a separate branch for your review. This lets you offload complex tasks and focus on other parts of your app.
+
+To get started with Background Agents:
+
+1.  Press `⌘E` to open the control panel.
+2.  Write a detailed prompt for your agent (e.g., "Create a new Solidity listener for the USDC Transfer event and a corresponding TypeScript API endpoint to query transfers by address").
+3.  Select the agent from the list to monitor its progress or provide follow-up instructions.
+
+<Frame caption="Starting a Cursor Background Agent">
+    <img src="/images/idx/cursor-background-agents.png" />
+</Frame>
+
+## Add Docs to Cursor
+
+To integrate our documentation directly into Cursor:
+
+1. Go to **Cursor Settings -> Indexing & Docs -> Add Doc**.
+2. Enter `docs.sim.dune.com/idx` in the URL field.
+3. Provide a name (e.g., "@simdocs").
+4. Hit confirm. The documentation will sync automatically.
+5. Reference Sim IDX documentation by typing `@simdocs` (or your chosen name) in your Cursor chat window.
+
+<Frame caption="Add our docs to Cursor to use it in your chats">
+    <img src="/images/cursor-add-docs.png" />
+</Frame>
+
+## AI Search
+
+To ask questions about our documentation, click the **Ask AI** button in the header of the site. This opens a chat interface, powered by Mintlify, that understands natural language queries. Ask questions about endpoints, authentication, or specific data points, and it will answer you with the most relevant, accurate information.
+
+## Use with LLMs
+
+### Complete Documentation for LLMs
+
+For LLM applications such as custom agents, RAG systems, or any scenario requiring our complete documentation, we provide an optimized text file at [`https://docs.sim.dune.com/llms-full.txt`](https://docs.sim.dune.com/llms-full.txt).
+
+### Per-Page Access
+
+You can get the Markdown version of any documentation page by appending `.md` to its URL. For example, `/guides/replace-a-sample-api` becomes [`https://docs.sim.dune.com/guides/replace-a-sample-api.md`](https://docs.sim.dune.com/guides/replace-a-sample-api.md).
+
+Additionally, in the top-right corner of each page, you will find several options to access the page's content in LLM-friendly formats:
+
+- **Copy Page:** Copies the fully rendered content of the current page.
+- **View Markdown:** Provides a URL with the raw Markdown source. This is ideal for direct input into LLMs.
+- **Open with ChatGPT:** Instantly loads the page's content into a new session with ChatGPT. Ask questions, summarize, or generate code based on the page's content.
+
+<Frame caption="Copy the page, view raw markdown, or open with ChatGPT">
+    <img src="/images/mintlify-open-with-chatgpt.png" />
+</Frame>
+
+You can also type `⌘C` or `Ctrl+C` to copy any page's Markdown content.
+Try it now.
