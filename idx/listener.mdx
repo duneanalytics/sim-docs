@@ -30,7 +30,7 @@ The indexing logic is primarily located in `listeners/src/`.
 | Contract    | Purpose                                                                                                                                     | Location               |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
 | `Triggers`  | Registers all triggers via `addTrigger`. Contains no business logic.                                                                        | Must be in `Main.sol`. |
-| Listener(s) | One or more contracts that implement handler logic and emit events. They can have any name and be defined in any `.sol` file within `src/`. | `listeners/src/`       |
+| `Listener` | A single contract that implements handler logic and emits events. Must be named `Listener`. | Must be in `Main.sol`. |
 
 Let's break the `Main.sol` file from the sample app down step-by-step.
 
@@ -86,7 +86,7 @@ contract Listener is UniswapV3Factory$OnCreatePoolFunction {
 -   **Inheritance**: The listener extends an abstract contract (`UniswapV3Factory$OnCreatePoolFunction`) that is automatically generated from your ABI. This provides the required handler function signature and typed structs for `inputs` and `outputs`.
 -   **Events**: Emitting an event like `PoolCreated` defines the shape of your database.
 
-While the sample app uses the generic name `Listener`, you can and should use more descriptive names for your contracts (e.g., `UniswapV3Listener`). For larger projects, you can even split logic into multiple listener contracts, each in its own `.sol` file within the `src/` directory.
+Currently, all listener logic must be contained within a single `Main.sol` file located at `/listeners/src/Main.sol`. This file must contain exactly two contracts: a `Triggers` contract and a `Listener` contract. Multiple listener files are not yet supported.
 
 ## Define and Emit Events
 
