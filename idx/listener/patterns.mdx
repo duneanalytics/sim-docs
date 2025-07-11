@@ -12,6 +12,10 @@ We will cover advanced triggering, handling name conflicts, calling other contra
 
 The `chainAbi` helper allows you to trigger your listener on any contract that matches a specific ABI signature. This is incredibly powerful for monitoring activity across all instances of a particular standard, like ERC-721 or Uniswap V3 pools, without needing to list every contract address explicitly.
 
+<Note>
+**ABI Matching is Permissive**: The matching behavior is permissive - if a contract implements the functions and events in the specified ABI, it counts as a match even if it also implements other functionality. This means contracts don't need to match the ABI exactly; they just need to include the required functions and events.
+</Note>
+
 The example below shows how to trigger the `onBurnEvent` handler for any contract on Ethereum that matches the `UniswapV3Pool` ABI. The `UniswapV3Pool$Abi()` is a helper struct that is automatically generated from that ABI file.
 
 ```solidity Main.sol
