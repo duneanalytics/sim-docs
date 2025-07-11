@@ -3,18 +3,39 @@ title: "Token Filtering"
 description: "Learn how Sim APIs provide liquidity data to help you filter tokens based on your specific needs."
 ---
 
-When working with blockchain data, you'll encounter numerous tokens with varying levels of liquidity and utility. Rather than making subjective determinations about what constitutes "spam," Sim APIs provide objective liquidity data that allows you to implement your own filtering logic downstream.
+When working with blockchain data, you'll encounter numerous tokens with varying levels of liquidity and utility.
+Sim APIs provide comprehensive token metadata and liquidity data to help you implement custom filtering logic that fits your specific requirements.
 
 ## Our Approach to Token Data
 
-We don't offer spam filtering per se, because we find that definitions of spam are varying and subjective. Instead, we provide the best objective measure that we're aware of—liquidity data—to allow users to filter downstream based on their specific requirements.
+We don't offer direct spam filtering because definitions of spam are varying and subjective.
+Instead, we provide the best objective measure that we're aware of—liquidity data—to allow developers to filter downstream based on their specific requirements.
+
+By grounding filtering decisions in measurable, onchain liquidity, rather than subjective labels, our method offers several advantages:
+
+- **Objective**: We provide liquidity metrics rather than subjective spam classifications
+- **Realtime**: Liquidity is checked at query time, not based on outdated lists
+- **Flexible**: All filtering data is provided, allowing you to implement custom logic that fits your use case
+- **Transparent**: You have full visibility into the data used for filtering decisions
+- **Adaptable**: Your filtering criteria can evolve with your application's needs
+
+## Supported APIs
+
+<Columns>
+  <Card title="EVM Balances API" href="/evm/balances">
+    Get wallet token balances with comprehensive filtering metadata
+  </Card>
+  <Card title="EVM Activity API" href="/evm/activity">
+    Track wallet activity with detailed token information
+  </Card>
+</Columns>
 
 For each token in our responses, we include comprehensive metadata that gives you the information needed to make informed filtering decisions:
 
-1. **Token basics**: Name, symbol, and decimals properties
-2. **Liquidity information**: Real-time liquidity pool data when available
-3. **Price data**: Current USD pricing information
-4. **Pool size**: The total value locked in the token's highest liquidity pool
+1. **Token basics**: `symbol`, `name`, and `decimals` properties
+2. **Price data**: Current USD pricing information using `price_usd`
+3. **Liquidity information**: Real-time liquidity pool data with `pool_size`
+4. **Pool size**: The total value locked in the token's highest liquidity pool using `low_liquidity`
 
 ## How Sim Calculates Liquidity Data
 
@@ -24,40 +45,156 @@ Sim's approach to assessing liquidity is sophisticated and real-time:
 - We calculate the USD value of the liquidity along that route for each token upon each query
 - This provides you with current, accurate liquidity information rather than static or outdated data
 
+<Warning>
+When `pool_size` is very small and `low_liquidity` is true, you should disregard `price_usd` and `value_usd` fields. While the price is technically correct based on the best liquidity pool we can find, it becomes effectively meaningless when there's insufficient liquidity. You can't actually exchange the token for anything else of value at that price.
+</Warning>
+
 ## Using Token Data for Custom Filtering
 
-All token responses include the data you need to implement your own filtering logic. Common filtering scenarios include:
+Let's explore practical implementations for different filtering scenarios.
+The following examples demonstrate how to use this data to create robust filtering logic that meets your app's needs.
 
-1. **Liquidity threshold filtering**: Filter based on the `pool_size` field using your own threshold (e.g., tokens with less than \$100, \$1000, or \$10,000 in liquidity)
-2. **Allowlisting specific tokens**: Include certain tokens regardless of their liquidity metrics
-3. **Denylisting specific tokens**: Exclude certain tokens even if they meet your liquidity criteria
-4. **Custom criteria combinations**: Create your own combination of the available fields to define filtering rules for your application
-5. **Token completeness**: Filter based on whether tokens have complete metadata (name, symbol, decimals)
+### Liquidity Threshold Filtering
 
-## Available Token Metadata
+Filter tokens based on minimum liquidity requirements using the `pool_size` field. This is one of the most effective ways to filter out low-quality tokens.
 
-Every token in our API responses includes:
+```javascript
+// Filter tokens with at least $10,000 in liquidity
+const filterByLiquidity = (tokens, minLiquidity = 10000) => {
+  return tokens.filter(token => {
+    return token.pool_size && token.pool_size >= minLiquidity;
+  });
+};
 
-- `symbol`: Token symbol
-- `name`: Token name (when available)
-- `decimals`: Token decimal places
-- `price_usd`: Current USD price (when available)
-- `pool_size`: USD value of the token's highest liquidity pool
-- `low_liquidity`: Boolean flag indicating tokens with minimal liquidity
+// Usage
+const filteredTokens = filterByLiquidity(tokenData, 10000);
+```
 
-## Applicable APIs
+This approach ensures you only show tokens that have sufficient trading volume and market depth, reducing the likelihood of displaying illiquid or potentially problematic tokens.
 
-Token filtering capabilities are available for:
+### Allowlisting Specific Tokens
 
-- [EVM Balances API](/evm/balances)
-- [EVM Activity API](/evm/activity)
+Include certain tokens regardless of their liquidity metrics by maintaining a list of approved token symbols.
 
-## Benefits of Sim's Approach
+```javascript
+// Allowlist of trusted token symbols (uppercase recommended)
+const ALLOWLISTED_SYMBOLS = [
+  'USDC', // USD Coin
+  'DAI',  // DAI Stablecoin
+  'WBTC', // Wrapped Bitcoin
+];
 
-- **Objective data**: We provide liquidity metrics rather than subjective spam classifications
-- **Real-time assessment**: Liquidity is checked at query time, not based on outdated lists
-- **Flexibility**: All filtering data is provided, allowing you to implement custom logic that fits your use case
-- **Transparency**: You have full visibility into the data used for filtering decisions
-- **Adaptability**: Your filtering criteria can evolve with your application's needs
+const filterWithAllowlist = (tokens) => {
+  return tokens.filter(token => {
+    // Always include allowlisted tokens
+    if (token.symbol && ALLOWLISTED_SYMBOLS.includes(token.symbol.toUpperCase())) {
+      return true;
+    }
+    // Apply other filtering criteria for non-allowlisted tokens
+    return token.pool_size && token.pool_size >= 1000;
+  });
+};
+```
 
-By leveraging Sim's comprehensive token metadata, you can provide your users with a curated view of blockchain data that aligns with your specific requirements and use case.
+Allowlisting is particularly useful for ensuring major tokens like stablecoins and established cryptocurrencies are always displayed to users.
+
+### Denylisting Specific Tokens
+
+Exclude certain tokens even if they meet your liquidity criteria by maintaining a blocklist of problematic symbols.
+
+```javascript
+// Denylist of problematic token symbols
+const DENYLISTED_SYMBOLS = [
+  'SCAM',
+  'RUG',
+];
+
+const filterWithDenylist = (tokens) => {
+  return tokens.filter(token => {
+    // Exclude denylisted tokens
+    if (token.symbol && DENYLISTED_SYMBOLS.includes(token.symbol.toUpperCase())) {
+      return false;
+    }
+    // Apply other filtering criteria
+    return token.pool_size && token.pool_size >= 1000;
+  });
+};
+```
+
+Denylisting helps you maintain control over which tokens appear in your application, even if they have sufficient liquidity.
+
+### Custom Criteria Combinations
+
+Create sophisticated filtering logic by combining multiple criteria such as liquidity, completeness, and custom business rules.
+
+```javascript
+const advancedTokenFilter = (tokens, options = {}) => {
+  const {
+    minLiquidity = 1000,
+    requireCompleteName = true,
+    minPriceUsd = 0.000001,
+    allowLowLiquidity = false
+  } = options;
+
+  return tokens.filter(token => {
+    // Check if token has complete metadata
+    if (requireCompleteName && (!token.name || !token.symbol)) {
+      return false;
+    }
+
+    // Check minimum price threshold
+    if (token.price_usd && token.price_usd < minPriceUsd) {
+      return false;
+    }
+
+    // Check liquidity requirements
+    if (!allowLowLiquidity && token.low_liquidity) {
+      return false;
+    }
+
+    if (token.pool_size && token.pool_size < minLiquidity) {
+      return false;
+    }
+
+    return true;
+  });
+};
+```
+
+This approach allows you to create nuanced filtering that considers multiple factors simultaneously.
+
+### Token Completeness Filtering
+
+Filter based on whether tokens have complete metadata, ensuring users only see tokens with proper names and symbols.
+
+```javascript
+const filterCompleteTokens = (tokens) => {
+  return tokens.filter(token => {
+    // Require all basic metadata to be present
+    const hasBasicInfo = token.name && 
+                        token.symbol && 
+                        token.decimals !== undefined;
+    
+    // Optionally require price data
+    const hasPriceData = token.price_usd !== undefined;
+    
+    return hasBasicInfo && hasPriceData;
+  });
+};
+
+// Or create a more flexible version
+const filterTokensByCompleteness = (tokens, strict = false) => {
+  return tokens.filter(token => {
+    if (strict) {
+      // Strict mode: require all fields
+      return token.name && token.symbol && token.decimals && 
+             token.price_usd && token.pool_size;
+    } else {
+      // Lenient mode: require only basic fields
+      return token.symbol && token.decimals !== undefined;
+    }
+  });
+};
+```
+
+Completeness filtering ensures your users have meaningful information about the tokens they're viewing.
