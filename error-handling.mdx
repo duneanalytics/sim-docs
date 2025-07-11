@@ -7,7 +7,7 @@ This guide explains how to handle errors when using Sim APIs, including common e
 
 ## Error Response Format
 
-When an error occurs, Sim APIs return a JSON response with a single property containing the error information. The response structure varies depending on the error type:
+When an error occurs, Sim APIs return a JSON response with error information:
 
 ```json
 {
@@ -15,12 +15,9 @@ When an error occurs, Sim APIs return a JSON response with a single property con
 }
 ```
 
-The error response will contain either a `message` or `error` property, but never both. Examples:
-- `{"error": "invalid API Key"}` (401 errors)
-- `{"message": "Invalid input length"}` (400 errors)
-- `{"error": "URL not found"}` (404 errors)
-
-**Important**: We recommend relying on HTTP status codes rather than checking for specific error message strings, as error messages may change over time while status codes remain consistent.
+<Note>
+The error property can be either `"error"` or `"message"` depending on the type of error.
+</Note>
 
 ## Common Error Codes
 
