@@ -7,33 +7,34 @@ This guide explains how to handle errors when using Sim APIs, including common e
 
 ## Error Response Format
 
-When an error occurs, Sim APIs return a standard error response format:
+When an error occurs, Sim APIs return a JSON response with error information:
 
 ```json
 {
-  "error": {
-    "message": "Description of what went wrong",
-    "code": "ERROR_CODE"
-  }
+  "error": "Description of what went wrong"
 }
 ```
 
+<Note>
+The error property can be either `"error"` or `"message"` depending on the type of error.
+</Note>
+
 ## Common Error Codes
 
-| HTTP Status | Error Code | Description | Troubleshooting |
-| ----------- | ---------- | ----------- | --------------- |
-| 401 | UNAUTHORIZED | Invalid or missing API key | Check that you're including the correct API key in the `X-Sim-Api-Key` header |
-| 400 | BAD_REQUEST | Malformed request | Verify the address format and other parameters in your request |
-| 404 | NOT_FOUND | Resource not found | Verify the endpoint URL and resource identifiers |
-| 429 | RATE_LIMIT_EXCEEDED | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
-| 500 | INTERNAL_SERVER_ERROR | Server-side error | Retry the request after a short delay; if persistent, contact support |
+| HTTP Status | Description | Troubleshooting |
+| ----------- | ----------- | --------------- |
+| 401 | Invalid or missing API key | Check that you're including the correct API key in the `X-Sim-Api-Key` header |
+| 400 | Malformed request | Verify the address format and other parameters in your request |
+| 404 | Resource not found | Verify the endpoint URL and resource identifiers |
+| 429 | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
+| 500 | Server-side error | Retry the request after a short delay; if persistent, contact support |
 
 ## Handling Errors in Code
 
 Here are examples of how to properly handle errors in different programming languages:
 
-### JavaScript
-
+<Tabs>
+<Tab title="JavaScript">
 ```javascript
 fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045', {
   method: 'GET', 
@@ -42,7 +43,8 @@ fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415
   .then(response => {
     if (!response.ok) {
       return response.json().then(err => {
-        throw new Error(`API error: ${err.error?.message || response.statusText}`);
+        const errorMessage = err.error || err.message || response.statusText;
+        throw new Error(`API error: ${errorMessage}`);
       });
     }
     return response.json();
@@ -57,9 +59,8 @@ fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415
     // e.g., show user-friendly message, retry, or fallback behavior
   });
 ```
-
-### Python
-
+</Tab>
+<Tab title="Python">
 ```python
 import requests
 import time
@@ -83,7 +84,8 @@ def get_balances(address, api_key, max_retries=3):
             except:
                 pass
                 
-            error_message = error_data.get('error', {}).get('message', 'Unknown error')
+            # Get error message from either 'error' or 'message' property
+            error_message = error_data.get('error') or error_data.get('message', 'Unknown error')
             
             print(f"HTTP Error {status_code}: {error_message}")
             
@@ -116,44 +118,22 @@ if "error" in result:
 else:
     print(f"Found {len(result['balances'])} token balances")
 ```
+</Tab>
+</Tabs>
 
 ## Best Practices for Error Handling
 
 1. **Always check for errors**: Don't assume API calls will succeed.
 
-2. **Implement retry logic with backoff**: For transient errors (like rate limits or server errors), implement exponential backoff:
-   ```javascript
-   async function fetchWithRetry(url, options, maxRetries = 3) {
-     let retries = 0;
-     while (retries < maxRetries) {
-       try {
-         const response = await fetch(url, options);
-         if (response.ok) return response.json();
-         
-         const error = await response.json();
-         
-         // Don't retry for client errors (except rate limiting)
-         if (response.status < 500 && response.status !== 429) {
-           throw new Error(error.error?.message || response.statusText);
-         }
-         
-         // For rate limiting or server errors, retry with backoff
-         retries++;
-         const delay = Math.min(1000 * 2 ** retries, 10000);
-         await new Promise(resolve => setTimeout(resolve, delay));
-       } catch (err) {
-         if (retries === maxRetries - 1) throw err;
-         retries++;
-       }
-     }
-   }
-   ```
+2. **Use HTTP status codes**: Rely on HTTP status codes rather than parsing error message strings for programmatic decisions.
 
-3. **Provide meaningful error messages**: Transform API error responses into user-friendly messages.
+3. **Implement retry logic with backoff**: For transient errors (like rate limits or server errors), implement exponential backoff.
 
-4. **Log errors for debugging**: Maintain detailed logs of API errors for troubleshooting.
+4. **Provide meaningful error messages**: Transform API error responses into user-friendly messages.
 
-5. **Implement fallbacks**: When possible, have fallback behavior when API calls fail.
+5. **Log errors for debugging**: Maintain detailed logs of API errors for troubleshooting.
+
+6. **Implement fallbacks**: When possible, have fallback behavior when API calls fail.
 
 ## Debugging Tips
 
