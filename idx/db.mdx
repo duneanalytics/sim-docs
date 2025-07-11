@@ -43,9 +43,9 @@ An event defined as `event PoolCreated(address pool, address token0, address tok
 
 When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase `snake_case` names).**
 
-<Note>
-**Database Limitations**: Currently, Sim IDX only supports creating new rows in the database, not updates to existing rows. This means that once data is indexed and stored, it cannot be modified through the framework. We are exploring options to support updates in future versions.
-</Note>
+## Limitations
+
+Currently, Sim IDX only supports creating new rows in the database, not updates to existing rows. This means that once data is indexed and stored, it cannot be modified through the framework. We are exploring options to support updates in future versions.
 
 ## Common Database Operations
 
