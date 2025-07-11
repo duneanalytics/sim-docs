@@ -23,7 +23,6 @@
             "group": "EVM",
             "pages": [
               "evm/overview",
-              "evm/supported-chains",
               {
                 "group": "Guides",
                 "pages": [
@@ -38,6 +37,7 @@
                   "evm/build-a-realtime-chat-agent"
                 ]
               },
+              "evm/supported-chains",
               "evm/balances",
               "evm/activity",
               "evm/collectibles",

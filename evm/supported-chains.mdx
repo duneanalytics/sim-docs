@@ -2,7 +2,7 @@
 title: "Supported Chains"
 sidebarTitle: "Supported Chains"
 description: "Explore chains supported by Sim's EVM API endpoints."
-openapi: "evm/openapi/supported-chains.json"
+openapi: "/evm/openapi/supported-chains.json"
 ---
 
 import { SupportedChainsAccordion } from '/snippets/supported-chains-accordion.mdx';
@@ -17,7 +17,198 @@ import { SupportedChainsAccordion } from '/snippets/supported-chains-accordion.m
   />
 </Frame>
 
-Chain support varies by API endpoint.
-Use the dropdown sections below to check which chains are available for each API:
+The Supported Chains endpoint provides realtime information about which blockchains are supported by Sim's EVM API endpoints.
+Chain support varies by API endpoint. Use the dropdown below to check which chains are available for each API:
 
 <SupportedChainsAccordion />
+
+## Using the API Endpoint
+
+You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
+
+The response includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
+Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url https://api.sim.dune.com/v1/evm/supported-chains \
+  --header 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.sim.dune.com/v1/evm/supported-chains', {
+  method: 'GET',
+  headers: {
+    'X-Sim-Api-Key': 'YOUR_API_KEY'
+  }
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/supported-chains"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+print(data)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "chains": [
+    {
+      "name": "ethereum",
+      "chain_id": 1,
+      "tags": ["default", "mainnet"],
+      "balances": {"supported": true},
+      "transactions": {"supported": true},
+      "activity": {"supported": true},
+      "token_info": {"supported": true},
+      "token_holders": {"supported": true},
+      "collectibles": {"supported": true}
+    },
+    {
+      "name": "polygon",
+      "chain_id": 137,
+      "tags": ["default", "mainnet"],
+      "balances": {"supported": true},
+      "transactions": {"supported": true},
+      "activity": {"supported": true},
+      "token_info": {"supported": true},
+      "token_holders": {"supported": true},
+      "collectibles": {"supported": true}
+    }
+  ]
+}
+```
+
+```json 400
+{
+  "error": "Bad Request"
+}
+```
+
+```json 401
+{
+  "error": "Unauthorized"
+}
+```
+
+```json 404
+{
+  "error": "Not Found"
+}
+```
+
+```json 429
+{
+  "error": "Too many requests"
+}
+```
+
+```json 500
+{
+  "error": "Internal Server Error"
+}
+```
+
+</ResponseExample>
+
+## Tags
+
+The `tags` property is used to categorize chains and make it easier to filter them in other API endpoints.
+When using the `chain_ids` parameter in other endpoints, you can get:
+
+- **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum)
+- **All chains**: `?chain_ids=all` (returns all chains supported by that endpoint)
+- **By tags**: `?chain_ids=mainnet` or `?chain_ids=mainnet,testnet` (returns chains with those tags)
+- **Default behavior**: If no `chain_ids` parameter is provided, endpoints return chains tagged as "default"
+
+## Examples
+
+Here are two practical examples of how you might use this endpoint:
+
+### 1. Building a Dynamic Chain Selector
+
+This example shows how to fetch supported chains and create a user-friendly dropdown menu that filters chains based on their capabilities.
+It can be useful for wallet UIs or dApp chain selection.
+
+```javascript [expandable]
+// Fetch supported chains and build a dropdown for users
+async function buildChainSelector() {
+  const response = await fetch('https://api.sim.dune.com/v1/evm/supported-chains', {
+    headers: { 'X-Sim-Api-Key': 'YOUR_API_KEY' }
+  });
+  
+  const data = await response.json();
+  
+  // Filter chains that support balances
+  const supportedChains = data.chains.filter(chain => chain.balances.supported);
+  
+  // Build dropdown options
+  const chainOptions = supportedChains.map(chain => ({
+    value: chain.chain_id,
+    label: `${chain.name} (${chain.chain_id})`,
+    isMainnet: chain.tags.includes('mainnet')
+  }));
+  
+  return chainOptions;
+}
+```
+
+### 2. Validating Chain Support
+
+This example demonstrates how to validate whether a specific chain supports a particular endpoint before making API calls.
+This helps prevent errors and improves user experience by showing appropriate messages.
+
+```javascript [expandable]
+async function validateChainSupport(chainId, endpointName) {
+  // Check if a chain supports a specific endpoint before making requests
+  try {
+    const response = await fetch('https://api.sim.dune.com/v1/evm/supported-chains', {
+      headers: { 'X-Sim-Api-Key': 'YOUR_API_KEY' }
+    });
+    
+    const data = await response.json();
+    
+    // Find the chain
+    const chain = data.chains.find(c => c.chain_id === chainId);
+    
+    if (!chain) {
+      return { supported: false, message: `Chain ${chainId} not found` };
+    }
+    
+    // Check if the endpoint is supported
+    if (!chain[endpointName] || !chain[endpointName].supported) {
+      return { 
+        supported: false, 
+        message: `Endpoint '${endpointName}' not supported on ${chain.name}` 
+      };
+    }
+    
+    return { 
+      supported: true, 
+      message: `Chain ${chain.name} supports ${endpointName}` 
+    };
+    
+  } catch (error) {
+    return { supported: false, message: `Error validating chain: ${error.message}` };
+  }
+}
+
+// Usage
+const result = await validateChainSupport(1, 'balances');
+console.log(result.message); // "Chain ethereum supports balances"
+```
+
