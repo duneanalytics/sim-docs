@@ -47,6 +47,11 @@ These two imports pull in everything provided by the **Sim IDX framework**. `Sim
 
 This contract tells Sim IDX when to run your code using a **trigger**, which specifies a target contract and the handler to call.
 
+<Note>
+You can also use helpers like `chainAbi` and `chainGlobal`.
+For other trigger types, see the [Listener Patterns](/idx/listener/patterns) page.
+</Note>
+
 ```solidity
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {

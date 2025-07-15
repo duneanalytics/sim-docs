@@ -92,7 +92,8 @@
                 "group": "Listener",
                 "pages": [
                   "idx/listener",
-                  "idx/listener/patterns"
+                  "idx/listener/patterns",
+                  "idx/listener/errors"
                 ]
               },
               "idx/db",
