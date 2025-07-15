@@ -107,7 +107,8 @@ Find a block number on Etherscan where a Moonbirds transaction occurred and use 
 ```bash
 sim listeners evaluate \
   --chain-id=1 \
-  --start-block=22830504
+  --start-block=22830504 \
+  --listeners=Listener
 ```
 
 If the setup is correct, the output will be a JSON object containing a list of decoded Moonbirds events in the `events` array and an empty `errors` array.
