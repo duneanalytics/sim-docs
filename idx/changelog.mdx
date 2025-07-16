@@ -1,0 +1,25 @@
+---
+title: "Changelog"
+description: "Product updates and announcements"
+---
+
+<Update label="July 16, 2025" description="CLI Update">
+  **Breaking Change: Generated Struct Names Now Include Contract Names**
+
+  With the next CLI release, there will be a breaking change that impacts users who import and use generated structs from the ABI.
+
+  **Why this change was needed:**
+  The same struct name can be used across different contracts (example: `GPv2Trade.Data` and `GPv2Interaction.Data` within the same ABI) with different definitions. Using just the struct name for generated structs prevented proper hooking on protocols like CoW Swap.
+
+  **What changed:**
+  We now include the contract name as part of the struct name in the generated Solidity file associated with the ABI. Instead of using `$AbiName$StructName` for the names, we now use `$AbiName$ContractName$StructName`.
+
+  **Impact:**
+  If you have imported a generated struct, you'll need to update the name to include the contract name the next time you run codegen. This doesn't impact the default inputs/outputs/context structs, so most users won't encounter this issue.
+
+  **Who is affected:**
+  You'll only run into this issue if you:
+  - Update to use the new CLI
+  - Add a new ABI or manually run a new codegen
+  - AND you've been using generated structs that aren't the ones provided in the trigger inputs/outputs object (i.e., you're using a nested struct from the inputs/outputs for some variable or part of the event)
+</Update>
