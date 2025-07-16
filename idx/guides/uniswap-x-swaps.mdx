@@ -55,7 +55,7 @@ sim abi codegen
 
 Next, we need the ABI for the Uniswap X Reactor. Create a file at `abis/IReactor.json` and paste the following content:
 
-```json abis/IReactor.json
+```json abis/IReactor.json [expandable]
 [
   {
     "inputs": [
@@ -151,27 +151,42 @@ pragma solidity ^0.8.0;
 import {IReactor} from "../interfaces/IReactor.sol";
 import {IValidationCallback} from "./IValidationCallback.sol";
 
+/// @dev generic order information
+///  should be included as the first field in any concrete order types
 struct OrderInfo {
+    // The address of the reactor that this order is targeting
+    // Note that this must be included in every order so the swapper
+    // signature commits to the specific reactor that they trust to fill their order properly
     IReactor reactor;
+    // The address of the user which created the order
+    // Note that this must be included so that order hashes are unique by swapper
     address swapper;
+    // The nonce of the order, allowing for signature replay protection and cancellation
     uint256 nonce;
+    // The timestamp after which this order is no longer valid
     uint256 deadline;
+    // Custom validation contract
     IValidationCallback additionalValidationContract;
+    // Encoded validation params for additionalValidationContract
     bytes additionalValidationData;
 }
 
+/// @dev tokens that need to be sent from the swapper in order to satisfy an order
 struct InputToken {
     address token;
     uint256 amount;
+    // Needed for dutch decaying inputs
     uint256 maxAmount;
 }
 
+/// @dev tokens that need to be received by the recipient in order to satisfy an order
 struct OutputToken {
     address token;
     uint256 amount;
     address recipient;
 }
 
+/// @dev generic concrete order that specifies exact tokens which need to be sent and received
 struct ResolvedOrder {
     OrderInfo info;
     InputToken input;
@@ -180,11 +195,14 @@ struct ResolvedOrder {
     bytes32 hash;
 }
 
+/// @dev external struct including a generic encoded order and swapper signature
+///  The order bytes will be parsed and mapped to a ResolvedOrder in the concrete reactor contract
 struct SignedOrder {
     bytes order;
     bytes sig;
 }
 ```
+
 This file defines the core data structures used by Uniswap X. `SignedOrder` represents the opaque order data as it exists on-chain, while `ResolvedOrder` is the fully-decoded structure we aim to capture. The other structs (`OrderInfo`, `InputToken`, `OutputToken`) are components of these main structures.
 
 ```solidity listeners/src/interfaces/IReactor.sol
@@ -194,11 +212,28 @@ pragma solidity ^0.8.0;
 import "./ReactorStructs.sol";
 import "./IProtocolFeeController.sol";
 
+/// @notice Interface for order execution reactors
 interface IReactor {
+    /// @notice Execute a single order
+    /// @param order The order definition and valid signature to execute
     function execute(SignedOrder calldata order) external payable;
+
+    /// @notice Execute a single order using the given callback data
+    /// @param order The order definition and valid signature to execute
+    /// @param callbackData The callbackData to pass to the callback
     function executeWithCallback(SignedOrder calldata order, bytes calldata callbackData) external payable;
+
+    /// @notice Execute the given orders at once
+    /// @param orders The order definitions and valid signatures to execute
     function executeBatch(SignedOrder[] calldata orders) external payable;
+
+    /// @notice Execute the given orders at once using a callback with the given callback data
+    /// @param orders The order definitions and valid signatures to execute
+    /// @param callbackData The callbackData to pass to the callback
     function executeBatchWithCallback(SignedOrder[] calldata orders, bytes calldata callbackData) external payable;
+
+    /// @notice Get the fee controller for the reactor
+    /// @return The fee controller
     function feeController() external view returns (IProtocolFeeController);
 }
 ```
@@ -210,7 +245,11 @@ pragma solidity ^0.8.0;
 
 import {ResolvedOrder, OutputToken} from "./ReactorStructs.sol";
 
+/// @notice Interface for getting fee outputs
 interface IProtocolFeeController {
+    /// @notice Get fee outputs for the given orders
+    /// @param order The orders to get fee outputs for
+    /// @return List of fee outputs to append for each provided order
     function getFeeOutputs(ResolvedOrder memory order) external view returns (OutputToken[] memory);
 }
 ```
@@ -222,10 +261,15 @@ pragma solidity ^0.8.0;
 
 import {ResolvedOrder} from "./ReactorStructs.sol";
 
+/// @notice Callback to validate an order
 interface IValidationCallback {
+    /// @notice Called by the reactor for custom validation of an order. Will revert if validation fails
+    /// @param filler The filler of the order
+    /// @param resolvedOrder The resolved order to fill
     function validate(address filler, ResolvedOrder calldata resolvedOrder) external view;
 }
 ```
+
 This final interface defines the structure for custom validation contracts that can be attached to Uniswap X orders, which is part of the `OrderInfo` struct.
 
 ## 3. Implement the OrderQuoter
@@ -309,7 +353,8 @@ contract OrderQuoter {
 }
 ```
 
-Let's break down the key functions of this contract.
+You can copy the full contents of the `OrderQuoter.sol` file above.
+Let's break down and explain the key functions of this contract.
 
 ```solidity
 function quote(bytes memory order, bytes memory sig) external returns (ResolvedOrder memory result) {
@@ -730,19 +775,36 @@ Create a `listeners/src/utils` directory and add the following files:
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+/// @notice Checks if a bytes type returned from a call can represent a string.
+/// @param b The bytes type.
+/// @return result true if it can represent a string, otherwise false.
 function canBeString(bytes memory b) pure returns (bool result) {
+    /// @solidity memory-safe-assembly
     assembly {
-        let size := mload(b);
+        let size := mload(b)
+
         switch gt(size, 63)
-        case 0 { result := 0; }
+        case 0 { result := 0 }
         default {
-            result := gt(sub(mload(b), 63), mload(add(b, 64)));
+            // sub(mload(b), 64) is the returndata length minus the 2 first words (offset and string size).
+            // mload(add(b, 64)) is the size of the string, written in the 2nd word.
+            // We check whether the size of the string is smaller or equal than the size of the returndata part corresponding to the string.
+            // Since we cannot do greater or equal, we use sub(mload(b), 63) instead of sub(mload(b), 64).
+            result := gt(sub(mload(b), 63), mload(add(b, 64)))
         }
     }
 }
+
+/// @notice Checks if a bytes type returned from a call can represent a uint256.
+/// @param b The bytes type.
+/// @return result true if it can represent a uint256, otherwise false.
 function canBeUint256(bytes memory b) pure returns (bool result) {
     return b.length == 32;
 }
+
+/// @notice Checks if a bytes type returned from a call can represent an address.
+/// @param b The bytes type.
+/// @return result true if it can represent an address, otherwise false.
 function canBeAddress(bytes memory b) pure returns (bool result) {
     return b.length <= 32 && uint256(bytes32(b)) >> 160 == 0;
 }
@@ -755,34 +817,55 @@ pragma solidity >=0.8.2 < 0.9.0;
 
 import {canBeString, canBeUint256} from "./ABIUtils.sol";
 
+/// @notice Returns the ERC20 symbol of an ERC20 token.
+/// @param tokenAddress The token's address.
+/// @return symbol The ERC20 decimals.
 function getSymbol(address tokenAddress) returns (string memory symbol) {
     (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("symbol()"));
+
     if (success && canBeString(data)) {
         symbol = abi.decode(data, (string));
     } else {
         return "";
     }
 }
+
+/// @notice Returns the ERC20 name of an ERC20 token.
+/// @param tokenAddress The token's address.
+/// @return name The ERC20 decimals.
 function getName(address tokenAddress) returns (string memory name) {
     (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("name()"));
+
     if (success && canBeString(data)) {
         name = abi.decode(data, (string));
     } else {
         return "";
     }
 }
+
+/// @notice Returns the ERC20 decimals of an ERC20 token.
+/// @param tokenAddress The token's address.
+/// @return decimals The ERC20 decimals or 18 if the call was unsuccessful.
 function getDecimals(address tokenAddress) returns (uint256 decimals) {
     (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("decimals()"));
+
     if (success && canBeUint256(data)) {
         decimals = abi.decode(data, (uint256));
     } else {
         return 18;
     }
 }
+
+/// @notice Returns the ERC20Metadata components of an ERC20 token.
+/// @param addr The token's address.
+/// @return The ERC20 name.
+/// @return The ERC20 symbol.
+/// @return The ERC20 decimals.
 function getMetadata(address addr) returns (string memory, string memory, uint256) {
     return (getName(addr), getSymbol(addr), getDecimals(addr));
 }
 ```
+
 `MetadataUtils.sol` uses low-level `call` to interact with any ERC-20 token contract and retrieve its name, symbol, and decimals, enriching our final event with human-readable data.
 
 ### The `Main.sol` Contract
@@ -984,16 +1067,8 @@ You should see a `Swap` event in the output, confirming your logic is working co
 
 ## 7. Develop APIs
 
-With the listener logic in place, the final step is to serve the indexed data via an API. To test your API locally using `npm run dev`, you first need a live database to connect to.
-
-This requires deploying your app at least once. Follow the [App Deployment guide](/idx/deployment) to push your project to GitHub and trigger the first build. Once deployed, you can find the `DB_CONNECTION_STRING` on your [App Page](/idx/app-page#db-connection).
-
-Create a `.dev.vars` file in your `apis/` directory and add the connection string:
-```plaintext apis/.dev.vars
-DB_CONNECTION_STRING="your_database_connection_string_here"
-```
-
-Now, replace the content of `apis/src/index.ts` with the following to create an endpoint for your `Swap` data:
+With the listener logic in place, the final step is to serve the indexed data via an API.
+Replace the content of `apis/src/index.ts` with the following to create an endpoint for your `Swap` data:
 
 ```typescript apis/src/index.ts
 import { swap } from "./db/schema/Listener";
@@ -1014,7 +1089,18 @@ app.get("/*", async (c) => {
 
 export default app;
 ```
-You can now run `npm install` and `npm run dev` in the `apis/` directory to test your API locally.
+
+Now that you've updated the `index.ts` file, you can run `sim build` once again to confirm that everything is building correctly.
+
+## Deploy Your App
+
+After making all of the changes above, it's time to ship your new indexer.
+
+<Columns cols={1}>
+  <Card title="Full Deployment Guide" href="/idx/deployment">
+    Follow the step-by-step guide if you need a refresher on the deployment process.
+  </Card>
+</Columns>
 
 ## Conclusion
 
