@@ -112,7 +112,8 @@
             "group": "Resources",
             "pages": [
               "idx/resources/templates",
-              "idx/build-with-ai"
+              "idx/build-with-ai",
+              "idx/changelog"
             ]
           }
         ]
