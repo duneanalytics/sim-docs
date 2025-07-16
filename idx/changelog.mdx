@@ -23,3 +23,27 @@ description: "Product updates and announcements"
   - Add a new ABI or manually run a new codegen
   - AND you've been using generated structs that aren't the ones provided in the trigger inputs/outputs object (i.e., you're using a nested struct from the inputs/outputs for some variable or part of the event)
 </Update>
+
+<Update label="July 15, 2025" description="CLI v0.0.78">
+  **New Feature: Multiple Listener Contracts Support**
+
+  The Sim CLI now supports defining multiple listener contracts within a single IDX application, enabling better code organization and structure.
+
+  **What's new:**
+  - You can now define listeners in separate files instead of having everything in `Main.sol`
+  - Listeners can be organized across multiple contracts for better code maintainability
+  - The `Main.sol` file still needs to contain the `Triggers` contract, but individual listeners can be defined anywhere
+  - Enhanced `sim listeners evaluate` command to target specific listeners for focused testing
+
+  **Benefits:**
+  - **Better Code Organization**: Split large applications with many listeners into manageable, separate files
+  - **Improved Maintainability**: Organize related listeners together (e.g., all DEX-specific listeners in one file)
+  - **Focused Testing**: Evaluate specific listeners without noise from other listeners in your application
+
+  **Migration:**
+  - Existing single-file applications continue to work without changes
+  - `Main.sol` must still exist and contain your `Triggers` contract
+  - Listener contracts can be moved to separate files as needed
+
+  This feature is particularly valuable for complex applications like DEX trade indexers that may have 15+ listeners and benefit from better file organization.
+</Update>
