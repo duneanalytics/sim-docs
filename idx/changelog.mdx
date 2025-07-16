@@ -47,3 +47,21 @@ description: "Product updates and announcements"
 
   This feature is particularly valuable for complex applications like DEX trade indexers that may have 15+ listeners and benefit from better file organization.
 </Update>
+
+<Update label="July 4, 2025" description="CLI v0.0.73">
+  **New Feature: Pre-Execution Triggers**
+
+  The Sim CLI now supports pre-execution triggers, allowing you to execute code _before_ a function runs instead of the default behavior of executing after.
+
+  **What's new:**
+  - Pre-triggers use corresponding `Pre-` abstract contracts (e.g., `preCreatePoolFunction`)
+  - Handlers receive a `PreFunctionContext` with access to function inputs only (outputs haven't been generated yet)
+  - Enables reactive logic that needs to run before the target function executes
+
+  **Use cases:**
+  - Emit events or perform actions based on upcoming function calls
+  - Pre-process or validate function inputs before execution
+  - Set up state or conditions that the main function execution will depend on
+
+  For detailed implementation examples and usage patterns, see the [Function Hooks documentation](https://docs.sim.dune.com/idx/listener#function-hooks).
+</Update>
