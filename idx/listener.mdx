@@ -288,11 +288,12 @@ Use `sim listeners evaluate` to see how your listener reacts to real onchain dat
 sim listeners evaluate \
   --chain-id 1 \
   --start-block 12369662 \
-  --end-block 12369670
+  --end-block 12369670 \
+  --listeners=Listener
 ```
 
 <Note>
-Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation to learn more about the available flags.
+The `--listeners=Listener` flag specifies which listener contract to evaluate. You can update this to match your specific listener contract name. Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation to learn more about the available flags.
 </Note>
 
 ## Next Steps

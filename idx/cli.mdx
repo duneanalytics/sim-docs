@@ -142,7 +142,8 @@ Runs your listener locally against historical main-chain data so you can verify 
 sim listeners evaluate \
   --start-block <START_BLOCK> \
   --chain-id <CHAIN_ID> \
-  --end-block <END_BLOCK>
+  --end-block <END_BLOCK> \
+  --listeners <LISTENER_CONTRACT>
 ```
 
 <Info>
@@ -154,6 +155,7 @@ sim listeners evaluate \
 | `--start-block` | Yes | First block to process. |
 | `--chain-id` | Conditional* | Chain ID to test against. If omitted, Sim tries to infer it from your `addTrigger` definitions. Required when your listener has triggers on multiple chains. |
 | `--end-block` | No | Last block to process. Provide this if you want to replay more than one block and observe state changes over a range. |
+| `--listeners` | No | Specific listener contract to evaluate. Accepts any listener contract within any of the Solidity files in `/listener/src`. If omitted, the command will run all listener contracts in all files. The command will fail if you specify an unknown listener. |
 
 The command compiles your listener, executes the triggers across the block range, and prints a summary such as:
 
