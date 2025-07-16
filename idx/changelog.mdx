@@ -3,10 +3,10 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
-<Update label="July 16, 2025" description="CLI Update">
+<Update label="July 16, 2025" description="CLI v0.0.79">
   **Breaking Change: Generated Struct Names Now Include Contract Names**
 
-  With the next CLI release, there will be a breaking change that impacts users who import and use generated structs from the ABI.
+  With CLI version v0.0.79 and upwards, there will be a breaking change that impacts users who import and use generated structs from the ABI.
 
   **Why this change was needed:**
   The same struct name can be used across different contracts (example: `GPv2Trade.Data` and `GPv2Interaction.Data` within the same ABI) with different definitions. Using just the struct name for generated structs prevented proper hooking on protocols like CoW Swap.
@@ -19,7 +19,7 @@ description: "Product updates and announcements"
 
   **Who is affected:**
   You'll only run into this issue if you:
-  - Update to use the new CLI
+  - Update to use CLI v0.0.79 or higher
   - Add a new ABI or manually run a new codegen
   - AND you've been using generated structs that aren't the ones provided in the trigger inputs/outputs object (i.e., you're using a nested struct from the inputs/outputs for some variable or part of the event)
 </Update>
