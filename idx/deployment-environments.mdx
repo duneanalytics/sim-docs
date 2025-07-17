@@ -30,3 +30,26 @@ Each preview deployment will get its own isolated database and unique API URL.
 <Frame caption="The Other Deployments section of your App Page is where you can find preview deployments.">
   <img src="/images/idx/deployment/other-deployments.png" />
 </Frame>
+
+## PR Flow
+
+For a more structured development process, you can use PRs on GitHub to trigger preview deployments.
+This allows for code review and collaborative testing before merging changes into the `main` branch.
+
+To start, create a new branch in your local repo and push it to GitHub.
+Then, open a pull request from your new branch to the `main` branch.
+
+<Frame caption="Open a new pull request on GitHub">
+  <img src="/images/idx/deployment/new-pr-on-github.png" />
+</Frame>
+
+Once the pull request is created, Sim IDX automatically builds a new preview deployment.
+You can find this build in the "Other Deployments" section of your App Page in the Sim dashboard.
+
+The deployment is linked to the pull request, allowing you and your team to easily access the PR on GitHub to review changes and test the isolated deployment.
+
+<Frame caption="The PR link in the deployment details.">
+  <img src="/images/idx/deployment/pr-other-deployment-sim-idx.png" />
+</Frame>
+
+After the pull request is approved and merged, a new production deployment will be created from the `main` branch.
