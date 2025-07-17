@@ -62,7 +62,7 @@ The CLI will parse the new ABI and generate a `Moonbirds.sol` file in `listeners
 
 ## 4. Configure the Listener to Decode All Events
 
-Open `listeners/src/Main.sol`. This is the core file where you define your indexing logic. We need to make two small changes to hook into the generated Moonbirds bindings.
+Open `listeners/src/Main.sol`. This is the core file where you define your indexing logic. We need to make two small changes to trigger on the generated Moonbirds bindings.
 
 The `Moonbirds.sol` file generated in the previous step includes a special abstract contract called `Moonbirds$EmitAllEvents`. By inheriting from this contract, your listener automatically gains the ability to:
 1.  React to every event defined in the Moonbirds ABI.

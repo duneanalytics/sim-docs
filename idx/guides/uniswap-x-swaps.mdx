@@ -884,7 +884,7 @@ import {IReactor} from "./interfaces/IReactor.sol";
 import {getMetadata} from "./utils/MetadataUtils.sol";
 import {FeeInjector} from "./libs/FeeInjector.sol";
 
-// This contract defines our triggers. We're listening to the pre-execution hooks
+// This contract defines our triggers. We're listening to the pre-execution triggers
 // of the four main functions on Uniswap X Reactor contracts across Ethereum, Polygon, and Base.
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {

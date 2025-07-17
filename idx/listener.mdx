@@ -147,22 +147,22 @@ function onCreatePoolFunction(...) external override {
 
 After deploying these changes, your `pool_created` table will automatically include the new `block_number` column.
 
-## Hook into Onchain Activity
+## Trigger Onchain Activity
 
-Sim IDX can hook into contract events as well as function calls, both before and after they execute. This allows you to capture a wide range of onchain activity.
+Sim IDX can trigger on contract events as well as function calls, both before and after they execute. This allows you to capture a wide range of onchain activity.
 
-To add a new hook to your listener, you'll follow a simple, five-step process:
+To add a new trigger to your listener, you'll follow a simple, five-step process:
 
-1.  **Discover the Hook**: Find the abstract contract for your target function or event in the generated files.
+1.  **Discover the Trigger**: Find the abstract contract for your target function or event in the generated files.
 2.  **Extend the Listener**: Add the abstract contract to your listener's inheritance list.
 3.  **Define a New Event**: Create a Solidity event to define your database schema.
 4.  **Implement the Handler**: Write the function required by the abstract contract to process the data and emit your event.
-5.  **Register the Trigger**: Call `addTrigger` in your `Triggers` contract to activate the hook.
+5.  **Register the Trigger**: Call `addTrigger` in your `Triggers` contract to activate the trigger.
 
-Let's walk through an example of adding a new event hook to the sample app's `Listener` contract.
+Let's walk through an example of adding a new event trigger to the sample app's `Listener` contract.
 We will extend the `Listener` to also index the `OwnerChanged` event from the Uniswap V3 Factory.
 
-### 1. Discover the Hook
+### 1. Discover the Trigger
 
 Look inside `listeners/lib/sim-idx-generated/UniswapV3Factory.sol`. You will find an abstract contract for the `OwnerChanged` event.
 
@@ -227,9 +227,9 @@ addTrigger(
 );
 ```
 
-## Function Hooks
+## Function Triggers
 
-The framework supports both post-execution and pre-execution function hooks.
+The framework supports both post-execution and pre-execution function triggers.
 
 **Post-Execution:** This is what the sample app uses with `onCreatePoolFunction`. The handler is called *after* the contract's function completes, so it has access to both `inputs` and `outputs`.
 
