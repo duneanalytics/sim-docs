@@ -9,7 +9,7 @@ description: "Product updates and announcements"
   With CLI version v0.0.79 and upwards, there will be a breaking change that impacts users who import and use generated structs from the ABI.
 
   **Why this change was needed:**
-  The same struct name can be used across different contracts (example: `GPv2Trade.Data` and `GPv2Interaction.Data` within the same ABI) with different definitions. Using just the struct name for generated structs prevented proper hooking on protocols like CoW Swap.
+  The same struct name can be used across different contracts (example: `GPv2Trade.Data` and `GPv2Interaction.Data` within the same ABI) with different definitions. Using just the struct name for generated structs prevented proper triggering on protocols like CoW Swap.
 
   **What changed:**
   We now include the contract name as part of the struct name in the generated Solidity file associated with the ABI. Instead of using `$AbiName$StructName` for the names, we now use `$AbiName$ContractName$StructName`.
@@ -63,5 +63,5 @@ description: "Product updates and announcements"
   - Pre-process or validate function inputs before execution
   - Set up state or conditions that the main function execution will depend on
 
-  For detailed implementation examples and usage patterns, see the [Function Hooks documentation](https://docs.sim.dune.com/idx/listener#function-hooks).
+  For detailed implementation examples and usage patterns, see the [Function Triggers documentation](https://docs.sim.dune.com/idx/listener#function-triggers).
 </Update>
