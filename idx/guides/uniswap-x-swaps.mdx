@@ -1,1074 +1,188 @@
 ---
 title: 'Uniswap X Swaps'
-description: 'A step-by-step guide to indexing the notoriously complex Uniswap X protocol using advanced Sim IDX patterns.'
+description: "Learn how to use Sim IDX to turn Uniswap X's gas-optimized architecture into rich, queryable data."
 ---
 
-Uniswap X is a powerful, intent-based trading protocol that offers users better pricing and protection from MEV. However, its sophisticated design, which prioritizes gas efficiency, makes it notoriously difficult to index with traditional tools.
+Uniswap X is an intent-based, auction-driven routing protocol that delivers better prices, gas-free swaps, and built-in MEV protection by letting swappers sign orders that competing fillers execute on-chain.
+The same efficiency, though, leaves most offchain indexers effectively blind.
+The data is emitted.
+It's just not in a format their offchain parsers can easily recognize.
+It's no problem for Sim IDX.
 
-This guide will walk you through building a Sim IDX app that can robustly decode and index Uniswap X trades. You'll learn how to use Sim IDX's unique ability to act as an on-chain probe, allowing it to solve complex indexing challenges that are out of reach for other platforms. We will build the exact indexer from our [Uniswap X Sample App](https://github.com/duneanalytics/sim-idx-example-uniswap-x) from scratch.
+In this guide, we'll show you how Sim IDX accomplishes this.
+
+<Note>
+**What you'll learn in this guide**
+- How the **Quoter pattern** lets an onchain listener pull fully-decoded swap data straight from Uniswap X reactors. This is something conventional offchain indexers can't do.
+- Why a **single Sim IDX listener** can index *every* Uniswap X swap, regardless of reactor type or order variant.
+- The fee-handling and onchain interaction techniques that make your indexer both **accurate and future-proof**.
+</Note>
 
 ## Why is Uniswap X Hard to Index?
 
-The core difficulty in indexing Uniswap X is in its gas-optimized design. To minimize costs for users, the protocol does not emit explicit event logs containing the final trade amounts. Instead, the data is left in an opaque, encoded format.
+The core difficulty in indexing Uniswap X stems from its order-based architecture.
+Reactors settle signed orders and verify execution, but they don't emit explicit logs of the final token amounts.
+Instead, the critical details live inside encoded calldata that only the reactors themselves can decode.
 
 This complexity is compounded by:
 
-1.  **Multiple Reactor Types**: Uniswap X uses different "reactor" contracts to handle various order types, such as Dutch auctions, linear decay orders, and limit orders. Each reactor has its own unique decoding logic. A robust indexer would need to replicate the complex decoding logic for every single reactor type, which is a significant engineering challenge.
-2.  **Opaque Order Data**: The on-chain events only provide a hash of the order and a filler address, but not the critical details like the tokens being swapped or their final amounts.
-3.  **On-Chain Decoding**: All the logic required to understand an order's final state is contained within the reactor contracts themselves. Traditional indexers, which operate off-chain, cannot easily access or execute this on-chain logic.
+1.  **Multiple Reactor Types**: Uniswap X relies on several reactor contracts, each tailored to a different kind of order with its own decoding logic. An indexer must replicate the nuances of every variant, which is a significant engineering challenge.
+2.  **Opaque Logs**: On-chain events expose only an order hash and the filler address, leaving out the tokens traded, the final amounts, and even the recipient of the swap proceeds.
+3.  **Decoded State is Private/Internal**: All the logic required to understand an order's final state is contained within the reactor contracts themselves. Traditional indexers, which operate offchain, cannot easily access or execute this on-chain logic.
 
-An attempt to index this with a traditional tool would require painstakingly re-implementing every reactor's decoding logic off-chain and keeping it in sync with any protocol upgrades. This is brittle, time-consuming, and error-prone.
+An attempt to index this with a traditional indexing tool would require painstakingly re-implementing every reactor's decoding logic offchain and keeping it in sync with any protocol upgrades.
 
 ## The Sim IDX Solution
 
-Sim IDX overcomes this challenge with a unique and elegant pattern. Because a Sim IDX listener is itself a smart contract deployed on-chain (within the Sim IDX probe environment), it can *interact* with other contracts, not just listen to their events.
+Sim IDX overcomes these challenges by fundamentally changing the relationship between the indexer and the protocol.
+Where traditional indexers are passive, off-chain observers, a **Sim IDX listener is a smart contract that lives on-chain**.
 
-This allows us to use a "Quoter" pattern:
+The listener is a smart contract, so it can do more than just read events.
+It can interact with other on-chain contracts.
+The listener can call their functions, pass them arguments, and read their return data, just like any other contract would.
 
-1.  **Act Like a Filler**: Our listener simulates the action of a trade filler by calling the reactor's `executeWithCallback` function.
-2.  **Trigger a Callback**: This call instructs the reactor to decode the order and then call a specific function, `reactorCallback`, on our own listener contract, passing the fully decoded `ResolvedOrder` as an argument.
-3.  **Capture Data via Revert**: Inside our `reactorCallback` function, we immediately `revert`. But here's the trick: we encode the `ResolvedOrder` we just received into the revert reason. We do this because we do not want to fill the order. We just want the decoded data.
-4.  **Decode the Revert**: The initial function that started this process uses a `try/catch` block to catch the deliberate revert. It then decodes the `ResolvedOrder` data from the revert reason.
+This capability lets us use an elegant technique we call the **Quoter Pattern**.
+Instead of painstakingly re-implementing Uniswap X's sophisticated decoding logic, we simply ask the Reactor to run its own logic for us.
+We treat the protocol itself as an on-demand decoding oracle.
 
-This approach treats the reactor contract as a black box. We do not need to know its internal logic. We simply use its own functionality to decode the data for us. It's a robust, elegant solution that is only possible because of Sim IDX's unique on-chain architecture.
+The following sections highlight the most unique parts of this implementation. To see the code in its entirety, we encourage you to explore the full repository.
 
-<Frame caption="The Quoter pattern: our listener calls the reactor, which calls back with the data, which we capture in a revert.">
-    <img src="https://dby10v016ygc2zna.public.blob.vercel-storage.com/uniswapx-diagram-Oq3V2w2j289yvXo5s2i3f4N1YlFk5v.png" />
-</Frame>
+<Card title="View Full Code on GitHub" icon="github" iconType="brands" href="https://github.com/duneanalytics/sim-idx-example-uniswap-x" cta="View Repository" arrow="true">
+  Explore the complete, unabridged source code for this Uniswap X indexer.
+</Card>
 
-## 1. Project Setup
+## Index by ABI, Not by Address
 
-First, create a new directory for your project and initialize a Sim IDX app.
+The first challenge in indexing Uniswap X is its scale. The protocol uses multiple Reactor contracts across several chains, and new ones can be deployed at any time. Maintaining a hardcoded list of addresses is not a scalable solution.
 
-```bash
-mkdir uniswapx-indexer
-cd uniswapx-indexer
-sim init
-```
+Sim IDX solves this with ABI-based triggers. Instead of targeting specific addresses, you can instruct your listener to trigger on *any contract* that matches a given ABI signature. This makes your indexer automatically forward-compatible.
 
-The sample app created by `sim init` comes with a `UniswapV3Factory.json` ABI. We don't need it for this guide, so let's remove it and regenerate the bindings to clean up our project.
+We achieve this with the `ChainIdAbi` helper in our `Triggers` contract. The code below sets up our listener to trigger on the `execute` function family for *any* contract on Ethereum, Polygon, and Base that implements the `IReactor` interface.
 
-```bash
-rm abis/UniswapV3Factory.json
-sim abi codegen
-```
+```solidity listeners/src/Main.sol
+contract Triggers is BaseTriggers {
+    function triggers() external virtual override {
+        Listener listener = new Listener();
 
-Next, we need the ABI for the Uniswap X Reactor. Create a file at `abis/IReactor.json` and paste the following content:
+        // Target any IReactor contract on Ethereum (1), Polygon (137), and Base (8453)
+        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteFunction());
+        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteFunction());
+        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteFunction());
 
-```json abis/IReactor.json [expandable]
-[
-  {
-    "inputs": [
-      {
-        "components": [
-          { "internalType": "bytes", "name": "order", "type": "bytes" },
-          { "internalType": "bytes", "name": "sig", "type": "bytes" }
-        ],
-        "internalType": "struct SignedOrder",
-        "name": "order",
-        "type": "tuple"
-      }
-    ],
-    "name": "execute",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          { "internalType": "bytes", "name": "order", "type": "bytes" },
-          { "internalType": "bytes", "name": "sig", "type": "bytes" }
-        ],
-        "internalType": "struct SignedOrder[]",
-        "name": "orders",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "executeBatch",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          { "internalType": "bytes", "name": "order", "type": "bytes" },
-          { "internalType": "bytes", "name": "sig", "type": "bytes" }
-        ],
-        "internalType": "struct SignedOrder[]",
-        "name": "orders",
-        "type": "tuple[]"
-      },
-      { "internalType": "bytes", "name": "callbackData", "type": "bytes" }
-    ],
-    "name": "executeBatchWithCallback",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          { "internalType": "bytes", "name": "order", "type": "bytes" },
-          { "internalType": "bytes", "name": "sig", "type": "bytes" }
-        ],
-        "internalType": "struct SignedOrder",
-        "name": "order",
-        "type": "tuple"
-      },
-      { "internalType": "bytes", "name": "callbackData", "type": "bytes" }
-    ],
-    "name": "executeWithCallback",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  }
-]
-```
-
-This ABI is intentionally concise. It defines a common interface for the `execute` functions found across all Uniswap X reactor contracts. We don't need the full, complex ABI of every individual reactor. Instead, we use this simplified interface to interact with them, which is a powerful abstraction made possible by Sim IDX's ability to trigger listeners based on ABI signatures.
-
-Finally, register the new ABI with your project. This will generate the necessary Solidity bindings.
-
-```bash
-sim abi add abis/IReactor.json
-```
-
-## 2. Define the Interfaces
-
-To work with Uniswap X's complex data structures within our Solidity listener, we first need to define them as structs and interfaces. This gives the Solidity compiler the context it needs to understand the data that our listener will receive from the reactor contracts.
-
-Create a new directory `listeners/src/interfaces` and add the following files.
-
-```solidity listeners/src/interfaces/ReactorStructs.sol
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
-
-import {IReactor} from "../interfaces/IReactor.sol";
-import {IValidationCallback} from "./IValidationCallback.sol";
-
-/// @dev generic order information
-///  should be included as the first field in any concrete order types
-struct OrderInfo {
-    // The address of the reactor that this order is targeting
-    // Note that this must be included in every order so the swapper
-    // signature commits to the specific reactor that they trust to fill their order properly
-    IReactor reactor;
-    // The address of the user which created the order
-    // Note that this must be included so that order hashes are unique by swapper
-    address swapper;
-    // The nonce of the order, allowing for signature replay protection and cancellation
-    uint256 nonce;
-    // The timestamp after which this order is no longer valid
-    uint256 deadline;
-    // Custom validation contract
-    IValidationCallback additionalValidationContract;
-    // Encoded validation params for additionalValidationContract
-    bytes additionalValidationData;
-}
-
-/// @dev tokens that need to be sent from the swapper in order to satisfy an order
-struct InputToken {
-    address token;
-    uint256 amount;
-    // Needed for dutch decaying inputs
-    uint256 maxAmount;
-}
-
-/// @dev tokens that need to be received by the recipient in order to satisfy an order
-struct OutputToken {
-    address token;
-    uint256 amount;
-    address recipient;
-}
-
-/// @dev generic concrete order that specifies exact tokens which need to be sent and received
-struct ResolvedOrder {
-    OrderInfo info;
-    InputToken input;
-    OutputToken[] outputs;
-    bytes sig;
-    bytes32 hash;
-}
-
-/// @dev external struct including a generic encoded order and swapper signature
-///  The order bytes will be parsed and mapped to a ResolvedOrder in the concrete reactor contract
-struct SignedOrder {
-    bytes order;
-    bytes sig;
+        // ... additional triggers for executeBatch, etc.
+    }
 }
 ```
 
-This file defines the core data structures used by Uniswap X. `SignedOrder` represents the opaque order data as it exists on-chain, while `ResolvedOrder` is the fully-decoded structure we aim to capture. The other structs (`OrderInfo`, `InputToken`, `OutputToken`) are components of these main structures.
+This single pattern ensures our listener will capture swaps from all current and future Uniswap X reactors without needing any code changes.
 
-```solidity listeners/src/interfaces/IReactor.sol
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+<Info>
+To learn more about `ChainAbi`, see the [Listener Patterns guide](/idx/listener/patterns).
+</Info>
 
-import "./ReactorStructs.sol";
-import "./IProtocolFeeController.sol";
+## Decode Opaque Data with the Quoter Pattern
 
-/// @notice Interface for order execution reactors
-interface IReactor {
-    /// @notice Execute a single order
-    /// @param order The order definition and valid signature to execute
-    function execute(SignedOrder calldata order) external payable;
+Once triggered, our listener receives the opaque `order` bytes. Replicating the decoding logic for every reactor type off-chain would be a massive, brittle engineering effort.
 
-    /// @notice Execute a single order using the given callback data
-    /// @param order The order definition and valid signature to execute
-    /// @param callbackData The callbackData to pass to the callback
-    function executeWithCallback(SignedOrder calldata order, bytes calldata callbackData) external payable;
+With Sim IDX, we don't have to. Because our listener is an on-chain contract, we can use the "Quoter Pattern" to have the Reactor contract decode its own data for us.
 
-    /// @notice Execute the given orders at once
-    /// @param orders The order definitions and valid signatures to execute
-    function executeBatch(SignedOrder[] calldata orders) external payable;
+This pattern is implemented in the `OrderQuoter.sol` contract, which our main `Listener` inherits from. It revolves around two key functions:
 
-    /// @notice Execute the given orders at once using a callback with the given callback data
-    /// @param orders The order definitions and valid signatures to execute
-    /// @param callbackData The callbackData to pass to the callback
-    function executeBatchWithCallback(SignedOrder[] calldata orders, bytes calldata callbackData) external payable;
+1.  The `quote` function, called by our listener's handler, simulates a fill by calling the Reactor's `executeWithCallback` inside a `try/catch` block. It knows this call will revert and is designed to catch the revert reason.
 
-    /// @notice Get the fee controller for the reactor
-    /// @return The fee controller
-    function feeController() external view returns (IProtocolFeeController);
-}
-```
-This is the Solidity version of the `IReactor.json` ABI we added earlier. It defines the common functions our listener will interact with. Notably, it includes `executeWithCallback`, which is central to our quoter pattern, and `feeController`, which we'll use to handle protocol fees.
-
-```solidity listeners/src/interfaces/IProtocolFeeController.sol
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
-
-import {ResolvedOrder, OutputToken} from "./ReactorStructs.sol";
-
-/// @notice Interface for getting fee outputs
-interface IProtocolFeeController {
-    /// @notice Get fee outputs for the given orders
-    /// @param order The orders to get fee outputs for
-    /// @return List of fee outputs to append for each provided order
-    function getFeeOutputs(ResolvedOrder memory order) external view returns (OutputToken[] memory);
-}
-```
-This interface allows our listener to call the `getFeeOutputs` function on a reactor's fee controller, if one exists. This is necessary for accurately calculating the final trade amounts.
-
-```solidity listeners/src/interfaces/IValidationCallback.sol
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
-
-import {ResolvedOrder} from "./ReactorStructs.sol";
-
-/// @notice Callback to validate an order
-interface IValidationCallback {
-    /// @notice Called by the reactor for custom validation of an order. Will revert if validation fails
-    /// @param filler The filler of the order
-    /// @param resolvedOrder The resolved order to fill
-    function validate(address filler, ResolvedOrder calldata resolvedOrder) external view;
-}
-```
-
-This final interface defines the structure for custom validation contracts that can be attached to Uniswap X orders, which is part of the `OrderInfo` struct.
-
-## 3. Implement the OrderQuoter
-
-The `OrderQuoter.sol` contract is the heart of our solution. It implements the "quoter" pattern, a powerful technique that uses Sim IDX's on-chain architecture to solve complex decoding challenges. Since our listener runs as a smart contract, it can call other contracts. The `OrderQuoter` uses this ability to ask the Uniswap X reactor to decode an order for us, effectively turning the reactor into an on-demand data oracle.
-
-Create a new file at `listeners/src/OrderQuoter.sol` and add the following code:
-
-```solidity listeners/src/OrderQuoter.sol [expandable]
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
-
-import {IReactor} from "./interfaces/IReactor.sol";
-import {ResolvedOrder, SignedOrder} from "./interfaces/ReactorStructs.sol";
-
-/// @title Originally a lens contract for UniswapX, now used as an order resolver for sim.
-/// @author Tal Vaizman (UniswapX)
-/// @notice Resolves orders and returns the current input and output token amounts required to satisfy them.
-/// @notice Chain agnostic.
-contract OrderQuoter {
-    /// @notice thrown if reactorCallback receives more than one order
-    error OrdersLengthIncorrect();
-
-    /// @notice offset bytes into the order object to the head of the order info struct
-    uint256 private constant ORDER_INFO_OFFSET = 64;
-
-    /// @notice minimum length of a resolved order object in bytes
-    uint256 private constant RESOLVED_ORDER_MIN_LENGTH = 192;
-
-    /// @notice Quote the given order, returning the ResolvedOrder object which defines
-    /// the current input and output token amounts required to satisfy it
-    /// Also bubbles up any reverts that would occur during the processing of the order
-    /// @param order abi-encoded order, including `reactor` as the first encoded struct member
-    /// @param sig The order signature
-    /// @return result The ResolvedOrder
+    ```solidity listeners/src/OrderQuoter.sol
     function quote(bytes memory order, bytes memory sig) external returns (ResolvedOrder memory result) {
+        // This call will trigger reactorCallback, which will then revert.
         try IReactor(getReactor(order)).executeWithCallback(SignedOrder(order, sig), bytes("")) {}
+        // We catch the revert and parse the data from it.
         catch (bytes memory reason) {
             result = parseRevertReason(reason);
         }
     }
+    ```
 
-    /// @notice Return the reactor of a given order (abi.encoded bytes).
-    /// @param order abi-encoded order, including `reactor` as the first encoded struct member
-    /// @return reactor
-    function getReactor(bytes memory order) internal pure returns (IReactor reactor) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            let orderInfoOffsetPointer := add(order, ORDER_INFO_OFFSET)
-            reactor := mload(add(orderInfoOffsetPointer, mload(orderInfoOffsetPointer)))
-        }
-    }
+2.  The `reactorCallback` function is the endpoint the Reactor calls on our contract. It receives the fully decoded `ResolvedOrder`, encodes it, and immediately places it into a `revert` message.
 
-    /// @notice Return the order info of a given order (abi-encoded bytes).
-    /// @param reason The revert reason
-    /// @return abi-encoded order, including `reactor` as the first encoded struct member
-    function parseRevertReason(bytes memory reason) private pure returns (ResolvedOrder memory) {
-        if (reason.length < RESOLVED_ORDER_MIN_LENGTH) {
-            /// @solidity memory-safe-assembly
-            assembly {
-                revert(add(32, reason), mload(reason))
-            }
-        } else {
-            return abi.decode(reason, (ResolvedOrder));
-        }
-    }
-
-    /// @notice Reactor callback function
-    /// @dev reverts with the resolved order as reason
-    /// @param resolvedOrders The resolved orders
+    ```solidity listeners/src/OrderQuoter.sol
     function reactorCallback(ResolvedOrder[] memory resolvedOrders, bytes memory) external pure {
         if (resolvedOrders.length != 1) {
             revert OrdersLengthIncorrect();
         }
         bytes memory order = abi.encode(resolvedOrders[0]);
-        /// @solidity memory-safe-assembly
+        // Revert with the decoded order data.
         assembly {
             revert(add(32, order), mload(order))
         }
     }
+    ```
+
+This interaction that calls a contract to make it call you back with data you capture from a deliberate revert is the heart of the solution. It's a powerful technique only possible because Sim IDX listeners operate on-chain.
+
+## Build the Perfect Event Onchain
+
+After decoding the raw order, we need to refine it into a complete and useful record. The listener acts as an on-chain data assembly line, composing other on-chain logic for accuracy and making live calls to enrich the data.
+
+First, to ensure financial accuracy, we must account for protocol fees. We do this by porting Uniswap's own on-chain fee logic into a `FeeInjector` library. Our handler calls this library to inject any applicable fees into the `ResolvedOrder`, ensuring the final amounts are perfect.
+
+```solidity listeners/src/Main.sol
+function preExecuteFunction(PreFunctionContext memory ctx, ...) external override {
+    // 1. Get the decoded order using the Quoter Pattern.
+    ResolvedOrder memory order = this.quote(inputs.order.order, inputs.order.sig);
+
+    // 2. Inject protocol fees for accuracy.
+    FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
+
+    // 3. Emit the final, perfected event.
+    emitTradesFromOrder(order, ctx.txn.call.caller);
 }
 ```
 
-You can copy the full contents of the `OrderQuoter.sol` file above.
-Let's break down and explain the key functions of this contract.
-
-```solidity
-function quote(bytes memory order, bytes memory sig) external returns (ResolvedOrder memory result) {
-    try IReactor(getReactor(order)).executeWithCallback(SignedOrder(order, sig), bytes("")) {}
-    catch (bytes memory reason) {
-        result = parseRevertReason(reason);
-    }
-}
-```
-The `quote` function is the entry point for the pattern. It calls the reactor's `executeWithCallback` function within a `try/catch` block. We anticipate that this call will revert (because our `reactorCallback` function is designed to do so), and when it does, we catch the `reason` and pass it to `parseRevertReason` to extract our data.
-
-```solidity
-function getReactor(bytes memory order) internal pure returns (IReactor reactor) {
-    /// @solidity memory-safe-assembly
-    assembly {
-        let orderInfoOffsetPointer := add(order, ORDER_INFO_OFFSET)
-        reactor := mload(add(orderInfoOffsetPointer, mload(orderInfoOffsetPointer)))
-    }
-}
-```
-This utility function uses low-level assembly to efficiently read the reactor's address directly from the encoded `order` bytes. This is necessary because the order is opaque, and this is the most gas-efficient way to identify which reactor contract we need to interact with.
-
-```solidity
-function reactorCallback(ResolvedOrder[] memory resolvedOrders, bytes memory) external pure {
-    if (resolvedOrders.length != 1) {
-        revert OrdersLengthIncorrect();
-    }
-    bytes memory order = abi.encode(resolvedOrders[0]);
-    /// @solidity memory-safe-assembly
-    assembly {
-        revert(add(32, order), mload(order))
-    }
-}
-```
-This is the function the Uniswap X reactor calls on our listener. When it's called, it receives the fully `ResolvedOrder`. We immediately `abi.encode` this data and use assembly to place it into the `revert` reason. This stops the execution flow and sends the data back to our `quote` function's `catch` block.
-
-```solidity
-function parseRevertReason(bytes memory reason) private pure returns (ResolvedOrder memory) {
-    if (reason.length < RESOLVED_ORDER_MIN_LENGTH) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            revert(add(32, reason), mload(reason))
-        }
-    } else {
-        return abi.decode(reason, (ResolvedOrder));
-    }
-}
-```
-This function safely decodes the `ResolvedOrder` from the revert reason captured by the `try/catch` block. It includes a check to ensure the data is long enough to be a valid `ResolvedOrder`; otherwise, it bubbles up the original revert reason, preserving any underlying errors from the reactor.
-
-## 4. Handle Protocol Fees
-
-To ensure the trade data we index is as accurate as possible, we must account for any protocol fees. Uniswap X reactors can have an associated `ProtocolFeeController` contract that defines these fees. The `FeeInjector.sol` library is a crucial component that queries this controller and incorporates the fees into our `ResolvedOrder`.
-
-Create a new directory `listeners/src/libs` and add the `FeeInjector.sol` file.
-
-```solidity listeners/src/libs/FeeInjector.sol [expandable]
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
-
-import {FixedPointMathLib} from "./FixedPointMathLib.sol";
-import {IProtocolFeeController} from "../interfaces/IProtocolFeeController.sol";
-import {ResolvedOrder, OutputToken} from "../interfaces/ReactorStructs.sol";
-
-library FeeInjector {
-    using FixedPointMathLib for uint256;
-
-    /// @notice thrown if two fee outputs have the same token
-    error DuplicateFeeOutput(address duplicateToken);
-    /// @notice thrown if a given fee output is greater than MAX_FEE_BPS of the order outputs
-    error FeeTooLarge(address token, uint256 amount, address recipient);
-    /// @notice thrown if a fee output token does not have a corresponding non-fee output
-    error InvalidFeeToken(address feeToken);
-    /// @notice thrown if fees are taken on both inputs and outputs
-    error InputAndOutputFees();
-
-    uint256 private constant BPS = 10_000;
-    uint256 private constant MAX_FEE_BPS = 5;
-
-    /// @notice Injects fees into an order
-    /// @dev modifies the orders to include protocol fee outputs
-    /// @param order The encoded order to inject fees into
-    function _injectFees(ResolvedOrder memory order, IProtocolFeeController feeController) internal view {
-        if (address(feeController) == address(0)) {
-            return;
-        }
-
-        OutputToken[] memory feeOutputs = feeController.getFeeOutputs(order);
-        uint256 outputsLength = order.outputs.length;
-        uint256 feeOutputsLength = feeOutputs.length;
-
-        // apply fee outputs
-        // fill new outputs with old outputs
-        OutputToken[] memory newOutputs = new OutputToken[](outputsLength + feeOutputsLength);
-
-        for (uint256 i = 0; i < outputsLength; i++) {
-            newOutputs[i] = order.outputs[i];
-        }
-
-        bool outputFeeTaken = false;
-        bool inputFeeTaken = false;
-        for (uint256 i = 0; i < feeOutputsLength; i++) {
-            OutputToken memory feeOutput = feeOutputs[i];
-            // assert no duplicates
-            for (uint256 j = 0; j < i; j++) {
-                if (feeOutput.token == feeOutputs[j].token) {
-                    revert DuplicateFeeOutput(feeOutput.token);
-                }
-            }
-
-            // assert not greater than MAX_FEE_BPS
-            uint256 tokenValue;
-            for (uint256 j = 0; j < outputsLength; j++) {
-                OutputToken memory output = order.outputs[j];
-                if (output.token == feeOutput.token) {
-                    if (inputFeeTaken) revert InputAndOutputFees();
-                    tokenValue += output.amount;
-                    outputFeeTaken = true;
-                }
-            }
-
-            // allow fee on input token as well
-            if (address(order.input.token) == feeOutput.token) {
-                if (outputFeeTaken) revert InputAndOutputFees();
-                tokenValue += order.input.amount;
-                inputFeeTaken = true;
-            }
-
-            if (tokenValue == 0) revert InvalidFeeToken(feeOutput.token);
-
-            if (feeOutput.amount > tokenValue.mulDivDown(MAX_FEE_BPS, BPS)) {
-                revert FeeTooLarge(feeOutput.token, feeOutput.amount, feeOutput.recipient);
-            }
-            unchecked {
-                newOutputs[outputsLength + i] = feeOutput;
-            }
-        }
-
-        order.outputs = newOutputs;
-    }
-}
-```
-This library demonstrates the power of composability within Sim IDX. The `_injectFees` function takes our `ResolvedOrder`, checks if a `feeController` exists, and if so, calls `getFeeOutputs` on it. It then performs validation and merges the fee outputs with the order's existing outputs, creating a complete and accurate picture of the trade's token flows. This logic is a direct adaptation of Uniswap's own on-chain fee handling, showcasing how you can port complex protocol logic directly into your listener.
-
-<Note>
-The `FeeInjector` library requires a math library. You can copy the `FixedPointMathLib.sol` from the sample app's `listeners/src/libs/` directory into your own project.
-</Note>
-
-```solidity listeners/src/libs/FixedPointMathLib.sol [expandable]
-// SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity >=0.8.0;
-
-/// @notice Arithmetic library with operations for fixed-point numbers.
-/// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol)
-/// @author Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
-library FixedPointMathLib {
-    /*//////////////////////////////////////////////////////////////
-                    SIMPLIFIED FIXED POINT OPERATIONS
-    //////////////////////////////////////////////////////////////*/
-
-    uint256 internal constant MAX_UINT256 = 2**256 - 1;
-
-    uint256 internal constant WAD = 1e18; // The scalar of ETH and most ERC20s.
-
-    function mulWadDown(uint256 x, uint256 y) internal pure returns (uint256) {
-        return mulDivDown(x, y, WAD); // Equivalent to (x * y) / WAD rounded down.
-    }
-
-    function mulWadUp(uint256 x, uint256 y) internal pure returns (uint256) {
-        return mulDivUp(x, y, WAD); // Equivalent to (x * y) / WAD rounded up.
-    }
-
-    function divWadDown(uint256 x, uint256 y) internal pure returns (uint256) {
-        return mulDivDown(x, WAD, y); // Equivalent to (x * WAD) / y rounded down.
-    }
-
-    function divWadUp(uint256 x, uint256 y) internal pure returns (uint256) {
-        return mulDivUp(x, WAD, y); // Equivalent to (x * WAD) / y rounded up.
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                    LOW LEVEL FIXED POINT OPERATIONS
-    //////////////////////////////////////////////////////////////*/
-
-    function mulDivDown(
-        uint256 x,
-        uint256 y,
-        uint256 denominator
-    ) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Equivalent to require(denominator != 0 && (y == 0 || x <= type(uint256).max / y))
-            if iszero(mul(denominator, iszero(mul(y, gt(x, div(MAX_UINT256, y)))))) {
-                revert(0, 0)
-            }
-
-            // Divide x * y by the denominator.
-            z := div(mul(x, y), denominator)
-        }
-    }
-
-    function mulDivUp(
-        uint256 x,
-        uint256 y,
-        uint256 denominator
-    ) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Equivalent to require(denominator != 0 && (y == 0 || x <= type(uint256).max / y))
-            if iszero(mul(denominator, iszero(mul(y, gt(x, div(MAX_UINT256, y)))))) {
-                revert(0, 0)
-            }
-
-            // If x * y modulo the denominator is strictly greater than 0,
-            // 1 is added to round up the division of x * y by the denominator.
-            z := add(gt(mod(mul(x, y), denominator), 0), div(mul(x, y), denominator))
-        }
-    }
-
-    function rpow(
-        uint256 x,
-        uint256 n,
-        uint256 scalar
-    ) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            switch x
-            case 0 {
-                switch n
-                case 0 {
-                    // 0 ** 0 = 1
-                    z := scalar
-                }
-                default {
-                    // 0 ** n = 0
-                    z := 0
-                }
-            }
-            default {
-                switch mod(n, 2)
-                case 0 {
-                    // If n is even, store scalar in z for now.
-                    z := scalar
-                }
-                default {
-                    // If n is odd, store x in z for now.
-                    z := x
-                }
-
-                // Shifting right by 1 is like dividing by 2.
-                let half := shr(1, scalar)
-
-                for {
-                    // Shift n right by 1 before looping to halve it.
-                    n := shr(1, n)
-                } n {
-                    // Shift n right by 1 each iteration to halve it.
-                    n := shr(1, n)
-                } {
-                    // Revert immediately if x ** 2 would overflow.
-                    // Equivalent to iszero(eq(div(xx, x), x)) here.
-                    if shr(128, x) {
-                        revert(0, 0)
-                    }
-
-                    // Store x squared.
-                    let xx := mul(x, x)
-
-                    // Round to the nearest number.
-                    let xxRound := add(xx, half)
-
-                    // Revert if xx + half overflowed.
-                    if lt(xxRound, xx) {
-                        revert(0, 0)
-                    }
-
-                    // Set x to scaled xxRound.
-                    x := div(xxRound, scalar)
-
-                    // If n is even:
-                    if mod(n, 2) {
-                        // Compute z * x.
-                        let zx := mul(z, x)
-
-                        // If z * x overflowed:
-                        if iszero(eq(div(zx, x), z)) {
-                            // Revert if x is non-zero.
-                            if iszero(iszero(x)) {
-                                revert(0, 0)
-                            }
-                        }
-
-                        // Round to the nearest number.
-                        let zxRound := add(zx, half)
-
-                        // Revert if zx + half overflowed.
-                        if lt(zxRound, zx) {
-                            revert(0, 0)
-                        }
-
-                        // Return properly scaled zxRound.
-                        z := div(zxRound, scalar)
-                    }
-                }
-            }
-        }
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        GENERAL NUMBER UTILITIES
-    //////////////////////////////////////////////////////////////*/
-
-    function sqrt(uint256 x) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            let y := x // We start y at x, which will help us make our initial estimate.
-
-            z := 181 // The "correct" value is 1, but this saves a multiplication later.
-
-            // This segment is to get a reasonable initial estimate for the Babylonian method. With a bad
-            // start, the correct # of bits increases ~linearly each iteration instead of ~quadratically.
-
-            // We check y >= 2^(k + 8) but shift right by k bits
-            // each branch to ensure that if x >= 256, then y >= 256.
-            if iszero(lt(y, 0x10000000000000000000000000000000000)) {
-                y := shr(128, y)
-                z := shl(64, z)
-            }
-            if iszero(lt(y, 0x1000000000000000000)) {
-                y := shr(64, y)
-                z := shl(32, z)
-            }
-            if iszero(lt(y, 0x10000000000)) {
-                y := shr(32, y)
-                z := shl(16, z)
-            }
-            if iszero(lt(y, 0x1000000)) {
-                y := shr(16, y)
-                z := shl(8, z)
-            }
-
-            // Goal was to get z*z*y within a small factor of x. More iterations could
-            // get y in a tighter range. Currently, we will have y in [256, 256*2^16).
-            // We ensured y >= 256 so that the relative difference between y and y+1 is small.
-            // That's not possible if x < 256 but we can just verify those cases exhaustively.
-
-            // Now, z*z*y <= x < z*z*(y+1), and y <= 2^(16+8), and either y >= 256, or x < 256.
-            // Correctness can be checked exhaustively for x < 256, so we assume y >= 256.
-            // Then z*sqrt(y) is within sqrt(257)/sqrt(256) of sqrt(x), or about 20bps.
-
-            // For s in the range [1/256, 256], the estimate f(s) = (181/1024) * (s+1) is in the range
-            // (1/2.84 * sqrt(s), 2.84 * sqrt(s)), with largest error when s = 1 and when s = 256 or 1/256.
-
-            // Since y is in [256, 256*2^16), let a = y/65536, so that a is in [1/256, 256). Then we can estimate
-            // sqrt(y) using sqrt(65536) * 181/1024 * (a + 1) = 181/4 * (y + 65536)/65536 = 181 * (y + 65536)/2^18.
-
-            // There is no overflow risk here since y < 2^136 after the first branch above.
-            z := shr(18, mul(z, add(y, 65536))) // A mul() is saved from starting z at 181.
-
-            // Given the worst case multiplicative error of 2.84 above, 7 iterations should be enough.
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-            z := shr(1, add(z, div(x, z)))
-
-            // If x+1 is a perfect square, the Babylonian method cycles between
-            // floor(sqrt(x)) and ceil(sqrt(x)). This statement ensures we return floor.
-            // See: https://en.wikipedia.org/wiki/Integer_square_root#Using_only_integer_division
-            // Since the ceil is rare, we save gas on the assignment and repeat division in the rare case.
-            // If you don't care whether the floor or ceil square root is returned, you can remove this statement.
-            z := sub(z, lt(div(x, z), z))
-        }
-    }
-
-    function unsafeMod(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Mod x by y. Note this will return
-            // 0 instead of reverting if y is zero.
-            z := mod(x, y)
-        }
-    }
-
-    function unsafeDiv(uint256 x, uint256 y) internal pure returns (uint256 r) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Divide x by y. Note this will return
-            // 0 instead of reverting if y is zero.
-            r := div(x, y)
-        }
-    }
-
-    function unsafeDivUp(uint256 x, uint256 y) internal pure returns (uint256 z) {
-        /// @solidity memory-safe-assembly
-        assembly {
-            // Add 1 to x * y if x % y > 0. Note this will
-            // return 0 instead of reverting if y is zero.
-            z := add(gt(mod(x, y), 0), div(x, y))
-        }
-    }
-}
-```
-
-## 5. Implement the Main Listener
-
-Now, we'll create the main listener contract that ties everything together. It will define the triggers, inherit from `OrderQuoter`, and implement the handlers that use the `quote` and `_injectFees` functions to emit our final `Swap` event.
-
-### Utility Contracts
-
-First, let's add some helper utilities for fetching token metadata and performing ABI checks. This is another example of a powerful Sim IDX pattern: your listener can call other contracts to enrich its data.
-
-Create a `listeners/src/utils` directory and add the following files:
-
-```solidity listeners/src/utils/ABIUtils.sol
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
-
-/// @notice Checks if a bytes type returned from a call can represent a string.
-/// @param b The bytes type.
-/// @return result true if it can represent a string, otherwise false.
-function canBeString(bytes memory b) pure returns (bool result) {
-    /// @solidity memory-safe-assembly
-    assembly {
-        let size := mload(b)
-
-        switch gt(size, 63)
-        case 0 { result := 0 }
-        default {
-            // sub(mload(b), 64) is the returndata length minus the 2 first words (offset and string size).
-            // mload(add(b, 64)) is the size of the string, written in the 2nd word.
-            // We check whether the size of the string is smaller or equal than the size of the returndata part corresponding to the string.
-            // Since we cannot do greater or equal, we use sub(mload(b), 63) instead of sub(mload(b), 64).
-            result := gt(sub(mload(b), 63), mload(add(b, 64)))
-        }
-    }
-}
-
-/// @notice Checks if a bytes type returned from a call can represent a uint256.
-/// @param b The bytes type.
-/// @return result true if it can represent a uint256, otherwise false.
-function canBeUint256(bytes memory b) pure returns (bool result) {
-    return b.length == 32;
-}
-
-/// @notice Checks if a bytes type returned from a call can represent an address.
-/// @param b The bytes type.
-/// @return result true if it can represent an address, otherwise false.
-function canBeAddress(bytes memory b) pure returns (bool result) {
-    return b.length <= 32 && uint256(bytes32(b)) >> 160 == 0;
-}
-```
-This utility provides safe checks to determine if raw `bytes` returned from a contract call can be decoded into common types like `string`, `uint256`, or `address`.
-
-```solidity listeners/src/utils/MetadataUtils.sol
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.2 < 0.9.0;
-
-import {canBeString, canBeUint256} from "./ABIUtils.sol";
-
-/// @notice Returns the ERC20 symbol of an ERC20 token.
-/// @param tokenAddress The token's address.
-/// @return symbol The ERC20 decimals.
-function getSymbol(address tokenAddress) returns (string memory symbol) {
-    (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("symbol()"));
-
-    if (success && canBeString(data)) {
-        symbol = abi.decode(data, (string));
-    } else {
-        return "";
-    }
-}
-
-/// @notice Returns the ERC20 name of an ERC20 token.
-/// @param tokenAddress The token's address.
-/// @return name The ERC20 decimals.
-function getName(address tokenAddress) returns (string memory name) {
-    (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("name()"));
-
-    if (success && canBeString(data)) {
-        name = abi.decode(data, (string));
-    } else {
-        return "";
-    }
-}
-
-/// @notice Returns the ERC20 decimals of an ERC20 token.
-/// @param tokenAddress The token's address.
-/// @return decimals The ERC20 decimals or 18 if the call was unsuccessful.
-function getDecimals(address tokenAddress) returns (uint256 decimals) {
-    (bool success, bytes memory data) = tokenAddress.call(abi.encodeWithSignature("decimals()"));
-
-    if (success && canBeUint256(data)) {
-        decimals = abi.decode(data, (uint256));
-    } else {
-        return 18;
-    }
-}
-
-/// @notice Returns the ERC20Metadata components of an ERC20 token.
-/// @param addr The token's address.
-/// @return The ERC20 name.
-/// @return The ERC20 symbol.
-/// @return The ERC20 decimals.
-function getMetadata(address addr) returns (string memory, string memory, uint256) {
-    return (getName(addr), getSymbol(addr), getDecimals(addr));
-}
-```
-
-`MetadataUtils.sol` uses low-level `call` to interact with any ERC-20 token contract and retrieve its name, symbol, and decimals, enriching our final event with human-readable data.
-
-### The `Main.sol` Contract
-
-Finally, replace the content of `listeners/src/Main.sol` with the complete listener implementation:
-
-```solidity listeners/src/Main.sol [expandable]
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
-
-import "sim-idx-sol/Simidx.sol";
-import "sim-idx-generated/Generated.sol";
-import {OrderQuoter} from "./OrderQuoter.sol";
-import {ResolvedOrder, InputToken, OutputToken} from "./interfaces/ReactorStructs.sol";
-import {IReactor} from "./interfaces/IReactor.sol";
-import {getMetadata} from "./utils/MetadataUtils.sol";
-import {FeeInjector} from "./libs/FeeInjector.sol";
-
-// This contract defines our triggers. We're listening to the pre-execution triggers
-// of the four main functions on Uniswap X Reactor contracts across Ethereum, Polygon, and Base.
-contract Triggers is BaseTriggers {
-    function triggers() external virtual override {
-        Listener listener = new Listener();
-        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteFunction());
-        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
-        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
-        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
-        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteFunction()); // Polygon
-        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
-        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
-        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
-        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteFunction()); // Base
-        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
-        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
-        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
-    }
-}
-
-// Our main listener contract inherits the logic from OrderQuoter and the generated IReactor interfaces.
-contract Listener is
-    OrderQuoter,
-    IReactor$PreExecuteFunction,
-    IReactor$PreExecuteBatchFunction,
-    IReactor$PreExecuteBatchWithCallbackFunction,
-    IReactor$PreExecuteWithCallbackFunction
-{
-    bytes32 internal txnHash;
-
-    // This struct will be flattened into our database table.
-    struct SwapData {
-        uint64 chainId;
-        bytes32 txnHash;
-        uint64 blockNumber;
-        uint64 blockTimestamp;
-        address makerToken;
-        uint256 makerAmt;
-        string makerTokenSymbol;
-        string makerTokenName;
-        uint64 makerTokenDecimals;
-        address takerToken;
-        uint256 takerAmt;
-        string takerTokenSymbol;
-        string takerTokenName;
-        uint64 takerTokenDecimals;
-        address txnOriginator;
-        address maker;
-        address taker;
-        address reactor;
-    }
-
-    event Swap(SwapData);
-
-    // Handler for single order execution.
-    function preExecuteFunction(PreFunctionContext memory ctx, IReactor$ExecuteFunctionInputs memory inputs)
-        external
-        override
-    {
-        txnHash = ctx.txn.hash;
-        // Call the quote function to get the resolved order.
-        ResolvedOrder memory order = this.quote(inputs.order.order, inputs.order.sig);
-        // Inject protocol fees if a fee controller is present.
-        FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
-        emitTradesFromOrder(order, ctx.txn.call.caller);
-    }
-
-    // Handler for batch order execution.
-    function preExecuteBatchFunction(PreFunctionContext memory ctx, IReactor$ExecuteBatchFunctionInputs memory inputs)
-        external
-        override
-    {
-        txnHash = ctx.txn.hash;
-        for (uint256 i = 0; i < inputs.orders.length; i++) {
-            ResolvedOrder memory order = this.quote(inputs.orders[i].order, inputs.orders[i].sig);
-            FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
-            emitTradesFromOrder(order, ctx.txn.call.caller);
-        }
-    }
+Next, we enrich the data. Instead of just storing token addresses, we can get human-readable symbols and names. The listener makes a live `call` to each token contract to retrieve its metadata.
+
+```solidity listeners/src/Main.sol
+function emitTradesFromOrder(ResolvedOrder memory order, address taker) internal {
+    (InputToken memory input, OutputToken memory output) = getIoTokensFromOrder(order);
     
-    // Identical logic for the other batch function.
-    function preExecuteBatchWithCallbackFunction(
-        PreFunctionContext memory ctx,
-        IReactor$ExecuteBatchWithCallbackFunctionInputs memory inputs
-    ) external override {
-        txnHash = ctx.txn.hash;
-        for (uint256 i = 0; i < inputs.orders.length; i++) {
-            ResolvedOrder memory order = this.quote(inputs.orders[i].order, inputs.orders[i].sig);
-            FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
-            emitTradesFromOrder(order, ctx.txn.call.caller);
-        }
-    }
+    // Make live on-chain calls to get token metadata.
+    (string memory makingTokenSymbol, string memory makingTokenName, uint256 makingTokenDecimals) =
+        getMetadata(input.token);
+    (string memory takingTokenSymbol, string memory takingTokenName, uint256 takingTokenDecimals) =
+        getMetadata(output.token);
 
-    // Handler for single order execution with a callback.
-    function preExecuteWithCallbackFunction(
-        PreFunctionContext memory ctx,
-        IReactor$ExecuteWithCallbackFunctionInputs memory inputs
-    ) external override {
-        // We add this check to avoid re-processing our own call from quote().
-        if (ctx.txn.call.caller != address(this)) {
-            txnHash = ctx.txn.hash;
-            ResolvedOrder memory order = this.quote(inputs.order.order, inputs.order.sig);
-            FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
-            emitTradesFromOrder(order, ctx.txn.call.caller);
-        }
-    }
-    
-    // Helper to emit the final event.
-    function emitTradesFromOrder(ResolvedOrder memory order, address taker) internal {
-        (InputToken memory input, OutputToken memory output) = getIoTokensFromOrder(order);
-        (string memory makingTokenSymbol, string memory makingTokenName, uint256 makingTokenDecimals) =
-            input.token == address(0) ? ("ETH", "Ether", 18) : getMetadata(input.token);
-        (string memory takingTokenSymbol, string memory takingTokenName, uint256 takingTokenDecimals) =
-            output.token == address(0) ? ("ETH", "Ether", 18) : getMetadata(output.token);
-
-        emit Swap(
-            SwapData(
-                uint64(block.chainid),
-                txnHash,
-                uint64(block.number),
-                uint64(block.timestamp),
-                input.token,
-                input.amount,
-                makingTokenSymbol,
-                makingTokenName,
-                uint64(makingTokenDecimals),
-                output.token,
-                output.amount,
-                takingTokenSymbol,
-                takingTokenName,
-                uint64(takingTokenDecimals),
-                tx.origin,
-                output.recipient, // maker
-                taker,
-                address(order.info.reactor)
-            )
-        );
-    }
-
-    function getIoTokensFromOrder(ResolvedOrder memory order)
-        internal
-        pure
-        returns (InputToken memory input, OutputToken memory output)
-    {
-        input = order.input;
-        uint256 outputIndex;
-        uint256 outputAmount;
-        unchecked {
-            for (uint256 i = 0; i < order.outputs.length; i++) {
-                if (order.outputs[i].recipient == order.info.swapper) return (input, order.outputs[i]);
-                if (order.outputs[i].amount > outputAmount) {
-                    outputIndex = i;
-                    outputAmount = order.outputs[i].amount;
-                }
-            }
-        }
-        output = order.outputs[outputIndex];
-        return (input, output);
-    }
+    // ... emit final event with enriched data
 }
 ```
 
-<Info>
-We are using `ChainIdAbi` to trigger our listener on any contract matching the `IReactor` ABI, which covers all Uniswap X reactors on the specified chains. Read more about this pattern in the [Listener Patterns guide](/idx/listener/patterns).
-</Info>
+This on-chain assembly process that consists of decoding, correcting for fees, and enriching with live metadata creates a complete data record before it's written to the database.
 
-## 6. Build and Test
+## Define Your API Directly in Solidity
 
-Your listener is now complete. Build the project to compile the contracts and generate the corresponding database schema for the API.
+The final step in the Sim IDX workflow demonstrates its most powerful abstraction: your on-chain `event` definition *is* your API schema.
 
-```bash
-sim build
+In our `Listener` contract, we define a `SwapData` struct and a `Swap` event. This struct contains all the decoded, fee-corrected, and enriched data points we assembled in the previous steps.
+
+```solidity listeners/src/Main.sol
+struct SwapData {
+    uint64 chainId;
+    bytes32 txnHash;
+    address makerToken;
+    uint256 makerAmt;
+    string makerTokenSymbol;
+    // ... all other fields
+}
+
+event Swap(SwapData);
+
+function emitTradesFromOrder(ResolvedOrder memory order, address taker) internal {
+    // ... logic to populate SwapData struct ...
+
+    emit Swap(/* populated SwapData struct */);
+}
 ```
 
-You can test your listener against historical data. For example, to test against a known Uniswap X transaction on Base:
+When this `Swap` event is emitted, Sim IDX automatically creates a `swap` table in your database with columns matching the fields in `SwapData`. It then generates a type-safe Drizzle schema for you to use in your API.
 
-```bash
-sim listeners evaluate --chain-id=1 --start-block=22920027
-```
-You should see a `Swap` event in the output, confirming your logic is working correctly.
-
-## 7. Develop APIs
-
-With the listener logic in place, the final step is to serve the indexed data via an API.
-Replace the content of `apis/src/index.ts` with the following to create an endpoint for your `Swap` data:
+The result is that your API code becomes trivially simple. You can query your `swap` table without writing any complex data transformation pipelines or ORM configurations.
 
 ```typescript apis/src/index.ts
 import { swap } from "./db/schema/Listener";
@@ -1090,21 +204,11 @@ app.get("/*", async (c) => {
 export default app;
 ```
 
-Now that you've updated the `index.ts` file, you can run `sim build` once again to confirm that everything is building correctly.
-
-## Deploy Your App
-
-After making all of the changes above, it's time to ship your new indexer.
-
-<Columns cols={1}>
-  <Card title="Full Deployment Guide" href="/idx/deployment">
-    Follow the step-by-step guide if you need a refresher on the deployment process.
-  </Card>
-</Columns>
+From a complex, gas-optimized protocol to a simple, queryable API, the entire process is orchestrated through on-chain logic. Your work as a developer is focused where it matters: in Solidity.
 
 ## Conclusion
 
-You have successfully built an indexer for one of the most complex DeFi protocols. This guide demonstrates the power of Sim IDX's architecture. By enabling your listener to act as an on-chain contract, you can solve sophisticated indexing problems with surprisingly simple and robust code.
+You have successfully designed an indexer for one of DeFi's most complex protocols. This guide demonstrates the power of Sim IDX's architecture. By enabling your listener to act as an on-chain contract, you can solve sophisticated indexing problems with surprisingly simple and robust code.
 
 This "Quoter" pattern can be adapted to any protocol where data is resolved through on-chain logic rather than emitted in simple events.
 
@@ -1116,3 +220,4 @@ This "Quoter" pattern can be adapted to any protocol where data is resolved thro
     Dive deeper into advanced listener patterns and techniques.
   </Card>
 </Columns>
+
