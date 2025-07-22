@@ -19,6 +19,8 @@ The `chainAbi` helper allows you to trigger your listener on any contract that m
 The example below shows how to trigger the `onBurnEvent` handler for any contract on Ethereum that matches the `UniswapV3Pool` ABI. The `UniswapV3Pool$Abi()` is a helper struct that is automatically generated from that ABI file.
 
 ```solidity Main.sol
+import "./UniswapPoolListener.sol";
+
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {
         UniswapPoolListener listener = new UniswapPoolListener();
@@ -28,7 +30,7 @@ contract Triggers is BaseTriggers {
 }
 ```
 
-```solidity Listener.sol
+```solidity UniswapPoolListener.sol
 contract UniswapPoolListener is UniswapV3Pool$OnBurnEvent {
     event PoolBurn(address indexed poolAddress, address owner, int24 tickLower, int24 tickUpper, uint128 amount);
 
@@ -54,6 +56,8 @@ The `chainGlobal` helper creates triggers that are not tied to any specific cont
 The framework provides a built-in abstract contract, `Raw$OnBlock`, for this purpose. First, add it to your listener's inheritance list, then implement the `onBlock` handler and register the trigger.
 
 ```solidity Main.sol
+import "./MyBlockListener.sol";
+
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {
         MyBlockListener listener = new MyBlockListener();

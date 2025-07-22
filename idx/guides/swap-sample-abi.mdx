@@ -52,10 +52,17 @@ After the command completes you will see the updated files in `listeners/lib/sim
 
 ## 5. Update the listener contract to inherit the new functionality
 
-Open `listeners/src/Main.sol` and update the `Listener` contract so that it inherits from the abstract contracts generated for your ABI. For example, to react to the `Transfer` event of USDC the inheritance line might look like this:
+Create a new file at `listeners/src/USDCListener.sol`.
+Next, create a new contract so that it inherits from the abstract contracts generated for your ABI. For example, to react to the `Transfer` event of USDC the inheritance line might look like this:
 
-```solidity Main.sol
-contract Listener is USDC$OnTransferEvent {
+```solidity USDCListener.sol
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
+
+contract USDCListener is USDC$OnTransferEvent {
     event USDCTransfer(
         uint64  chainId,
         address from,
@@ -81,13 +88,26 @@ Add or modify event definitions to capture the onchain data you want persisted a
 
 ## 6. Register triggers for the new contract
 
-In the `Triggers` contract within the same `Main.sol` file, replace the existing `addTrigger` call so that it points to the USDC contract address on Ethereum and references the helper selector exposed by the listener:
+In the `Main.sol` file, you now need to import your new `USDCListener` and update the `Triggers` contract to use it.
+In the `Triggers` contract, replace the existing `addTrigger` call so that it points to the USDC contract address on Ethereum and references the helper selector exposed by the listener:
 
 ```solidity Main.sol
-addTrigger(
-    chainContract(Chains.Ethereum, 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48),
-    listener.triggerOnTransferEvent()
-);
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
+import "./USDCListener.sol";
+
+contract Triggers is BaseTriggers {
+    function triggers() external virtual override {
+        USDCListener listener = new USDCListener();
+        addTrigger(
+            chainContract(Chains.Ethereum, 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48),
+            listener.triggerOnTransferEvent()
+        );
+    }
+}
 ```
 
 Want to listen on multiple networks (e.g. Base)? Simply add additional `addTrigger` calls with the appropriate chain name from the `Chains` enum (for example, `Chains.Base`) and contract address. You can find the list of supported chains at [sim.dune.com/chains](https://sim.dune.com/chains).
@@ -100,7 +120,7 @@ Before deploying, replay historical chain data to confirm that the new triggers 
 sim listeners evaluate \
   --chain-id 1 \
   --start-block <BLOCK_NUMBER> \
-  --listeners=Listener
+  --listeners=USDCListener
   # --end-block   <BLOCK_NUMBER>   # optional, evaluates a single block if omitted
 ```
 

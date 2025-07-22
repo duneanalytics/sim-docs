@@ -29,8 +29,8 @@ The indexing logic is primarily located in `listeners/src/`.
 
 | Contract    | Purpose                                                                                                                                     | Location               |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `Triggers`  | Registers all triggers via `addTrigger`. Contains no business logic.                                                                        | Must be in `Main.sol`. |
-| Listener(s) | One or more contracts that implement handler logic and emit events. They can have any name and be defined in any `.sol` file within `src/`. | `listeners/src/`       |
+| `Triggers`  | Registers all triggers via `addTrigger`. Must be named `Triggers` and defined in `Main.sol`.                                                      | `listeners/src/Main.sol` |
+| Listener(s) | One or more contracts that implement handler logic and emit events. They can have any name and be defined in any `.sol` file within `listeners/src/`. | `listeners/src/`       |
 
 Let's break the `Main.sol` file from the sample app down step-by-step.
 
@@ -39,51 +39,77 @@ Let's break the `Main.sol` file from the sample app down step-by-step.
 ```solidity
 import "sim-idx-sol/Simidx.sol";
 import "sim-idx-generated/Generated.sol";
+import "./UniswapV3FactoryListener.sol";
 ```
 
-These two imports pull in everything provided by the **Sim IDX framework**. `Simidx.sol` provides core helpers, while `Generated.sol` contains the Solidity code created from your ABIs.
+These two imports pull in everything provided by the **Sim IDX framework**.
+`Simidx.sol` provides core helpers, while `Generated.sol` contains the Solidity code created from your ABIs.
+The `./UniswapV3FactoryListener.sol` import brings in the listener contract from a separate file.
 
 ### Triggers Contract
 
 This contract tells Sim IDX when to run your code using a **trigger**, which specifies a target contract and the handler to call.
+The `Triggers` contract must be named `Triggers` and must be located in `listeners/src/Main.sol`.
 
 <Note>
 You can also use helpers like `chainAbi` and `chainGlobal`.
 For other trigger types, see the [Listener Patterns](/idx/listener/patterns) page.
 </Note>
 
-```solidity
+```solidity Main.sol
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {
-        Listener listener = new Listener();
-        addTrigger(chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnCreatePoolFunction());
-        addTrigger(chainContract(Chains.Unichain, 0x1F98400000000000000000000000000000000003), listener.triggerOnCreatePoolFunction());
-        addTrigger(chainContract(Chains.Base, 0x33128a8fC17869897dcE68Ed026d694621f6FDfD), listener.triggerOnCreatePoolFunction());
+        UniswapV3FactoryListener listener = new UniswapV3FactoryListener();
+        addTrigger(
+            chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+            listener.triggerOnCreatePoolFunction()
+        );
+        addTrigger(
+            chainContract(Chains.Unichain, 0x1F98400000000000000000000000000000000003),
+            listener.triggerOnCreatePoolFunction()
+        );
+        addTrigger(
+            chainContract(Chains.Base, 0x33128a8fC17869897dcE68Ed026d694621f6FDfD),
+            listener.triggerOnCreatePoolFunction()
+        );
     }
 }
 ```
 
 -   **`BaseTriggers`**: An abstract contract from `Simidx.sol` that provides the `addTrigger` helper.
 -   **`triggers()`**: The required function where you register all your triggers.
+-   **`new UniswapV3FactoryListener()`**: The listener contract is instantiated from its own contract type.
 -   **`chainContract(...)`**: This helper function uses the `Chains` enum for readability. The sample app registers the same trigger for Ethereum, Base, and Unichain, demonstrating how to monitor a contract across multiple networks.
 
 ### Listener Contract
 
-This is where you implement your business logic. The sample app uses the name `Listener`.
+This is where you implement your business logic.
+The sample app places this logic in `listeners/src/UniswapV3FactoryListener.sol`.
 
-```solidity
-contract Listener is UniswapV3Factory$OnCreatePoolFunction {
+```solidity UniswapV3FactoryListener.sol
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-generated/Generated.sol";
+
+/// Index calls to the UniswapV3Factory.createPool function on Ethereum
+/// To hook on more function calls, specify that this listener should implement that interface and follow the compiler errors.
+contract UniswapV3FactoryListener is UniswapV3Factory$OnCreatePoolFunction {
+    /// Emitted events are indexed.
+    /// To change the data which is indexed, modify the event or add more events.
     event PoolCreated(uint64 chainId, address caller, address pool, address token0, address token1, uint24 fee);
 
+    /// The handler called whenever the UniswapV3Factory.createPool function is called.
+    /// Within here you write your indexing specific logic (e.g., call out to other contracts to get more information).
+    /// The only requirement for handlers is that they have the correct signature, but usually you will use generated interfaces to help write them.
     function onCreatePoolFunction(
         FunctionContext memory ctx,
         UniswapV3Factory$CreatePoolFunctionInputs memory inputs,
         UniswapV3Factory$CreatePoolFunctionOutputs memory outputs
-    )
-        external
-        override
-    {
-        emit PoolCreated(uint64(block.chainid), ctx.txn.call.callee, outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee);
+    ) external override {
+        emit PoolCreated(
+            uint64(block.chainid), ctx.txn.call.callee, outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee
+        );
     }
 }
 ```
@@ -91,7 +117,9 @@ contract Listener is UniswapV3Factory$OnCreatePoolFunction {
 -   **Inheritance**: The listener extends an abstract contract (`UniswapV3Factory$OnCreatePoolFunction`) that is automatically generated from your ABI. This provides the required handler function signature and typed structs for `inputs` and `outputs`.
 -   **Events**: Emitting an event like `PoolCreated` defines the shape of your database.
 
-While the sample app uses the generic name `Listener`, you can and should use more descriptive names for your contracts (e.g., `UniswapV3Listener`). For larger projects, you can even split logic into multiple listener contracts, each in its own `.sol` file within the `src/` directory.
+The sample app uses the descriptive name `UniswapV3FactoryListener`.
+You should use descriptive names for your contracts.
+For larger projects, you can even split logic into multiple listener contracts, each in its own `.sol` file within the `src/` directory.
 
 ## Define and Emit Events
 
@@ -159,7 +187,7 @@ To add a new trigger to your listener, you'll follow a simple, five-step process
 4.  **Implement the Handler**: Write the function required by the abstract contract to process the data and emit your event.
 5.  **Register the Trigger**: Call `addTrigger` in your `Triggers` contract to activate the trigger.
 
-Let's walk through an example of adding a new event trigger to the sample app's `Listener` contract.
+Let's walk through an example of adding a new event trigger to the sample app's `UniswapV3FactoryListener` contract.
 We will extend the `Listener` to also index the `OwnerChanged` event from the Uniswap V3 Factory.
 
 ### 1. Discover the Trigger
@@ -175,10 +203,10 @@ abstract contract UniswapV3Factory$OnOwnerChangedEvent {
 
 ### 2. Extend the Listener
 
-Add `UniswapV3Factory$OnOwnerChangedEvent` to the inheritance list of the `Listener` contract in `Main.sol`.
+Add `UniswapV3Factory$OnOwnerChangedEvent` to the inheritance list of the `UniswapV3FactoryListener` contract in `UniswapV3FactoryListener.sol`.
 
-```solidity
-contract Listener is
+```solidity UniswapV3FactoryListener.sol
+contract UniswapV3FactoryListener is
     UniswapV3Factory$OnCreatePoolFunction, // existing
     UniswapV3Factory$OnOwnerChangedEvent   // new
 {
@@ -188,7 +216,7 @@ contract Listener is
 
 ### 3. Define a New Event
 
-Inside the `Listener` contract, add a new event to define the schema for the `owner_changed` table.
+Inside the `UniswapV3FactoryListener` contract, add a new event to define the schema for the `owner_changed` table.
 
 ```solidity
 event OwnerChanged(
@@ -200,7 +228,7 @@ event OwnerChanged(
 
 ### 4. Implement the Handler
 
-Implement the `onOwnerChangedEvent` function required by the abstract contract, also inside `Listener`.
+Implement the `onOwnerChangedEvent` function required by the abstract contract, also inside `UniswapV3FactoryListener`.
 
 ```solidity
 function onOwnerChangedEvent(
@@ -217,10 +245,16 @@ function onOwnerChangedEvent(
 
 ### 5. Register the Trigger
 
-Finally, add a new trigger for this handler in your `Triggers` contract.
+Finally, add a new trigger for this handler in your `Triggers` contract within `Main.sol`. You will need to instantiate the listener first.
 
-```solidity
+```solidity Main.sol
 // In Triggers.triggers()
+UniswapV3FactoryListener listener = new UniswapV3FactoryListener();
+
+addTrigger(
+    chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+    listener.triggerOnCreatePoolFunction() // existing trigger
+);
 addTrigger(
     chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
     listener.triggerOnOwnerChangedEvent() // new trigger
@@ -233,10 +267,16 @@ The framework supports both post-execution and pre-execution function triggers.
 
 **Post-Execution:** This is what the sample app uses with `onCreatePoolFunction`. The handler is called *after* the contract's function completes, so it has access to both `inputs` and `outputs`.
 
-**Pre-Execution:** To react to a function *before* it executes, you use the corresponding `Pre-` abstract contract (e.g., `preCreatePoolFunction`). The handler receives a `PreFunctionContext` and only has access to the function's `inputs`, as outputs have not yet been generated.
+**Pre-Execution:** To react to a function *before* it executes, you use the corresponding `Pre-` abstract contract (e.g., `preCreatePoolFunction`). The handler receives a `PreFunctionContext` and only has access to the function's `inputs`, as outputs have not yet been generated. This logic can live in its own file.
 
-```solidity
-contract Listener is UniswapV3Factory$PreCreatePoolFunction {
+```solidity UniswapV3FactoryPreExecutionListener.sol
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-sol/Simidx.sol";
+import "sim-idx-generated/Generated.sol";
+
+contract UniswapV3FactoryPreExecutionListener is UniswapV3Factory$PreCreatePoolFunction {
     // Fires *before* createPool executes
     event PoolWillBeCreated(
         uint64  chainId,
@@ -260,10 +300,20 @@ contract Listener is UniswapV3Factory$PreCreatePoolFunction {
         );
     }
 }
+```
+
+You would then import and register this new listener in your `Triggers` contract inside `Main.sol`.
+
+```solidity Main.sol
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.13;
+
+import "sim-idx-sol/Simidx.sol";
+import "./UniswapV3FactoryPreExecutionListener.sol";
 
 contract Triggers is BaseTriggers {
     function triggers() external override {
-        Listener listener = new Listener();
+        UniswapV3FactoryPreExecutionListener listener = new UniswapV3FactoryPreExecutionListener();
 
         address factory = 0x1F98431c8aD98523631AE4a59f267346ea31F984; // Uniswap V3 Factory (Ethereum)
 
@@ -289,11 +339,11 @@ sim listeners evaluate \
   --chain-id 1 \
   --start-block 12369662 \
   --end-block 12369670 \
-  --listeners=Listener
+  --listeners=UniswapV3FactoryListener
 ```
 
 <Note>
-The `--listeners=Listener` flag specifies which listener contract to evaluate. You can update this to match your specific listener contract name. Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation to learn more about the available flags.
+The `--listeners` flag specifies which listener contract to evaluate. You can update this to match your specific listener contract name. Visit the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation to learn more about the available flags.
 </Note>
 
 ## Next Steps
