@@ -3,13 +3,13 @@ title: 'Uniswap X Swaps'
 description: "Learn how to use Sim IDX to turn Uniswap X's gas-optimized architecture into rich, queryable data."
 ---
 
-Uniswap X is an intent-based, auction-driven routing protocol that delivers better prices, gas-free swaps, and built-in MEV protection by letting swappers sign orders that competing fillers execute on-chain.
+Uniswap X is an intent-based, auction-driven routing protocol that delivers better prices, gas-free swaps, and built-in MEV protection by letting swappers sign orders that competing fillers execute onchain.
 The same efficiency, though, leaves most offchain indexers effectively blind.
 The data is emitted.
 It's just not in a format their offchain parsers can easily recognize.
 It's no problem for Sim IDX.
 
-In this guide, we'll show you how Sim IDX accomplishes this.
+This guide breaks down exactly how Sim IDX's unique onchain architecture turns this challenge into a straightforward indexing task.
 
 <Note>
 **What you'll learn in this guide**
@@ -27,18 +27,18 @@ Instead, the critical details live inside encoded calldata that only the reactor
 This complexity is compounded by:
 
 1.  **Multiple Reactor Types**: Uniswap X relies on several reactor contracts, each tailored to a different kind of order with its own decoding logic. An indexer must replicate the nuances of every variant, which is a significant engineering challenge.
-2.  **Opaque Logs**: On-chain events expose only an order hash and the filler address, leaving out the tokens traded, the final amounts, and even the recipient of the swap proceeds.
-3.  **Decoded State is Private/Internal**: All the logic required to understand an order's final state is contained within the reactor contracts themselves. Traditional indexers, which operate offchain, cannot easily access or execute this on-chain logic.
+2.  **Opaque Logs**: onchain events expose only an order hash and the filler address, leaving out the tokens traded, the final amounts, and even the recipient of the swap proceeds.
+3.  **Decoded State is Private/Internal**: All the logic required to understand an order's final state is contained within the reactor contracts themselves. Traditional indexers, which operate offchain, cannot easily access or execute this onchain logic.
 
 An attempt to index this with a traditional indexing tool would require painstakingly re-implementing every reactor's decoding logic offchain and keeping it in sync with any protocol upgrades.
 
 ## The Sim IDX Solution
 
 Sim IDX overcomes these challenges by fundamentally changing the relationship between the indexer and the protocol.
-Where traditional indexers are passive, off-chain observers, a **Sim IDX listener is a smart contract that lives on-chain**.
+Where traditional indexers are passive, offchain observers, a **Sim IDX listener is a smart contract that lives onchain**.
 
 The listener is a smart contract, so it can do more than just read events.
-It can interact with other on-chain contracts.
+It can interact with other onchain contracts.
 The listener can call their functions, pass them arguments, and read their return data, just like any other contract would.
 
 This capability lets us use an elegant technique we call the **Quoter Pattern**.
@@ -57,19 +57,24 @@ The first challenge in indexing Uniswap X is its scale. The protocol uses multip
 
 Sim IDX solves this with ABI-based triggers. Instead of targeting specific addresses, you can instruct your listener to trigger on *any contract* that matches a given ABI signature. This makes your indexer automatically forward-compatible.
 
-We achieve this with the `ChainIdAbi` helper in our `Triggers` contract. The code below sets up our listener to trigger on the `execute` function family for *any* contract on Ethereum, Polygon, and Base that implements the `IReactor` interface.
+We achieve this with the `ChainIdAbi` helper in our `Triggers` contract. The code below sets up our listener to trigger on the `execute` function family for *any* contract on Ethereum, Unichain, and Base that implements the `IReactor` interface.
 
 ```solidity listeners/src/Main.sol
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {
         Listener listener = new Listener();
-
-        // Target any IReactor contract on Ethereum (1), Polygon (137), and Base (8453)
         addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteFunction());
-        addTrigger(ChainIdAbi(137, IReactor$Abi()), listener.triggerPreExecuteFunction());
+        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
+        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
+        addTrigger(ChainIdAbi(1, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
+        addTrigger(ChainIdAbi(130, IReactor$Abi()), listener.triggerPreExecuteFunction());
+        addTrigger(ChainIdAbi(130, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
+        addTrigger(ChainIdAbi(130, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
+        addTrigger(ChainIdAbi(130, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
         addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteFunction());
-
-        // ... additional triggers for executeBatch, etc.
+        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteBatchFunction());
+        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteBatchWithCallbackFunction());
+        addTrigger(ChainIdAbi(8453, IReactor$Abi()), listener.triggerPreExecuteWithCallbackFunction());
     }
 }
 ```
@@ -82,19 +87,23 @@ To learn more about `ChainAbi`, see the [Listener Patterns guide](/idx/listener/
 
 ## Decode Opaque Data with the Quoter Pattern
 
-Once triggered, our listener receives the opaque `order` bytes. Replicating the decoding logic for every reactor type off-chain would be a massive, brittle engineering effort.
+Once triggered, our listener receives the opaque `order` bytes. Replicating the decoding logic for every reactor type offchain would be a massive, brittle engineering effort.
 
-With Sim IDX, we don't have to. Because our listener is an on-chain contract, we can use the "Quoter Pattern" to have the Reactor contract decode its own data for us.
+With Sim IDX, we don't have to. Because our listener is an onchain contract, we can use the "Quoter Pattern" to have the Reactor contract decode its own data for us.
 
-This pattern is implemented in the `OrderQuoter.sol` contract, which our main `Listener` inherits from. It revolves around two key functions:
+This pattern is implemented in the `OrderQuoter.sol` contract, which our main `Listener` inherits from. It revolves around two primary functions:
 
 1.  The `quote` function, called by our listener's handler, simulates a fill by calling the Reactor's `executeWithCallback` inside a `try/catch` block. It knows this call will revert and is designed to catch the revert reason.
 
     ```solidity listeners/src/OrderQuoter.sol
+    /// @notice Quote the given order, returning the ResolvedOrder object which defines
+    /// the current input and output token amounts required to satisfy it
+    /// Also bubbles up any reverts that would occur during the processing of the order
+    /// @param order abi-encoded order, including `reactor` as the first encoded struct member
+    /// @param sig The order signature
+    /// @return result The ResolvedOrder
     function quote(bytes memory order, bytes memory sig) external returns (ResolvedOrder memory result) {
-        // This call will trigger reactorCallback, which will then revert.
         try IReactor(getReactor(order)).executeWithCallback(SignedOrder(order, sig), bytes("")) {}
-        // We catch the revert and parse the data from it.
         catch (bytes memory reason) {
             result = parseRevertReason(reason);
         }
@@ -104,25 +113,28 @@ This pattern is implemented in the `OrderQuoter.sol` contract, which our main `L
 2.  The `reactorCallback` function is the endpoint the Reactor calls on our contract. It receives the fully decoded `ResolvedOrder`, encodes it, and immediately places it into a `revert` message.
 
     ```solidity listeners/src/OrderQuoter.sol
+    /// @notice Reactor callback function
+    /// @dev reverts with the resolved order as reason
+    /// @param resolvedOrders The resolved orders
     function reactorCallback(ResolvedOrder[] memory resolvedOrders, bytes memory) external pure {
         if (resolvedOrders.length != 1) {
             revert OrdersLengthIncorrect();
         }
         bytes memory order = abi.encode(resolvedOrders[0]);
-        // Revert with the decoded order data.
+        /// @solidity memory-safe-assembly
         assembly {
             revert(add(32, order), mload(order))
         }
     }
     ```
 
-This interaction that calls a contract to make it call you back with data you capture from a deliberate revert is the heart of the solution. It's a powerful technique only possible because Sim IDX listeners operate on-chain.
+This interaction that calls a contract to make it call you back with data you capture from a deliberate revert is the heart of the solution. It's a powerful technique only possible because Sim IDX listeners operate onchain.
 
 ## Build the Perfect Event Onchain
 
-After decoding the raw order, we need to refine it into a complete and useful record. The listener acts as an on-chain data assembly line, composing other on-chain logic for accuracy and making live calls to enrich the data.
+After decoding the raw order, we need to refine it into a complete and useful record. The listener acts as an onchain data assembly line, composing other onchain logic for accuracy and making live calls to enrich the data.
 
-First, to ensure financial accuracy, we must account for protocol fees. We do this by porting Uniswap's own on-chain fee logic into a `FeeInjector` library. Our handler calls this library to inject any applicable fees into the `ResolvedOrder`, ensuring the final amounts are perfect.
+First, to ensure financial accuracy, we must account for protocol fees. We do this by porting Uniswap's own onchain fee logic into a `FeeInjector` library. Our handler calls this library to inject any applicable fees into the `ResolvedOrder`, ensuring the final amounts are perfect.
 
 ```solidity listeners/src/Main.sol
 function preExecuteFunction(PreFunctionContext memory ctx, ...) external override {
@@ -140,24 +152,56 @@ function preExecuteFunction(PreFunctionContext memory ctx, ...) external overrid
 Next, we enrich the data. Instead of just storing token addresses, we can get human-readable symbols and names. The listener makes a live `call` to each token contract to retrieve its metadata.
 
 ```solidity listeners/src/Main.sol
+function emitUniswapXTrade(
+    address makingToken,
+    address takingToken,
+    address maker,
+    address taker,
+    uint256 makingAmount,
+    uint256 takingAmount,
+    address platformContract
+) internal {
+    (string memory makingTokenSymbol, string memory makingTokenName, uint256 makingTokenDecimals) =
+        makingToken == address(0) ? ("ETH", "Ether", 18) : getMetadata(makingToken);
+    (string memory takingTokenSymbol, string memory takingTokenName, uint256 takingTokenDecimals) =
+        takingToken == address(0) ? ("ETH", "Ether", 18) : getMetadata(takingToken);
+    emit Swap(
+        SwapData(
+            uint64(block.chainid),
+            txnHash,
+            uint64(block.number),
+            uint64(block.timestamp),
+            makingToken,
+            makingAmount,
+            makingTokenSymbol,
+            makingTokenName,
+            uint64(makingTokenDecimals),
+            takingToken,
+            takingAmount,
+            takingTokenSymbol,
+            takingTokenName,
+            uint64(takingTokenDecimals),
+            tx.origin,
+            maker,
+            taker,
+            platformContract
+        )
+    );
+}
+
 function emitTradesFromOrder(ResolvedOrder memory order, address taker) internal {
     (InputToken memory input, OutputToken memory output) = getIoTokensFromOrder(order);
-    
-    // Make live on-chain calls to get token metadata.
-    (string memory makingTokenSymbol, string memory makingTokenName, uint256 makingTokenDecimals) =
-        getMetadata(input.token);
-    (string memory takingTokenSymbol, string memory takingTokenName, uint256 takingTokenDecimals) =
-        getMetadata(output.token);
-
-    // ... emit final event with enriched data
+    emitUniswapXTrade(
+        input.token, output.token, output.recipient, taker, input.amount, output.amount, address(order.info.reactor)
+    );
 }
 ```
 
-This on-chain assembly process that consists of decoding, correcting for fees, and enriching with live metadata creates a complete data record before it's written to the database.
+This onchain assembly process that consists of decoding, correcting for fees, and enriching with live metadata creates a complete data record before it's written to the database.
 
 ## Define Your API Directly in Solidity
 
-The final step in the Sim IDX workflow demonstrates its most powerful abstraction: your on-chain `event` definition *is* your API schema.
+The final step in the Sim IDX workflow demonstrates its most powerful abstraction: your onchain `event` definition *is* your API schema.
 
 In our `Listener` contract, we define a `SwapData` struct and a `Swap` event. This struct contains all the decoded, fee-corrected, and enriched data points we assembled in the previous steps.
 
@@ -165,18 +209,31 @@ In our `Listener` contract, we define a `SwapData` struct and a `Swap` event. Th
 struct SwapData {
     uint64 chainId;
     bytes32 txnHash;
+    uint64 blockNumber;
+    uint64 blockTimestamp;
     address makerToken;
     uint256 makerAmt;
     string makerTokenSymbol;
-    // ... all other fields
+    string makerTokenName;
+    uint64 makerTokenDecimals;
+    address takerToken;
+    uint256 takerAmt;
+    string takerTokenSymbol;
+    string takerTokenName;
+    uint64 takerTokenDecimals;
+    address txnOriginator;
+    address maker;
+    address taker;
+    address reactor;
 }
 
 event Swap(SwapData);
 
 function emitTradesFromOrder(ResolvedOrder memory order, address taker) internal {
-    // ... logic to populate SwapData struct ...
-
-    emit Swap(/* populated SwapData struct */);
+    (InputToken memory input, OutputToken memory output) = getIoTokensFromOrder(order);
+    emitUniswapXTrade(
+        input.token, output.token, output.recipient, taker, input.amount, output.amount, address(order.info.reactor)
+    );
 }
 ```
 
@@ -204,13 +261,13 @@ app.get("/*", async (c) => {
 export default app;
 ```
 
-From a complex, gas-optimized protocol to a simple, queryable API, the entire process is orchestrated through on-chain logic. Your work as a developer is focused where it matters: in Solidity.
+From a complex, gas-optimized protocol to a simple, queryable API, the entire process is orchestrated through onchain logic. Your work as a developer is focused on Solidity.
 
 ## Conclusion
 
-You have successfully designed an indexer for one of DeFi's most complex protocols. This guide demonstrates the power of Sim IDX's architecture. By enabling your listener to act as an on-chain contract, you can solve sophisticated indexing problems with surprisingly simple and robust code.
+You have successfully designed an indexer for one of DeFi's most complex protocols. This guide demonstrates the power of Sim IDX's architecture. By enabling your listener to act as an onchain contract, you can solve sophisticated indexing problems with surprisingly simple and robust code.
 
-This "Quoter" pattern can be adapted to any protocol where data is resolved through on-chain logic rather than emitted in simple events.
+This "Quoter" pattern can be adapted to any protocol where data is resolved through onchain logic rather than emitted in simple events.
 
 <Columns cols={2}>
   <Card title="App Deployment" href="/idx/deployment">
