@@ -92,7 +92,7 @@
                 "group": "Listener",
                 "pages": [
                   "idx/listener",
-                  "idx/listener/patterns",
+                  "idx/listener/features",
                   "idx/listener/errors"
                 ]
               },
@@ -127,6 +127,12 @@
       "chatgpt"
     ]
   },
+  "redirects": [
+    {
+      "source": "/idx/listener/patterns",
+      "destination": "/idx/listener/features"
+    }
+  ],
   "api": {
     "examples": {
       "languages": ["curl", "javascript", "python"]
