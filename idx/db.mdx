@@ -9,15 +9,15 @@ You can use this during development to verify your schema, inspect live data, an
 
 <Note>
 The database connection string provided after deployment is intended for development and debugging.
-Your deployed API will connect to a separate, production-ready database instance with the same schema.
+Your deployed [APIs](/idx/apis) will connect to a separate, production-ready database instance with the same schema.
 </Note>
 
-## Connecting to Your Database
+## Connect to Your Database
 
 Use the [database connection string](/idx/app-page#db-connection) provided in your app's deployment to connect with any standard PostgreSQL client.
 
 ```
-db_read_connection: "postgres://username:password@host/database?sslmode=require"
+postgres://username:password@host/database?sslmode=require
 ```
 
 For example, using `psql`:
@@ -28,10 +28,10 @@ psql "your_connection_string_here"
 ```
 
 <Info>
-You can also use clients ike DBeaver, Postico, or Beekeeper Studio for a more visual way to explore your data and schema.
+You can also use clients like DBeaver, Postico, or Beekeeper Studio for a more visual way to explore your data and schema.
 </Info>
 
-## Understanding the Schema
+## Understand the Schema
 
 The structure of your database is directly determined by the `event` definitions in your `Main.sol` contract.
 
@@ -43,17 +43,34 @@ An event defined as `event PoolCreated(address pool, address token0, address tok
 
 When you inspect your database, you will see both the clean views you should query and the internal tables with random suffixes. **Always query the views (lowercase `snake_case` names).**
 
-## Limitations
+## Inspect Indexes
 
-Currently, Sim IDX only supports creating new rows in the database, not updates to existing rows. This means that once data is indexed and stored, it cannot be modified through the framework. We are exploring options to support updates in future versions.
+If you have [defined indexes in your listener](/idx/listener/patterns#db-indexes), you can verify their existence directly from your database client.
+
+To confirm your indexes were created successfully, you can list them using `psql`.
+To list all indexes in the database, use the `\di` command. This shows the index name, type, and the table it belongs to.
+To see the indexes for a specific table, use the `\d "view_name"` command. This describes the view and lists the indexes on its underlying table.
+
+```bash
+# List all indexes in the database
+\di
+
+# Describe the view and see its specific indexes
+\d "position_owner_changes"
+```
 
 ## Common Database Operations
 
 Here are some common `psql` commands you can use to inspect your database:
 
-| Operation              | `psql` Command                             | Description                                                               |
-| ---------------------- | ------------------------------------------ | ------------------------------------------------------------------------- |
-| **List Views**         | `\dv`                                       | Shows all queryable views in the public schema.                          |
-| **Describe View**      | `\d "view_name"`                           | Displays the columns, types, and structure for a specific view.           |
-| **View Sample Data**   | `SELECT * FROM "view_name" LIMIT 10;`      | Retrieves the first 10 rows from a view.                                  |
-| **Count Rows**         | `SELECT COUNT(*) FROM "view_name";`        | Counts the total number of records indexed in a view.                     |
+| Operation            | `psql` Command                        | Description                                                     |
+| -------------------- | ------------------------------------- | --------------------------------------------------------------- |
+| **List Views**       | `\dv`                                 | Shows all queryable views in the public schema.                 |
+| **Describe View**    | `\d "view_name"`                      | Displays the columns, types, and structure for a specific view, including indexes on the underlying table. |
+| **List Indexes**     | `\di`                                 | Shows all indexes in the database.                              |
+| **View Sample Data** | `SELECT * FROM "view_name" LIMIT 10;` | Retrieves the first 10 rows from a view.                        |
+| **Count Rows**       | `SELECT COUNT(*) FROM "view_name";`   | Counts the total number of records indexed in a view.           |
+
+## Limitations
+
+Currently, Sim IDX only supports creating new rows in the database, not updates to existing rows. This means that once data is indexed and stored, it cannot be modified through the framework. We are exploring options to support updates in future versions.

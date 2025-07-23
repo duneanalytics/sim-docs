@@ -1,12 +1,12 @@
 ---
-title: Listener Patterns
-sidebarTitle: Patterns
+title: Listener Features
+sidebarTitle: Features
 ---
 
-After learning about listeners in the [Listener Basics](/idx/listener) guide, you can use more advanced patterns to build sophisticated indexers.
+After learning about listeners in the [Listener Basics](/idx/listener) guide, you can use more advanced features to build sophisticated indexers.
 This page explores core Sim IDX concepts that give you more flexibility in how you trigger listeners and structure your onchain data.
 
-We will cover advanced triggering and calling other contracts via interfaces. For common listener compilation errors like name conflicts and `Stack too deep`, please see the [Listener Errors](/idx/listener/errors) guide.
+We will cover advanced triggering, calling other contracts via interfaces, and adding indexes to your generated database.
 
 ## Trigger on an ABI
 
@@ -53,7 +53,9 @@ contract UniswapPoolListener is UniswapV3Pool$OnBurnEvent {
 
 The `chainGlobal` helper creates triggers that are not tied to any specific contract or ABI. This can be used to set up block-level handlers with `onBlock` for tasks that need to run once per block, such as creating periodic data snapshots, calculating time-weighted averages, or performing end-of-block settlements.
 
-The framework provides a built-in abstract contract, `Raw$OnBlock`, for this purpose. First, add it to your listener's inheritance list, then implement the `onBlock` handler and register the trigger.
+The framework provides a built-in abstract contract, `Raw$OnBlock`, for this purpose.
+First, implement the `onBlock` handler and register the trigger in the `Triggers` contract.
+Next, add `Raw$OnBlock` to your listener's inheritance list.
 
 ```solidity Main.sol
 import "./MyBlockListener.sol";
@@ -78,7 +80,7 @@ contract MyBlockListener is Raw$OnBlock {
 
 The framework also provides abstract contracts for `Raw$OnCall` and `Raw$OnLog`, allowing you to create global triggers for every function call or every event log on a chain.
 
-## Using Interfaces
+## Use Interfaces
 
 Often, your handler is triggered by one contract, but you need to fetch additional data from another contract to enrich your event. For example, a `Swap` event on a pool tells you a swap occurred, but you need to call the pool contract directly to get its current `slot0` state. Solidity interfaces allow your listener to do this.
 
@@ -125,3 +127,91 @@ contract Listener is UniswapV3Pool$OnSwapEvent {
 <Note>
 For guidance on resolving compilation issues such as name conflicts or `Stack too deep` errors, refer to the [Listener Errors](/idx/listener/errors) guide.
 </Note>
+
+## DB Indexes
+
+Database indexes are a common way to improve database performance.
+Sim IDX lets you define indexes directly in the event definition of your listener contract.
+This gives you fine-grained control over the database performance of your app.
+
+<Card
+  title="Learn More About Database Indexes"
+  href="https://www.postgresql.org/docs/current/indexes-intro.html"
+>
+  To learn more about how database indexes, visit
+  the PostgreSQL documentation.
+</Card>
+
+### How to Add Indexes
+
+To add a database index, use a special comment with the `@custom:index` annotation directly above the `event` definition in your Solidity listener.
+
+```text
+/// @custom:index <index_name> <INDEX_TYPE> (<column1>, <column2>, ...);
+```
+
+Let's take a closer look at what each part of this syntax means:
+
+*   `<index_name>`: A unique name for your index.
+*   `<INDEX_TYPE>`: The type of index to create (e.g., `BTREE`).
+*   `(<columns>)`: A comma-separated list of columns to include in the index. These names must **exactly match** the parameter names in your `event` definition, including case.
+
+Here is an example of a multi-column index on the `pool`, `block_number`, and `to_address` columns.
+
+```solidity
+/// @custom:index po_idx1 BTREE (pool, block_number, to_address);
+event PositionOwnerChanges(
+    bytes32 txn_hash,
+    uint256 block_number,
+    uint256 block_timestamp,
+    address from_address,
+    address to_address,
+    uint256 token_id,
+    address pool
+);
+```
+
+You can define multiple indexes for a single event by adding multiple `@custom:index` lines. This is useful when your API queries the same table in different ways.
+
+```solidity
+/// @custom:index lp_events_by_pool BTREE (pool, block_number);
+/// @custom:index lp_events_by_owner BTREE (owner);
+event LpEvents(
+    bytes32 txn_hash,
+    // ...
+    address pool,
+    address owner,
+    // ...
+);
+```
+
+### Supported Index Types
+
+Sim IDX supports several PostgreSQL index types. `BTREE` is the default and most common type, suitable for a wide range of queries.
+
+| Type   | Use Case                                                                              |
+| ------ | ------------------------------------------------------------------------------------- |
+| `BTREE`  | The default and most versatile index type. Good for equality and range queries on sortable data (`=`, `>`, `<`, `BETWEEN`, `IN`). |
+| `HASH`   | Useful only for simple equality comparisons (`=`).                                    |
+| `BRIN`   | Best for very large tables where columns have a natural correlation with their physical storage order (e.g., timestamps). |
+| `GIN`    | An inverted index useful for composite types like `array` or `jsonb`. It can efficiently check for the presence of specific values within the composite type. |
+
+<Note>
+While PostgreSQL supports `GIST` and `SP-GIST` index types, they are not practically usable in Sim IDX as they require data types (like geometric types) that are not generated from Solidity events.
+</Note>
+
+<Card
+  title="Learn More About Index Types"
+  href="https://www.postgresql.org/docs/current/indexes-types.html"
+>
+  To learn more about index types and their specific use cases, visit the
+  PostgreSQL documentation.
+</Card>
+
+### Validation
+
+The `sim build` command automatically validates your index definitions. If it detects an error in the syntax, it will fail the build and provide a descriptive error message.
+
+For example, if you misspell a column name:
+`Error: Cannot find column(s): 'block_numbr' in event PositionOwnerChanges`
+
