@@ -154,7 +154,7 @@ Let's take a closer look at what each part of this syntax means:
 
 *   `<index_name>`: A unique name for your index.
 *   `<INDEX_TYPE>`: The type of index to create (e.g., `BTREE`).
-*   `(<columns>)`: A comma-separated list of columns to include in the index. These names must **exactly match** the parameter names in your `event` definition, including case.
+*   `(<columns>)`: A comma-separated list of one or more columns to include in the index. These names must **exactly match** the parameter names in your `event` definition, including case.
 
 Here is an example of a multi-column index on the `pool`, `block_number`, and `to_address` columns.
 
@@ -195,10 +195,6 @@ Sim IDX supports several PostgreSQL index types. `BTREE` is the default and most
 | `HASH`   | Useful only for simple equality comparisons (`=`).                                    |
 | `BRIN`   | Best for very large tables where columns have a natural correlation with their physical storage order (e.g., timestamps). |
 | `GIN`    | An inverted index useful for composite types like `array` or `jsonb`. It can efficiently check for the presence of specific values within the composite type. |
-
-<Note>
-While PostgreSQL supports `GIST` and `SP-GIST` index types, they are not practically usable in Sim IDX as they require data types (like geometric types) that are not generated from Solidity events.
-</Note>
 
 <Card
   title="Learn More About Index Types"
