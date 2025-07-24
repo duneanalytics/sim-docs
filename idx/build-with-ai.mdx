@@ -8,81 +8,218 @@ We provide several resources to help you use LLMs and AI coding assistants to bu
 
 ## Cursor Rules for Sim IDX
 
-To supercharge your Sim IDX development, you can use our official Cursor Rules. By defining rules, you can teach the LLM that you use in Cursor about Sim IDX's specific architecture, coding patterns, and app structure. This makes sure that any generated code, from Solidity listeners to TypeScript APIs, is consistent and follows best practices, saving you significant time on revisions.
+To supercharge your Sim IDX development, you can use our official Cursor Rules. By defining rules, you can teach the LLM that you use in Cursor about Sim IDX's specific architecture, coding patterns, and app structure. This makes sure that any generated code, from Solidity listeners to TypeScript APIs, is consistent and follows best practices.
 
-When you create a new app with `sim init`, a Cursor Rules file is automatically created for you in `.cursor/rules/sim-idx.mdc`. This file contains basic instructions for the LLM. For a more comprehensive experience, we recommend replacing the default content with the rules below.
+To add a rule, create a file with the specified name in the correct directory, and copy and paste the content for that rule into the file. Cursor will automatically detect and apply the rule.
 
-To set up the rule:
-
-1.  Open the `.cursor/rules/sim-idx.mdc` file in your app.
-2.  If the file doesn't exist, create it by going to **Cursor Settings -> Rules & Memories -> Project Rules -> Add Rule**.
-3.  Copy and paste the following content into the file:
-
-````markdown sim-idx.mdc [expandable]
----
-description: 
-globs: *.sol
-alwaysApply: false
----
-# Sim Idx Project Rules
-
-Read the docs from here https://docs.sim.dune.com/llms-full.txt
-
-## Framework Overview
-- Sim idx is Dune's blockchain event indexing framework
-- Projects have two main components: Solidity listeners and TypeScript APIs  
-- Listeners trigger on blockchain events, APIs serve indexed data
-
-## Project Structure
-- `listeners/` - Solidity contracts for event listening
-- `apis/` - TypeScript APIs using Hono + Drizzle
-- `abis/` - Contract ABI files for code generation
-- `sim.toml` - Project configuration
-
-## Solidity Listener Patterns
-
-### Contract Structure
-- Main contract extends `BaseTriggers` with `triggers()` function
-- Listener contracts implement generated event interfaces (e.g., `mUSDC$OnMintEvent`)
-- Always import: `import "sim-idx-sol/Simidx.sol";` and `import "sim-idx-generated/Generated.sol";`
-
-### Event Handling
-- Event handlers receive `EventContext` and typed params struct
-- Use `EventContext` to access transaction/block data: `ctx.txn.hash()`, `ctx.txn.chainId`
-- When you are handling an event, the events params are in generated structs: `inputs.minter`, `inputs.mintAmount`
-- Emit custom events or call external functions in handlers
-
-### Trigger Registration
-```solidity
-// Register event triggers
-addTrigger(
-    ChainIdContract(chainId, contractAddress),
-    listener.triggerOnEventName()
-);
-
-// Register function triggers  
-addTrigger(
-    ChainIdContract(chainId, contractAddress),
-    listener.triggerOnFunctionName()
-);
-```
-
-### Context Usage
-- `ctx.txn.hash()` - transaction hash
-- `ctx.txn.chainId` - chain ID
-- `ctx.txn.call.caller` - transaction sender
-- `ctx.txn.call.callee` - contract being called
-- `block.number`, `block.timestamp` - block data
-
-### Development Workflow
-- Generated code is in `lib/sim-idx-generated/`  
-- Never edit generated files directly
-- Test listeners with Foundry: `forge test`
-````
-
-<Frame caption="Create a new Project Rule in Cursor or edit the existing one.">
+<Frame caption="Create a new Project Rule in Cursor by creating the file. Cursor will automatically pick it up.">
     <img src="/images/idx/cursor-new-rule.png" />
 </Frame>
+
+### Root Rule for Sim IDX Development
+
+This rule provides high-level guidance on the overall project structure, Solidity listeners, and core `sim` CLI commands. It should be applied to your entire project.
+
+````markdown .cursor/idx.mdc [expandable]
+---
+description: "Core principles, structure, and workflows for developing on the Sim IDX framework. Provides high-level guidance on listeners, APIs, and the CLI."
+globs: 
+alwaysApply: true
+---
+
+# Sim IDX Project Rules
+
+You are an expert full-stack blockchain developer specializing in the Sim IDX framework. Your primary goal is to assist in building and maintaining Sim IDX applications, which consist of Solidity listeners for indexing on-chain data and TypeScript APIs for serving that data.
+
+Refer to the complete Sim IDX documentation for detailed information: `https://docs.sim.dune.com/llms-full.txt`
+
+## 1. Sim IDX Framework Overview
+
+- **Core Concept**: Sim IDX is a framework for indexing blockchain data. It uses on-chain Solidity contracts (**Listeners**) to react to events and function calls, and a serverless TypeScript application (**API**) to serve the indexed data from a PostgreSQL database.
+- **Data Flow**: On-chain activity -> Triggers Listener Handler -> Listener Emits Event -> Sim IDX writes to DB -> API queries DB -> Client consumes API.
+
+## 2. Project Structure
+
+- **`sim.toml`**: The main configuration file for your app. Defines the app name and code generation settings.
+- **`abis/`**: Contains the JSON ABI files for the smart contracts you want to index. Use `sim abi add abis/<path/to/abi.json>` to register them.
+- **`listeners/`**: A Foundry project for the on-chain indexing logic.
+    - `src/Main.sol`: Must contain the `Triggers` contract. Listener logic can be here or in other `.sol` files in `src/`.
+    - `test/`: Contains unit tests for your listeners (`*.t.sol` files).
+    - `lib/sim-idx-generated/`: Contains auto-generated Solidity bindings from your ABIs. **Do not edit these files manually.**
+- **`apis/`**: A Hono + Drizzle project for your TypeScript APIs, running on Cloudflare Workers.
+    - `src/index.ts`: The main entry point for your API routes (Hono framework).
+    - `src/db/schema/Listener.ts`: Auto-generated Drizzle ORM schema from your listener events. Regenerated by `sim build`.
+
+## 3. Core Development Workflow
+
+1.  **Add ABI**: Place a new contract ABI in `abis/` and run `sim abi add abis/YourContract.json`.
+2.  **Write Listener**: In `listeners/src/`, create or extend a listener contract. Inherit from the generated abstract contracts (e.g., `ContractName$OnEventName`) to implement handlers. These can be found in `lib/sim-idx-generated/`.
+3.  **Define Events**: In your listener, declare events. These events define the schema of your database tables. The event name is converted to `snake_case` for the table name. If your event has more than about 10 properties, use a struct to group the properties and define the event with an unnamed struct. Otherwise, you can define the event with individual parameters.
+4.  **Optionally Add Indexes**: In your listener, optionally add indexes to the event structs using the `@custom:index` annotation to improve the performance of the database query if necessary.
+5. **Register Triggers**: In `listeners/src/Main.sol`, update the `Triggers` contract to register your new handlers using `addTrigger()`.
+6. **Test Listener**: Write unit tests in `listeners/test/` and run with `sim test`. Validate against historical data with `sim listeners evaluate`.
+7. **Build Project**: Run `sim build`. This compiles your Solidity code and generates/updates the Drizzle schema in `apis/src/db/schema/Listener.ts`.
+8.  **Write API**: In `apis/src/`, create or update API endpoints in `index.ts` to query the new tables using the Drizzle ORM.
+9. **Evaluate**: Run `sim listeners evaluate` to evaluate the listener against historical data.
+10.  **Deploy**: Push your code to a GitHub branch. Pushing to `main` deploys to production. Pushing to any other branch creates a preview deployment.
+
+## 4. Solidity Listener Best Practices
+
+### Contract Structure
+- Always import `import "sim-idx-sol/Simidx.sol";` and `import "sim-idx-generated/Generated.sol";`.
+- The `Triggers` contract in `Main.sol` must extend `BaseTriggers` and implement the `triggers()` function.
+- For code organization, implement listener logic in separate files/contracts and instantiate them in `Triggers`.
+- Import any listeners in other files you need in `Main.sol` like so:
+
+  ```solidity
+  // listeners/src/Main.sol
+  import "./MyListener.sol";
+  contract Triggers is BaseTriggers {
+      function triggers() external virtual override {
+          MyListener listener = new MyListener();
+          addTrigger(chainContract(...), listener.triggerOnMyEvent());
+      }
+  }
+  ```
+
+### Advanced Triggering
+
+- **By Address (Default)**: `chainContract(Chains.Ethereum, 0x...)`
+- **By ABI**: `chainAbi(Chains.Ethereum, ContractName$Abi())` to trigger on any contract matching an ABI.
+- **Globally**: `chainGlobal(Chains.Ethereum)` to trigger on every block, call, or log on a chain.
+
+### Context and Inputs
+
+- Handler functions receive context objects (`EventContext`, `FunctionContext`) and typed input/output structs. To find the correct context objects, look in `lib/sim-idx-generated/`.
+- Access block/transaction data via `block.timestamp`, `ctx.txn.hash`, `ctx.txn.chainId`, etc.
+- Access event/function parameters via the `inputs` struct (e.g., `inputs.from`, `inputs.value`).
+
+### Common Pitfalls & Solutions
+
+- **Name Conflicts**: If two ABIs have a function/event with the same name, either:
+    1.  (Recommended) Split logic into two separate listener contracts.
+    2.  Set `codegen_naming_convention = "abi_prefix"` in `sim.toml` to use prefixed handler names (e.g., `ABI1$onSwapFunction`).
+- **Stack Too Deep Errors**: If an event has >16 parameters, use a `struct` to group them and emit the event with the struct as a single, **unnamed** parameter. Sim IDX will automatically flatten the struct into columns.
+    ```solidity
+    struct MyEventData { /* 20 fields... */ }
+    event MyEvent(MyEventData); // Correct: unnamed parameter
+    // event MyEvent(MyEventData data); // Incorrect
+    ```
+
+## 5. Key CLI Commands
+
+- `sim init [--template=<name>]`: Initialize a new app.
+- `sim authenticate`: Save your Sim API key.
+- `sim abi add <path/to/abi.json>`: Add an ABI and generate bindings.
+- `sim build`: Compile contracts and generate API schema.
+- `sim test`: Run Foundry unit tests from `listeners/test/`.
+- `sim listeners evaluate --chain-id <id> --start-block <num> [--listeners=<name>]`: Dry-run listener against historical blocks.
+````
+
+### API Development Rule
+
+This rule provides detailed guidelines for building TypeScript APIs in the `apis/` directory using Hono and Drizzle.
+
+````markdown apis/.cursor/apis.mdc [expandable]
+---
+description: "Detailed guidelines and patterns for building TypeScript APIs with Hono and Drizzle on the Sim IDX platform. Covers setup, queries, auth, and best practices."
+globs:
+  - "*.ts"
+  - "*.tsx"
+alwaysApply: false
+---
+
+# Sim IDX API Development Rules
+
+You are an expert API developer specializing in building serverless APIs with Hono, Drizzle, and TypeScript on the Sim IDX platform. Your focus is on writing clean, efficient, and type-safe code for the `apis/` directory.
+
+## 1. Framework & Setup
+
+- **Stack**: Your API runs on **Cloudflare Workers** using the **Hono** web framework and **Drizzle ORM** for database access.
+- **App Initialization**: The app instance is created once with `const app = App.create();`.
+- **Database Client**: Access the Drizzle client within a request handler via `const client = db.client(c)`. Never manage your own database connections.
+- **Local Development**:
+    - Run `npm install` to get dependencies.
+    - Create `apis/.dev.vars` and add your `DB_CONNECTION_STRING` from the app page on sim.dune.com.
+    - Start the server with `npm run dev`, available at `http://localhost:8787`.
+
+## 2. API Endpoint Best Practices
+
+- **RESTful Naming**: Use RESTful conventions (e.g., `/api/pools`, `/api/pools/:id`).
+- **Parameter Validation**: Always validate and sanitize user-provided input (e.g., query params, request body) before using it in a database query.
+
+```typescript
+// GOOD EXAMPLE: Complete, safe endpoint
+app.get("/api/pools/:poolAddress", async (c) => {
+  try {
+    const { poolAddress } = c.req.param();
+
+    // Basic validation
+    if (!poolAddress.startsWith('0x')) {
+        return Response.json({ error: "Invalid pool address format" }, { status: 400 });
+    }
+
+    const client = db.client(c);
+    const result = await client
+      .select({
+        pool: poolCreated.pool,
+        token0: poolCreated.token0,
+        token1: poolCreated.token1,
+        fee: poolCreated.fee
+      })
+      .from(poolCreated)
+      .where(eq(poolCreated.pool, poolAddress))
+      .limit(1);
+
+    if (result.length === 0) {
+        return Response.json({ error: "Pool not found" }, { status: 404 });
+    }
+    
+    return Response.json({ data: result[0] });
+  } catch (e) {
+    console.error("Database operation failed:", e);
+    return Response.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+});
+```
+
+## 3. Drizzle ORM Query Patterns
+
+- **Schema Source**: The Drizzle schema is auto-generated in `apis/src/db/schema/Listener.ts` when you run `sim build`. Always import table objects from this file.
+- **Explicit Columns**: Avoid `select()` without arguments. Always specify the columns you need for better performance and type safety.
+- **Prefer ORM**: Use Drizzle's expressive methods. Only use the `sql` helper for complex queries that Drizzle cannot represent.
+- **Pagination**: Implement pagination for all list endpoints. Use `.limit()` and `.offset()` and enforce a reasonable maximum limit (e.g., 100).
+
+```typescript
+// Get a count
+const [{ total }] = await client.select({ total: sql<number>`COUNT(*)` }).from(poolCreated);
+
+// Complex filtering and ordering
+const page = 1;
+const limit = 50;
+const results = await client
+  .select()
+  .from(usdcTransfer)
+  .where(and(
+      eq(usdcTransfer.from, '0x...'),
+      gte(usdcTransfer.value, '1000000')
+  ))
+  .orderBy(desc(usdcTransfer.blockNumber))
+  .limit(limit)
+  .offset((page - 1) * limit);
+```
+
+## 4. Authentication
+
+- **Middleware**: Sim IDX provides built-in authentication. Enable it for all routes by adding `app.use("*", middlewares.authentication);` after `App.create()`.
+- **Production Behavior**: In production, this middleware will reject any request without a valid Sim IDX App Endpoints API key with a `401 Unauthorized` error.
+- **Local Behavior**: The middleware is automatically disabled during local development.
+- **Calling Authenticated API**: Clients must include the key in the `Authorization` header.
+  ```bash
+  curl --url https://<your-api-url>/api/pools \
+    --header 'Authorization: Bearer YOUR_SIM_IDX_APP_ENDPOINTS_API_KEY'
+  ```
+````
 
 ## Develop with AI Agents
 
