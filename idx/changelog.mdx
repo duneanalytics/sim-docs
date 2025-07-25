@@ -3,6 +3,23 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="July 25, 2025" description="CallFrame Structure Update">
+  **CallFrame Properties Are Now Functions**
+
+  With CLI version v.0.0.83 the `CallFrame` structure has been updated to use function calls instead of direct property access.
+
+  **What changed:**
+  - Properties like `callee`, `caller`, `callData`, `callDepth`, `value`, and `callType` are now functions that must be called with parentheses: `callee()`, `caller()`, etc.
+  - New proxy-related functions added: `delegator()` and `delegatee()`
+  - The `verificationSource` property remains unchanged
+
+  **Impact:**
+  - Code that directly accesses CallFrame properties needs to be updated to use function calls
+
+  **Who is affected:**
+  - Developers updating to this version of CLI and that use this context in an existing project.
+</Update>
+
 <Update label="July 23, 2025" description="CLI v0.0.82">
   **New Feature: Database Indexing Support**
 

@@ -38,7 +38,7 @@ contract UniswapPoolListener is UniswapV3Pool$OnBurnEvent {
         // Only emit an event if the burn amount is greater than zero
         if (inputs.amount > 0) {
             emit PoolBurn(
-                ctx.txn.call.callee, // The address of the pool that emitted the event
+                ctx.txn.call.callee(), // The address of the pool that emitted the event
                 inputs.owner,
                 inputs.tickLower,
                 inputs.tickUpper,
@@ -119,7 +119,7 @@ contract Listener is UniswapV3Pool$OnSwapEvent {
     function onSwapEvent(EventContext memory ctx, ...) external override {
         // Cast the address of the contract that triggered the event
         // to the IUniswapV3Pool interface to call its functions.
-        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(ctx.txn.call.callee).slot0();
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(ctx.txn.call.callee()).slot0();
     }
 }
 ```

@@ -145,7 +145,7 @@ function preExecuteFunction(PreFunctionContext memory ctx, ...) external overrid
     FeeInjector._injectFees(order, IReactor(order.info.reactor).feeController());
 
     // 3. Emit the final, perfected event.
-    emitTradesFromOrder(order, ctx.txn.call.caller);
+    emitTradesFromOrder(order, ctx.txn.call.caller());
 }
 ```
 
