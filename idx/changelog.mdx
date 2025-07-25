@@ -3,6 +3,26 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="July 23, 2025" description="CLI v0.0.82">
+  **New Feature: Database Indexing Support**
+
+  You can now define database indexes directly within your listener contracts. This gives you more control over your app's query performance.
+
+  **What's new:**
+  
+  - Define indexes directly above your `event` declarations using a `/// @custom:index` comment in your Solidity code.
+  - Support for multiple index types, including `BTREE`, `HASH`, `BRIN`, and `GIN`.
+  - The `sim build` command now validates your index definitions to catch errors early.
+
+  **Benefits:**
+
+  - **Improved Query Performance**: Significantly speed up data retrieval by indexing columns that are frequently used in your API queries.
+  - **Declarative and Convenient**: Manage database performance directly from your Solidity code without writing separate migration scripts.
+  - **Fine-Grained Control**: Apply the right index types to the right columns for optimal performance.
+
+  For more details on how to define indexes, see the [Listener Features](/idx/listener/features#db-indexes) documentation.
+</Update>
+
 <Update label="July 16, 2025" description="CLI v0.0.79">
   **Breaking Change: Generated Struct Names Now Include Contract Names**
 
