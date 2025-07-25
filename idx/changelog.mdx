@@ -3,21 +3,37 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
-<Update label="July 25, 2025" description="CallFrame Structure Update">
+<Update label="July 25, 2025" description="CLI v0.0.83">
   **CallFrame Properties Are Now Functions**
 
-  With CLI version v.0.0.83 the `CallFrame` structure has been updated to use function calls instead of direct property access.
+  Every field on `ctx.txn.call`’s `CallFrame` structure has been updated to use function calls instead of direct property access.
 
   **What changed:**
-  - Properties like `callee`, `caller`, `callData`, `callDepth`, `value`, and `callType` are now functions that must be called with parentheses: `callee()`, `caller()`, etc.
-  - New proxy-related functions added: `delegator()` and `delegatee()`
-  - The `verificationSource` property remains unchanged
+
+  | Old (≤ v0.0.82)          | New (v0.0.83+)             |
+  | ------------------------ | -------------------------- |
+  | `ctx.txn.call.callee`    | `ctx.txn.call.callee()`    |
+  | `ctx.txn.call.caller`    | `ctx.txn.call.caller()`    |
+  | `ctx.txn.call.callData`  | `ctx.txn.call.callData()`  |
+  | `ctx.txn.call.callDepth` | `ctx.txn.call.callDepth()` |
+  | `ctx.txn.call.value`     | `ctx.txn.call.value()`     |
+  | `ctx.txn.call.callType`  | `ctx.txn.call.callType()`  |
+  | *(new)*                  | `ctx.txn.call.delegator()` |
+  | *(new)*                  | `ctx.txn.call.delegatee()` |
+
+  `ctx.txn.call.verificationSource` is unchanged (still a property).
 
   **Impact:**
-  - Code that directly accesses CallFrame properties needs to be updated to use function calls
 
-  **Who is affected:**
-  - Developers updating to this version of CLI and that use this context in an existing project.
+  If you were directly reading these fields, your code will no longer compile. Add `()` everywhere you touch `ctx.txn.call.*`.
+
+  ```diff Example (UniswapV3Factory Listener)
+  emit PoolCreated(
+  -     uint64(block.chainid), ctx.txn.call.callee, outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee
+  +     uint64(block.chainid), ctx.txn.call.callee(), outputs.pool, inputs.tokenA, inputs.tokenB, inputs.fee
+  );
+  ```
+  
 </Update>
 
 <Update label="July 23, 2025" description="CLI v0.0.82">
