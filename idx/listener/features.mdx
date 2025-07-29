@@ -80,6 +80,39 @@ contract MyBlockListener is Raw$OnBlock {
 
 The framework also provides abstract contracts for `Raw$OnCall` and `Raw$OnLog`, allowing you to create global triggers for every function call or every event log on a chain.
 
+## Register Multiple Triggers
+
+`addTriggers` (plural) lets you register several handler functions for the same contract, ABI, or global target in one call. It accepts an array of trigger functions.
+
+<Note>
+`addTriggers` lives in the same `Triggers` contract as `addTrigger`. It is purely a convenience helper and behaviour is identical. If you are new to triggers, start with the [Listener Basics](/idx/listener) guide where `addTrigger` is introduced.
+</Note>
+
+```solidity listeners/src/Main.sol
+import "./MyPoolListener.sol";
+
+contract Triggers is BaseTriggers {
+    function triggers() external override {
+        MyPoolListener listener = new MyPoolListener();
+
+        // Collect every handler we care about for this pool
+        Trigger[] memory poolTriggers = [
+            listener.UniswapV3Pool$triggerOnSwapEvent(),
+            listener.UniswapV3Pool$triggerOnMintEvent(),
+            listener.UniswapV3Pool$triggerOnBurnEvent()
+        ];
+
+        // Register all three triggers for the same contract in one call
+        addTriggers(
+            chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984),
+            poolTriggers
+        );
+    }
+}
+```
+
+Use `addTriggers` when your listener exposes multiple handlers that share a target.
+
 ## Use Interfaces
 
 Often, your handler is triggered by one contract, but you need to fetch additional data from another contract to enrich your event. For example, a `Swap` event on a pool tells you a swap occurred, but you need to call the pool contract directly to get its current `slot0` state. Solidity interfaces allow your listener to do this.
