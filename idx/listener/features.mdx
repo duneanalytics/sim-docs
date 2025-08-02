@@ -204,6 +204,34 @@ event PositionOwnerChanges(
 );
 ```
 
+You can also add indexes to events that use an unnamed struct. The syntax is identical.
+
+```solidity [expandable]
+struct EmitSwapData {
+    uint64 chainId;
+    bytes32 txnHash;
+    uint64 blockNumber;
+    uint64 blockTimestamp;
+    bytes32 poolId;
+    address fromToken;
+    uint256 fromTokenAmt;
+    string fromTokenSymbol;
+    string fromTokenName;
+    uint64 fromTokenDecimals;
+    address toToken;
+    uint256 toTokenAmt;
+    string toTokenSymbol;
+    string toTokenName;
+    uint64 toTokenDecimals;
+    address txnOriginator;
+    address recipient;
+    address poolManager;
+}
+
+/// @custom:index swap_events_idx BTREE (poolId, blockNumber, recipient, txnHash);
+event Swap(EmitSwapData);
+```
+
 You can define multiple indexes for a single event by adding multiple `@custom:index` lines. This is useful when your API queries the same table in different ways.
 
 ```solidity
