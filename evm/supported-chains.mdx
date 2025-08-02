@@ -26,7 +26,8 @@ Chain support varies by API endpoint. Use the dropdown below to check which chai
 
 You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
 
-The response includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
+The response includes an array of supported chains.
+Each item in the array includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
 Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
 
 <RequestExample>
@@ -127,13 +128,22 @@ print(data)
 
 ## Tags
 
-The `tags` property is used to categorize chains and make it easier to filter them in other API endpoints.
-When using the `chain_ids` parameter in other endpoints, you can get:
+The `tags` property groups chains by category, such as `mainnet`, `testnet`, or `default`.
+You can use these tags to filter or select chains in API requests.
+Any endpoint that supports the `chain_ids` query parameter accepts a tag in place of explicit IDs, letting you fetch data for an entire group of chains in a single request.
 
-- **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum)
-- **All chains**: `?chain_ids=all` (returns all chains supported by that endpoint)
+When using `chain_ids`, you can request chains in several ways:
+
 - **By tags**: `?chain_ids=mainnet` or `?chain_ids=mainnet,testnet` (returns chains with those tags)
-- **Default behavior**: If no `chain_ids` parameter is provided, endpoints return chains tagged as "default"
+- **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum)
+- **All chains**: `?chain_ids=all` (returns every chain supported by that endpoint)
+- **Default behavior**: Omitting `chain_ids` returns only chains tagged `default`.
+
+Some supported chains have **no tag assigned**.
+A chain may be untagged due to higher latency, restrictive rate limits, RPC cost, or a temporary incident.
+Untagged chains stay out of default requests to keep them fast, but you can still query them with `chain_ids` by passing the chain name (e.g. `?chain_ids=corn,funkichain`) or by requesting `all`.
+
+Open the accordion above and scan the table to see which chains carry tags and which are untagged.
 
 ## Examples
 
