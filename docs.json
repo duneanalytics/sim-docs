@@ -124,7 +124,8 @@
     "options": [
       "copy",
       "view",
-      "chatgpt"
+      "chatgpt",
+      "cursor"
     ]
   },
   "redirects": [
