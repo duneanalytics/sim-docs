@@ -3,6 +3,31 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="August 5, 2025" description="CLI v0.0.86">
+  **New Feature: Custom Block Range Support**
+
+  You can now specify custom block ranges for your triggers, allowing you to target specific blocks or time periods for each trigger.
+
+  **What's new:**
+  
+  - Chain helper functions now support `.withStartBlock()`, `.withEndBlock()`, and `.withBlockRange()` methods
+  - Block range support for contract, ABI, and global targets
+
+  **Example Usage:**
+
+  ```solidity
+  // Range from block onwards
+  addTrigger(chainContract(Chains.Ethereum.withStartBlock(10000000), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  
+  // Inclusive block range
+  addTrigger(chainContract(Chains.Ethereum.withStartBlock(10000000).withEndBlock(10000001), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  
+  // Using BlockRange directly
+  BlockRange memory range = BlockRangeLib.withStartBlock(100000).withEndBlock(10000001);
+  addTrigger(chainContract(Chains.Ethereum.withBlockRange(range), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  ```
+</Update>
+
 <Update label="July 25, 2025" description="CLI v0.0.83">
   **CallFrame Properties Are Now Functions**
 
