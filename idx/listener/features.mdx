@@ -291,5 +291,10 @@ Sim IDX supports several PostgreSQL index types. `BTREE` is the default and most
 The `sim build` command automatically validates your index definitions. If it detects an error in the syntax, it will fail the build and provide a descriptive error message.
 
 For example, if you misspell a column name:
-`Error: Cannot find column(s): 'block_numbr' in event PositionOwnerChanges`
+
+```text
+2025-08-06T10:14:31.112260Z ERROR sim: Error: Cannot find column(s): 'block_numbr' in event PositionOwnerChanges
+sim v0.0.83 (eaddf2 2025-06-22T18:01:14.000000000Z)
+For more help, visit: <https://docs.sim.dune.com/idx>
+```
 
