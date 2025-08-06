@@ -3,6 +3,44 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="August 5, 2025" description="CLI v0.0.86">
+  **New Feature: Custom Block Range Support**
+
+  You can now specify custom block ranges for your triggers, allowing you to target specific blocks or time periods for each trigger.
+
+  **What's new:**
+  
+  - Chain helper functions now support `.withStartBlock()`, `.withEndBlock()`, and `.withBlockRange()` methods
+  - Block range support for contract, ABI, and global targets
+
+  **Examples:** 
+
+  **Range from Block Onwards**
+
+  ```solidity
+  addTrigger(chainContract(Chains.Ethereum.withStartBlock(10000000), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  ```
+  
+  This creates a trigger that listens to events starting from block 10,000,000 onwards with no end block. The `withStartBlock()` method creates a `BlockRange` struct with `BlockRangeKind.RangeFrom`, meaning it captures all blocks from the specified start block to the latest available block.
+
+  **Inclusive Block Range**
+
+  ```solidity
+  addTrigger(chainContract(Chains.Ethereum.withStartBlock(10000000).withEndBlock(10000001), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  ```
+
+  This creates a trigger that listens to events only within blocks 10,000,000 to 10,000,001 (both inclusive). The `withEndBlock()` method modifies the `BlockRange` to use `BlockRangeKind.RangeInclusive`, creating a bounded range that stops processing after the end block.
+
+  **Using BlockRange Struct Directly**
+
+  ```solidity
+  BlockRange memory range = BlockRangeLib.withStartBlock(100000).withEndBlock(10000001);
+  addTrigger(chainContract(Chains.Ethereum.withBlockRange(range), 0x1F98431c8aD98523631AE4a59f267346ea31F984), listener.triggerOnPoolCreatedEvent());
+  ```
+
+  This demonstrates creating a `BlockRange` struct directly using the `BlockRangeLib` library functions before applying it to the chain. The `BlockRange` struct is available through the `sim-idx-sol` import. This approach gives you more flexibility to reuse ranges across multiple triggers or build complex range logic.
+</Update>
+
 <Update label="July 25, 2025" description="CLI v0.0.83">
   **CallFrame Properties Are Now Functions**
 
