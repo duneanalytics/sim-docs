@@ -30,7 +30,10 @@ contract Listener2 is ABI2$OnSwapFunction { /* ... */ }
 
 If you need to share state between handlers for conflicting functions within a single contract, you can configure `sim.toml` to prefix the generated names.
 
-Set `codegen_naming_convention = "abi_prefix"` in your `sim.toml` file.
+```toml sim.toml
+[listeners]
+codegen_naming_convention = "abi_prefix"
+```
 
 This changes the generated function names, allowing you to implement them both in the same contract:
 
@@ -96,7 +99,11 @@ To learn more about the `codegen_naming_convention` property and other `sim.toml
 
 You may encounter a `Stack too deep` compilation error if your event contains more than 16 parameters, or if your handler function declares too many local variables. This is due to a fundamental limit in the Solidity EVM.
 
-The solution is to use a pattern called **Struct Flattening**. You group your event parameters into a `struct` and then define your event to take this `struct` as a single, **unnamed** parameter. Sim IDX recognizes this specific pattern and will automatically "flatten" the struct's members into individual columns in your database. This gives you the best of both worlds: code that compiles and a clean, relational database schema.
+The solution is to use a pattern called **Struct Flattening**. You group your event parameters into a `struct` and then define your event to take this struct as a single, **unnamed** parameter. Sim IDX recognizes this specific pattern and will automatically "flatten" the struct's members into individual columns in your database. This gives you the best of both worlds: code that compiles and a clean, relational database schema.
+
+<Info>
+Implement struct flattening in your listener contract code (in `listeners/src/`), not in the generated files. Files in `listeners/lib/sim-idx-generated/` are auto-generated and should never be modified directly, as they will be overwritten when you run `sim build`.
+</Info>
 
 <Steps>
   <Step title="Define a Struct">
@@ -124,6 +131,11 @@ The solution is to use a pattern called **Struct Flattening**. You group your ev
         address poolManager;
     }
     ```
+
+    <Note>
+        This struct can be defined in any Solidity file within `listeners/src/`, but it must be properly imported in any file where you plan to use it for events or handler functions.
+    </Note>
+    
   </Step>
 
   <Step title="Update Event Definition">
