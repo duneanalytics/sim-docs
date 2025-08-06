@@ -163,51 +163,35 @@ For guidance on resolving compilation issues such as name conflicts or `Stack to
 
 ## DB Indexes
 
-Database indexes are a common way to improve database performance.
-Sim IDX lets you define indexes directly in the [event definition](/idx/listener#define-and-emit-events) of your listener contract.
-This gives you fine-grained control over the database performance of your app.
+Database indexes are a common way to improve database performance. Sim IDX lets you define indexes directly on the [event definition](/idx/listener#define-and-emit-events) of your listener contract, giving you fine-grained control of your database's performance.
 
 <Card
-  title="Learn More About Database Indexes"
+  title="Learn More About PostgreSQL Database Indexes"
   href="https://www.postgresql.org/docs/current/indexes-intro.html"
 >
-  To learn more about how database indexes, visit
-  the PostgreSQL documentation.
+  To learn more about database indexes, visit the PostgreSQL documentation.
 </Card>
 
-### How to Add Indexes
+### Index Definition Syntax
 
-To add a database index, use a special comment with the `@custom:index` annotation directly above the `event` definition in your Solidity listener.
+To add a database index, use a special comment with the `@custom:index` annotation directly _above_ the `event` definition in your Solidity listener.
 
 ```text
 /// @custom:index <index_name> <INDEX_TYPE> (<column1>, <column2>, ...);
 ```
 
-Let's take a closer look at what each part of this syntax means:
+The syntax components:
 
 *   `<index_name>`: A unique name for your index.
-*   `<INDEX_TYPE>`: The type of index to create (e.g., `BTREE`).
-*   `(<columns>)`: A comma-separated list of one or more columns to include in the index. These names must **exactly match** the parameter names in your `event` definition, including case.
+*   `<INDEX_TYPE>`: The type of index to create (e.g., `BTREE`, `HASH`).
+*   `(<columns>)`: A comma-separated list of one or more columns to include in the index. These names must **exactly match** the field names in your event or struct definition, including case.
 
-Here is an example of a multi-column index on the `pool`, `block_number`, and `to_address` columns.
+<Accordion title="Adding Indexes to Events with Unnamed Structs">
+
+When events use unnamed structs to avoid [Solidity's "Stack too deep" errors](/idx/listener/errors#stack-too-deep-errors), column names in your index annotations must match the **struct field names**, not event parameter names.
 
 ```solidity
-/// @custom:index po_idx1 BTREE (pool, block_number, to_address);
-event PositionOwnerChanges(
-    bytes32 txn_hash,
-    uint256 block_number,
-    uint256 block_timestamp,
-    address from_address,
-    address to_address,
-    uint256 token_id,
-    address pool
-);
-```
-
-You can also add indexes to events that [use an unnamed struct](/idx/listener/errors#stack-too-deep-errors). The syntax is identical.
-
-```solidity [expandable]
-struct EmitSwapData {
+struct SwapData {
     uint64 chainId;
     bytes32 txnHash;
     uint64 blockNumber;
@@ -228,23 +212,60 @@ struct EmitSwapData {
     address poolManager;
 }
 
-/// @custom:index swap_events_idx BTREE (poolId, blockNumber, recipient, txnHash);
-event Swap(EmitSwapData);
+/// @custom:index swap_pool_time_idx BTREE (poolId, blockNumber, blockTimestamp);
+event Swap(SwapData);
 ```
 
-You can define multiple indexes for a single event by adding multiple `@custom:index` lines. This is useful when your API queries the same table in different ways.
+Notice how the index column names (`poolId`, `blockNumber`, `blockTimestamp`, etc.) correspond exactly to the field names in the `SwapData` struct, even though the event takes an unnamed parameter.
+
+</Accordion>
+
+<Accordion title="Adding Indexes to Events with Named Parameters">
+
+For simple events with fewer parameters that don't hit Solidity's stack limits, you can use named parameters directly. Column names must match the event parameter names.
 
 ```solidity
-/// @custom:index lp_events_by_pool BTREE (pool, block_number);
-/// @custom:index lp_events_by_owner BTREE (owner);
-event LpEvents(
+/// @custom:index position_owner_idx HASH (to_address, token_id);
+event PositionOwnerChanges(
     bytes32 txn_hash,
-    // ...
-    address pool,
-    address owner,
-    // ...
+    uint256 block_number,
+    uint256 block_timestamp,
+    address from_address,
+    address to_address,
+    uint256 token_id,
+    address pool
 );
 ```
+
+</Accordion>
+
+### Multiple Indexes Per Event
+
+You can define multiple indexes for a single event by adding multiple `@custom:index` lines. This is useful when you want to query the same table in different ways.
+
+```solidity
+struct LiquidityEventData {
+    bytes32 txnHash;
+    uint64 blockNumber;
+    uint64 blockTimestamp;
+    address pool;
+    address owner;
+    int24 tickLower;
+    int24 tickUpper;
+    uint128 liquidity;
+    uint256 amount0;
+    uint256 amount1;
+}
+
+/// @custom:index lp_events_by_pool BTREE (pool, blockNumber);
+/// @custom:index lp_events_by_owner BRIN (owner, blockTimestamp);
+/// @custom:index lp_events_by_tick_range HASH (pool, tickLower, tickUpper);
+event LiquidityEvent(LiquidityEventData);
+```
+
+<Note>
+When events use unnamed structs to solve [Solidity's stack errors](/idx/listener/errors#stack-too-deep-errors), Sim IDX automatically flattens the struct fields into individual database columns. Your index annotations reference these **struct field names**.
+</Note>
 
 ### Supported Index Types
 
@@ -258,14 +279,14 @@ Sim IDX supports several PostgreSQL index types. `BTREE` is the default and most
 | `GIN`    | An inverted index useful for composite types like `array` or `jsonb`. It can efficiently check for the presence of specific values within the composite type. |
 
 <Card
-  title="Learn More About Index Types"
+  title="Learn More About PostgreSQL Index Types"
   href="https://www.postgresql.org/docs/current/indexes-types.html"
 >
   To learn more about index types and their specific use cases, visit the
   PostgreSQL documentation.
 </Card>
 
-### Validation
+### Syntax Validation
 
 The `sim build` command automatically validates your index definitions. If it detects an error in the syntax, it will fail the build and provide a descriptive error message.
 
