@@ -134,7 +134,7 @@ Any endpoint that supports the `chain_ids` query parameter accepts a tag in plac
 
 When using `chain_ids`, you can request chains in several ways:
 
-- **By tags**: `?chain_ids=mainnet` returns all chains tagged with `mainnet`. Using `?chain_ids=mainnet,testnet` returns all chains that are tagged with `mainnet` _and_  `testnet`.
+- **By tags**: `?chain_ids=mainnet` returns all chains tagged with `mainnet`. Using `?chain_ids=mainnet,testnet` returns all chains that are tagged with `mainnet` _or_ `testnet`.
 - **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum)
 - **Default behavior**: Omitting `chain_ids` returns only chains tagged `default`.
 
