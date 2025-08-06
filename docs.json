@@ -73,14 +73,7 @@
             "group": "Sim IDX",
             "pages": [
               "idx",
-              {
-                "group": "Deployment",
-                "pages": [
-                  "idx/deployment",
-                  "idx/deployment-environments",
-                  "idx/app-page"
-                ]
-              }
+              "idx/changelog"
             ]
           },
           {
@@ -101,6 +94,14 @@
             ]
           },
           {
+            "group": "Deployment",
+            "pages": [
+              "idx/deployment",
+              "idx/deployment-environments",
+              "idx/app-page"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "idx/guides/swap-sample-abi",
@@ -112,8 +113,7 @@
             "group": "Resources",
             "pages": [
               "idx/resources/templates",
-              "idx/build-with-ai",
-              "idx/changelog"
+              "idx/build-with-ai"
             ]
           }
         ]
