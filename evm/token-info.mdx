@@ -27,6 +27,35 @@ The Tokens API provides metadata and realtime pricing information for native and
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response.
 
+## Historical prices
+
+You can request 24 hour point-in-time prices by adding the optional `historical_prices` query parameter. Use whole numbers only, from 1 to 24. You can request up to three offsets. For example, `historical_prices=24` returns the price 24 hours ago. `historical_prices=1,6,24` returns prices 1 hour ago, 6 hours ago, and 24 hours ago.
+
+<Note>
+  The `historical_prices` query parameter is currently supported only on the EVM Token Info and EVM Balances endpoints.
+</Note>
+
+When set, each token object includes a `historical_prices` array with one entry per offset:
+
+```json
+{
+  "tokens": [
+    {
+      "chain": "base",
+      "symbol": "ETH",
+      "price_usd": 3897.492219,
+      "historical_prices": [
+        { "offset_hours": 24, "price_usd": 3816.557286 },
+        { "offset_hours": 6,  "price_usd": 3914.205613 },
+        { "offset_hours": 1,  "price_usd": 3898.926195 }
+      ]
+    }
+  ]
+}
+```
+
+Percent changes are not returned. You can compute your own percentage differences using the current `price_usd` and the values in `historical_prices[].price_usd`.
+
 ## Pagination
 
 This endpoint uses cursor-based pagination. You can use the `limit` parameter to define the maximum page size.
