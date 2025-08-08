@@ -22,6 +22,38 @@ The Token Balances API provides accurate and fast real time balances of the nati
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a USD price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
 
+## Historical prices
+
+You can request 24 hour point-in-time prices by adding the `historical_prices` query parameter. Use whole numbers only, from 1 to 24. You can request up to three offsets. For example, `&historical_prices=24` returns the price 24 hours ago. `&historical_prices=1,6,24` returns prices 1 hour ago, 6 hours ago, and 24 hours ago.
+
+<Note>
+  The `historical_prices` parameter is currently supported only on the EVM Balances and EVM Token Info endpoints.
+</Note>
+
+When set, each balance includes a `historical_prices` array with one entry per offset:
+
+```json
+{
+  "balances": [
+    {
+      "symbol": "ETH",
+      "price_usd": 3896.8315,
+      "historical_prices": [
+        { "offset_hours": 24, "price_usd": 3816.476803 },
+        { "offset_hours": 6,  "price_usd": 3910.384068 },
+        { "offset_hours": 1,  "price_usd": 3898.632723 }
+      ]
+    }
+  ]
+}
+```
+
+**Percent changes are not returned**. You can compute your own differences using the `price_usd` on the balance and the values in `historical_prices[].price_usd`.
+
+<Warning>
+  The maximum number of historical price offsets is 3. Only whole numbers 1–24 are accepted. If more than 3 are provided, the API returns an error.
+</Warning>
+
 ## Token Filtering
 
 We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.

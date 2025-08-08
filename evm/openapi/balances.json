@@ -73,6 +73,44 @@
             }
           },
           {
+            "name": "historical_prices",
+            "in": "query",
+            "description": "24 hour price history selection. Accepts integer | integer[]. Provide whole numbers from 1 to 24, up to 3 time offsets (e.g. 24 or 1,6,24). When set, each balance includes a historical_prices array with one entry per offset.",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 1,
+                  "maximum": 24
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 1,
+                    "maximum": 24
+                  },
+                  "maxItems": 3
+                }
+              ]
+            },
+            "examples": {
+              "single_offset": {
+                "summary": "Single offset",
+                "value": "24"
+              },
+              "three_offsets": {
+                "summary": "Three offsets",
+                "value": "1,6,24"
+              }
+            }
+          },
+          {
             "name": "offset",
             "in": "query",
             "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
@@ -138,6 +176,25 @@
   },
   "components": {
     "schemas": {
+      "HistoricalPricePoint": {
+        "type": "object",
+        "required": [
+          "offset_hours",
+          "price_usd"
+        ],
+        "properties": {
+          "offset_hours": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 24
+          },
+          "price_usd": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "BalanceData": {
         "type": "object",
         "required": [
@@ -180,6 +237,14 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "historical_prices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalPricePoint"
+            },
+            "nullable": true,
+            "description": "Historical price points for the requested offsets. Only present when the historical_prices query parameter is provided."
           },
           "symbol": {
             "type": "string",
