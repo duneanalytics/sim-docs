@@ -29,8 +29,10 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+            },
+            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
           },
           {
             "name": "uri",
@@ -38,8 +40,10 @@
             "description": "Wallet to get activity for",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+            },
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "offset",
@@ -47,8 +51,7 @@
             "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
             "required": false,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
@@ -59,7 +62,6 @@
             "schema": {
               "type": "integer",
               "format": "int64",
-              "nullable": true,
               "minimum": 0
             }
           }

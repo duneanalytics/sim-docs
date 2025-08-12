@@ -126,7 +126,8 @@
             "description": "The identifier of the blockchain (e.g., 8453 for Base). For a full list see Supported Chains.",
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "format": "int32",
+              "default": 8453
             },
             "example": 8453
           },
@@ -138,7 +139,8 @@
             "schema": {
               "type": "string",
               "format": "address",
-              "pattern": "^0x[a-fA-F0-9]{40}$"
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "default": "0x63706e401c06ac8513145b7687A14804d17f814b"
             },
             "example": "0x63706e401c06ac8513145b7687A14804d17f814b"
           },

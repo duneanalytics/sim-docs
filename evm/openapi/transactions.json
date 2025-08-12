@@ -29,8 +29,10 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+            },
+            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
           },
           {
             "name": "uri",
@@ -38,8 +40,10 @@
             "description": "EVM address",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+            },
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           {
             "name": "chain_ids",

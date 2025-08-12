@@ -28,8 +28,10 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+            },
+            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
           },
           {
             "name": "uri",
@@ -37,8 +39,10 @@
             "description": "The contract address of the token or 'native' for the native token of the chain",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
+            },
+            "example": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
           },
           {
             "name": "chain_ids",
@@ -47,9 +51,10 @@
             "required": true,
             "schema": {
               "type": "string",
-              "nullable": true
+              "nullable": true,
+              "default": "8453"
             },
-            "example": "1,8453"
+            "example": "8453"
           },
           {
             "name": "historical_prices",

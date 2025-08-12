@@ -29,8 +29,10 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+            },
+            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
           },
           {
             "name": "uri",
@@ -38,8 +40,10 @@
             "description": "SVM address",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "default": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY"
+            },
+            "example": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY"
           },
           {
             "name": "limit",

@@ -127,7 +127,8 @@
             "schema": {
               "type": "string",
               "format": "address",
-              "pattern": "^0x[a-fA-F0-9]{40}$"
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             },
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
