@@ -27,6 +27,10 @@ It displays the **Deployment ID** (unique UUID for this deployment), **Environme
 
 When a build is running the status badge moves from **Building → Ingesting → Ready**. Previous builds stay available in the [**Other deployments**](#other-deployments).
 
+<Note>
+During **Ingesting**, real-time indexing is live and historical backfill runs to completion. The backfill re-triggers only when you change your Listener Contract. See the full details in [Build and Ingestion Lifecycle](/idx/deployment-environments#build-and-ingestion-lifecycle).
+</Note>
+
 ### DB connection
 
 A Postgres **DB connection** string is issued for every deployment.

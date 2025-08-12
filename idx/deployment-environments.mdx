@@ -31,6 +31,31 @@ Each preview deployment will get its own isolated database and unique API URL.
   <img src="/images/idx/deployment/other-deployments.png" />
 </Frame>
 
+## Build and Ingestion Lifecycle
+
+Every deployment progresses through three statuses: **Building → Ingesting → Ready**. This lifecycle governs when your code is compiled, when data is indexed, and what changes re-trigger historical backfill.
+
+### Building
+
+After you push a commit, Sim IDX builds your app (equivalent to running `sim build`). If there is a problem, the build fails with clear logs to help you resolve it. Fix the issue locally, commit, and push again to start a new build.
+
+### Ingesting
+
+When the build succeeds, the deployment begins ingesting. Two things happen in parallel:
+
+- Real‑time indexing from the chain tip begins immediately.
+- Historical backfill starts for the data defined by your Listener Contract. The status percentage reflects the backfill progress until it reaches 100%.
+
+Your APIs and database are usable as soon as the deployment enters Ingesting. Response completeness improves as the backfill advances.
+
+<Note>
+Backfill is re-triggered only when you change your Listener Contract (including generated bindings that alter what the listener indexes). API-only or other non-listener code changes will create a new deployment but will not re-run historical backfill. The new deployment continues from the latest indexed state. To force a new backfill, modify your listener, commit, and push.
+</Note>
+
+### Ready
+
+Backfill has completed (100%). Your app continues to index new onchain activity in real time.
+
 ## PR Flow
 
 For a more structured development process, you can use PRs on GitHub to trigger preview deployments.
