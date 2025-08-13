@@ -241,17 +241,6 @@
                       "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
                       "entries": [
                         {
-                          "contract_address": "0x344299dd2af8f81246dcb7b3368c6b9b5ddad4f6",
-                          "token_standard": "ERC1155",
-                          "token_id": "1",
-                          "chain": "bnb",
-                          "chain_id": 56,
-                          "name": "launchspx org",
-                          "metadata": null,
-                          "balance": "1",
-                          "last_acquired": "2025-08-11T04:22:52Z"
-                        },
-                        {
                           "contract_address": "0x5d28dcf2fbbd3738c0ebe9de03eafcb4ec33015d",
                           "token_standard": "ERC1155",
                           "token_id": "1",
@@ -271,6 +260,16 @@
                           },
                           "balance": "8",
                           "last_acquired": "2025-08-10T03:58:59Z"
+                        },
+                        {
+                          "contract_address": "0x344299dd2af8f81246dcb7b3368c6b9b5ddad4f6",
+                          "token_standard": "ERC1155",
+                          "token_id": "1",
+                          "chain": "bnb",
+                          "chain_id": 56,
+                          "name": "launchspx org",
+                          "balance": "1",
+                          "last_acquired": "2025-08-11T04:22:52Z"
                         },
                         {
                           "contract_address": "0x3c020f2124b84bd079985c77f93d4a750512448c",
@@ -299,7 +298,6 @@
                           "token_id": "24",
                           "chain": "optimism",
                           "chain_id": 10,
-                          "metadata": null,
                           "balance": "1",
                           "last_acquired": "2025-08-07T14:51:57Z"
                         }
