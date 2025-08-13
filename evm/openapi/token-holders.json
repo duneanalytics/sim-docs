@@ -99,14 +99,6 @@
           }
         }
       }
-    },
-    "securitySchemes": {
-      "SimApiKeyHeader": {
-        "type": "apiKey",
-        "name": "X-Sim-Api-Key",
-        "in": "header",
-        "description": "API key for authenticating requests."
-      }
     }
   },
   "paths": {
@@ -119,6 +111,15 @@
           "EVM"
         ],
         "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "required": true,
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "chain_id",
             "in": "path",
@@ -165,11 +166,6 @@
             "schema": {
               "type": "string"
             }
-          }
-        ],
-        "security": [
-          {
-            "SimApiKeyHeader": []
           }
         ],
         "responses": {
