@@ -31,8 +31,7 @@
             "schema": {
               "type": "string",
               "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
-            },
-            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+            }
           },
           {
             "name": "uri",
@@ -42,17 +41,15 @@
             "schema": {
               "type": "string",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
-            },
-            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+            }
           },
           {
             "name": "chain_ids",
             "in": "query",
-            "description": "A comma separated list of chain_ids or tags for blockchains to get balances for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.  Only balances for blockchains tagged with all the specified tags are returned. Please see the response of the /chains endpoint for the tags on each blockchain.",
             "required": false,
+            "description": "Filter by chain(s). Accepts a single numeric chain ID (e.g. `?chain_ids=1`), a single chain name (e.g. `?chain_ids=ethereum`), or a comma separated list of either (e.g. `?chain_ids=1,137` or `?chain_ids=ethereum,polygon`). If omitted, results include collectibles from chains with the \"default\" tag for the address. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
@@ -62,8 +59,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["erc20", "native"],
-              "nullable": true
+              "enum": ["erc20", "native"]
             }
           },
           {
@@ -72,8 +68,7 @@
             "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`",
             "required": false,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
@@ -120,20 +115,20 @@
             "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
             "required": false,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
             "name": "limit",
             "in": "query",
-            "description": "Maximum number of transactions to return",
+            "description": "Maximum number of balances to return. Default is 1000 when not provided. Values above 1000 are reduced to 1000.",
             "required": false,
             "schema": {
               "type": "integer",
-              "format": "int64",
-              "nullable": true,
-              "minimum": 0
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1000
             }
           }
         ],
@@ -145,34 +140,56 @@
                 "schema": {
                   "$ref": "#/components/schemas/BalancesResponse"
                 },
-                "example": {
+                "examples": {
+                  "success": {
+                    "value": {
+                  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
                   "balances": [
                     {
-                      "address": "native",
-                      "amount": "605371497350928252303",
                       "chain": "ethereum",
+                      "chain_id": 1,
+                      "address": "0x0e36c45d16585d1801e37cfaa577a9ad39f9343a",
+                      "amount": "45787557175393926414790300082",
+                      "symbol": "Kendu",
+                      "name": "Kendu of Bank",
                       "decimals": 18,
-                      "price_usd": 3042.816964922323,
-                      "symbol": "ETH",
-                      "value_usd": 1842034.6622198338
+                      "price_usd": 1.233346836175539e+21,
+                      "value_usd": 5.647193877847869e+31,
+                      "pool_size": 1233.34683617554,
+                      "low_liquidity": true
+                    },
+                    {
+                      "chain": "ethereum",
+                      "chain_id": 1,
+                      "address": "0x113404d2003c4acf4231a3a62374bb503bff03d7",
+                      "amount": "432599243131405501735524",
+                      "symbol": "ALT",
+                      "name": "AltLayer",
+                      "decimals": 18,
+                      "price_usd": 9.38838601200003e+18,
+                      "value_usd": 4.061408683016688e+24,
+                      "pool_size": 9.38838601200001,
+                      "low_liquidity": true
                     }
                   ],
-                  "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg",
-                  "request_time": "2023-11-07T05:31:56Z",
-                  "response_time": "2023-11-07T05:31:56Z",
-                  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+                        ],
+                        "next_offset": "opaque-pagination-token",
+                        "request_time": "2025-08-13T10:31:08Z",
+                        "response_time": "2025-08-13T10:31:08Z"
+                    }
+                  }
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+            "description": "Bad Request. The request could not be understood by the server due to malformed data"
           },
           "404": {
             "description": "Not Found"
           },
           "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
+            "description": "Internal Server Error. A generic error occurred on the server."
           }
         }
       }
@@ -222,56 +239,46 @@
           },
           "decimals": {
             "type": "integer",
-            "format": "int64",
-            "nullable": true
+            "format": "int64"
           },
           "low_liquidity": {
             "type": "boolean"
           },
           "name": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "pool_size": {
             "type": "number",
-            "format": "double",
-            "nullable": true
+            "format": "double"
           },
           "price_usd": {
             "type": "number",
-            "format": "double",
-            "nullable": true
+            "format": "double"
           },
           "historical_prices": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/HistoricalPricePoint"
             },
-            "nullable": true,
             "description": "Historical price points for the requested offsets. Only present when the historical_prices query parameter is provided."
           },
           "symbol": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "token_metadata": {
             "type": "object",
             "properties": {
               "logo": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "url": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
-            },
-            "nullable": true
+            }
           },
           "value_usd": {
             "type": "number",
-            "format": "double",
-            "nullable": true
+            "format": "double"
           }
         }
       },
@@ -298,8 +305,7 @@
         "type": "object",
         "properties": {
           "error_message": {
-            "type": "string",
-            "nullable": true
+            "type": "string"
           },
           "token_errors": {
             "type": "array",
@@ -327,19 +333,21 @@
               {
                 "$ref": "#/components/schemas/BalanceErrors"
               }
-            ],
-            "nullable": true
+            ]
           },
           "next_offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Use this value as the `offset` in your next request to continue pagination. Not included when there are no more balances."
           },
           "request_time": {
             "type": "string",
-            "nullable": true
+            "format": "date-time",
+            "description": "Timestamp of when the request was received."
           },
           "response_time": {
             "type": "string",
-            "nullable": true
+            "format": "date-time",
+            "description": "Timestamp of when the response was generated."
           },
           "wallet_address": {
             "type": "string",
