@@ -217,12 +217,12 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "Maximum entries per page for collectibles. Default is 250 when not provided. Values above 500 are reduced to 500. If fewer entries exist than the limit, only the available entries are returned.",
+            "description": "Maximum entries per page for collectibles. Default is 250 when not provided. Values above 2500 are reduced to 2500. If fewer entries exist than the limit, only the available entries are returned.",
             "schema": {
               "type": "integer",
               "format": "int32",
               "minimum": 1,
-              "maximum": 500,
+              "maximum": 2500,
               "default": 250
             }
           }

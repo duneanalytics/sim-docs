@@ -148,13 +148,13 @@
             "name": "limit",
             "in": "query",
             "required": false,
-            "description": "Maximum number of token holders to return.",
+            "description": "Maximum number of token holders to return. Default is 500 when not provided. Values above 500 are reduced to 500.",
             "schema": {
               "type": "integer",
               "format": "int32",
               "minimum": 1,
               "maximum": 500,
-              "default": 50
+              "default": 500
             }
           },
           {

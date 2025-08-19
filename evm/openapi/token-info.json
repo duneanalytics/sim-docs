@@ -94,7 +94,7 @@
           {
             "name": "limit",
             "in": "query",
-            "description": "Maximum number of prices to return",
+            "description": "This endpoint returns up to the number of supported chains. See [Supported Chains](/evm/supported-chains) to learn more.",
             "required": false,
             "schema": {
               "type": "integer",

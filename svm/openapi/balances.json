@@ -55,11 +55,13 @@
           {
             "name": "limit",
             "in": "query",
-            "description": "Maximum number of results to return",
+            "description": "Maximum number of results to return. Default is 1000 when not provided. Values above 1000 are reduced to 1000.",
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 100
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1000
             }
           },
           {
