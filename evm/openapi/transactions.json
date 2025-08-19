@@ -49,8 +49,7 @@
             "description": "A comma separated list of chain_ids or tags for blockchains to get transactions for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.",
             "required": false,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           },
           {
@@ -61,7 +60,6 @@
             "schema": {
               "type": "integer",
               "format": "int64",
-              "nullable": true,
               "minimum": 0
             }
           },
@@ -71,8 +69,7 @@
             "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
             "required": false,
             "schema": {
-              "type": "string",
-              "nullable": true
+              "type": "string"
             }
           }
         ],
@@ -171,8 +168,7 @@
           },
           "to": {
             "type": "string",
-            "description": "Address of receiver",
-            "nullable": true
+            "description": "Address of receiver"
           },
           "data": {
             "type": "string",
@@ -180,8 +176,7 @@
           },
           "gas_price": {
             "type": "string",
-            "description": "Gas price of transaction as hexadecimal string",
-            "nullable": true
+            "description": "Gas price of transaction as hexadecimal string"
           },
           "hash": {
             "type": "string",
@@ -193,13 +188,11 @@
           },
           "max_fee_per_gas": {
             "type": "string",
-            "description": "Max fee per gas of transaction as hexadecimal string",
-            "nullable": true
+            "description": "Max fee per gas of transaction as hexadecimal string"
           },
           "max_priority_fee_per_gas": {
             "type": "string",
-            "description": "Max priority fee per gas of transaction as hexadecimal string",
-            "nullable": true
+            "description": "Max priority fee per gas of transaction as hexadecimal string"
           },
           "nonce": {
             "type": "string",
@@ -239,7 +232,7 @@
         "properties": {
           "error_message": {
             "type": "string",
-            "nullable": true
+            
           },
           "transaction_errors": {
             "type": "array",
@@ -267,20 +260,19 @@
               {
                 "$ref": "#/components/schemas/TransactionErrors"
               }
-            ],
-            "nullable": true
+            ]
           },
           "next_offset": {
             "type": "string",
-            "nullable": true
+            
           },
           "request_time": {
             "type": "string",
-            "nullable": true
+            
           },
           "response_time": {
             "type": "string",
-            "nullable": true
+            
           },
           "wallet_address": {
             "type": "string",

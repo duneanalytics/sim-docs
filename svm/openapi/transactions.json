@@ -29,10 +29,8 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
-            },
-            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+              "type": "string"
+            }
           },
           {
             "name": "uri",
@@ -187,7 +185,7 @@
           "next_offset": {
             "type": "string",
             "description": "Pagination token for the next page of results",
-            "nullable": true
+            
           },
           "transactions": {
             "type": "array",

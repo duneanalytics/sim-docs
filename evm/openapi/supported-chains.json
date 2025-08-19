@@ -129,18 +129,15 @@
           },
           "rpc_url": {
             "type": "string",
-            "description": "The RPC URL for this chain",
-            "nullable": true
+            "description": "The RPC URL for this chain"
           },
           "explorer_url": {
             "type": "string",
-            "description": "The block explorer URL for this chain",
-            "nullable": true
+            "description": "The block explorer URL for this chain"
           },
           "logo": {
             "type": "string",
-            "description": "URL to the chain's logo",
-            "nullable": true
+            "description": "URL to the chain's logo"
           }
         }
       },

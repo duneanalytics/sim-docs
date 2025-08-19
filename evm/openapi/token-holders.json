@@ -93,7 +93,6 @@
           },
           "next_offset": {
             "type": "string",
-            "nullable": true,
             "description": "An opaque token for fetching the next page of results. Null if no more results.",
             "example": "eyJvZmZzZXQiOjEwMH0="
           }

@@ -49,7 +49,6 @@
             "required": true,
             "schema": {
               "type": "string",
-              "nullable": true,
               "default": "8453"
             },
             "example": "8453"
@@ -99,7 +98,6 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "nullable": true,
               "minimum": 0
             },
             "example": "100"
@@ -188,43 +186,36 @@
           },
           "name": {
             "type": "string",
-            "description": "The token name",
-            "nullable": true
+            "description": "The token name"
           },
           "decimals": {
             "type": "integer",
-            "description": "The number of decimals for the token",
-            "nullable": true
+            "description": "The number of decimals for the token"
           },
           "price_usd": {
             "type": "number",
             "format": "double",
-            "description": "The price of the token in USD",
-            "nullable": true
+            "description": "The price of the token in USD"
           },
           "historical_prices": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/HistoricalPricePoint"
             },
-            "nullable": true,
             "description": "Historical price points for the requested offsets. Only present when the historical_prices query parameter is provided."
           },
           "total_supply": {
             "type": "string",
-            "description": "The total supply of the token",
-            "nullable": true
+            "description": "The total supply of the token"
           },
           "market_cap": {
             "type": "number",
             "format": "double",
-            "description": "The market capitalization of the token",
-            "nullable": true
+            "description": "The market capitalization of the token"
           },
           "logo": {
             "type": "string",
-            "description": "URL to the token logo",
-            "nullable": true
+            "description": "URL to the token logo"
           }
         }
       },
@@ -248,7 +239,6 @@
           },
           "next_offset": {
             "type": "string",
-            "nullable": true,
             "description": "Pagination cursor for the next page of results"
           }
         }

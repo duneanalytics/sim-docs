@@ -145,103 +145,87 @@
           },
           "token_address": {
             "type": "string",
-            "description": "Contract address of token (for ERC20/ERC721/ERC1155)",
-            "nullable": true
+            "description": "Contract address of token (for ERC20/ERC721/ERC1155)"
           },
           "from": {
             "type": "string",
-            "description": "Address initiating the activity",
-            "nullable": true
+            "description": "Address initiating the activity"
           },
           "to": {
             "type": "string",
-            "description": "Recipient address",
-            "nullable": true
+            "description": "Recipient address"
           },
           "value": {
             "type": "string",
-            "description": "Amount transferred (in WEI) or contract call value",
-            "nullable": true
+            "description": "Amount transferred (in WEI) or contract call value"
           },
           "value_usd": {
             "type": "number",
             "format": "double",
-            "description": "USD value of the transaction",
-            "nullable": true
+            "description": "USD value of the transaction"
           },
           "id": {
             "type": "string",
-            "description": "Token ID (for ERC721/ERC1155 transfers)",
-            "nullable": true
+            "description": "Token ID (for ERC721/ERC1155 transfers)"
           },
           "spender": {
             "type": "string",
-            "description": "Address being approved to spend tokens (for approve activities)",
-            "nullable": true
+            "description": "Address being approved to spend tokens (for approve activities)"
           },
           "token_metadata": {
             "type": "object",
             "description": "Additional token information",
-            "nullable": true,
+            
             "properties": {
               "symbol": {
                 "type": "string",
-                "description": "Token symbol",
-                "nullable": true
+                "description": "Token symbol"
               },
               "decimals": {
                 "type": "integer",
-                "description": "Token decimals",
-                "nullable": true
+                "description": "Token decimals"
               },
               "name": {
                 "type": "string",
-                "description": "Token name",
-                "nullable": true
+                "description": "Token name"
               },
               "logo": {
                 "type": "string",
-                "description": "URL to token logo",
-                "nullable": true
+                "description": "URL to token logo"
               },
               "price_usd": {
                 "type": "number",
                 "format": "double",
-                "description": "Token price in USD",
-                "nullable": true
+                "description": "Token price in USD"
               },
               "pool_size": {
                 "type": "number",
                 "format": "double",
-                "description": "Token pool size",
-                "nullable": true
+                "description": "Token pool size"
               },
               "standard": {
                 "type": "string",
-                "description": "Token standard (e.g., 'erc721')",
-                "nullable": true
+                "description": "Token standard (e.g., 'erc721')"
               }
             }
           },
           "function": {
             "type": "object",
             "description": "Decoded function information (for contract calls)",
-            "nullable": true,
+            
             "properties": {
               "signature": {
                 "type": "string",
-                "description": "Function signature",
-                "nullable": true
+                "description": "Function signature"
               },
               "name": {
                 "type": "string",
-                "description": "Function name",
-                "nullable": true
+                "description": "Function name"
               },
               "inputs": {
                 "type": "array",
                 "description": "Function parameters",
-                "nullable": true,
+                
                 "items": {
                   "type": "object",
                   "properties": {
@@ -265,78 +249,65 @@
           "contract_metadata": {
             "type": "object",
             "description": "Contract metadata",
-            "nullable": true,
+            
             "properties": {
               "name": {
                 "type": "string",
-                "description": "Contract name",
-                "nullable": true
+                "description": "Contract name"
               }
             }
           },
           "from_token_address": {
             "type": "string",
-            "description": "Source token address (for swaps)",
-            "nullable": true
+            "description": "Source token address (for swaps)"
           },
           "from_token_value": {
             "type": "string",
-            "description": "Source token amount (for swaps)",
-            "nullable": true
+            "description": "Source token amount (for swaps)"
           },
           "from_token_metadata": {
             "type": "object",
             "description": "Source token metadata (for swaps)",
-            "nullable": true,
+            
             "properties": {
               "symbol": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "decimals": {
-                "type": "integer",
-                "nullable": true
+                "type": "integer"
               },
               "name": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "logo": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           },
           "to_token_address": {
             "type": "string",
-            "description": "Destination token address (for swaps)",
-            "nullable": true
+            "description": "Destination token address (for swaps)"
           },
           "to_token_value": {
             "type": "string",
-            "description": "Destination token amount (for swaps)",
-            "nullable": true
+            "description": "Destination token amount (for swaps)"
           },
           "to_token_metadata": {
             "type": "object",
             "description": "Destination token metadata (for swaps)",
-            "nullable": true,
+            
             "properties": {
               "symbol": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "decimals": {
-                "type": "integer",
-                "nullable": true
+                "type": "integer"
               },
               "name": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               },
               "logo": {
-                "type": "string",
-                "nullable": true
+                "type": "string"
               }
             }
           }
@@ -357,7 +328,6 @@
           },
           "next_offset": {
             "type": "string",
-            "nullable": true,
             "description": "Pagination cursor for the next page of results"
           }
         }

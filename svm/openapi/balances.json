@@ -29,10 +29,8 @@
             "description": "API key to access the service",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
-            },
-            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+              "type": "string"
+            }
           },
           {
             "name": "uri",
@@ -153,62 +151,62 @@
           "value_usd": {
             "type": "number",
             "description": "Current value of token owned, if available",
-            "nullable": true
+            
           },
           "program_id": {
             "type": "string",
             "description": "Program ID of the token (for SPL tokens)",
-            "nullable": true
+            
           },
           "decimals": {
             "type": "number",
             "description": "Decimals of token",
-            "nullable": true
+            
           },
           "total_supply": {
             "type": "string",
             "description": "Total supply of the token",
-            "nullable": true
+            
           },
           "name": {
             "type": "string",
             "description": "Name of token",
-            "nullable": true
+            
           },
           "symbol": {
             "type": "string",
             "description": "Symbol of token",
-            "nullable": true
+            
           },
           "uri": {
             "type": "string",
             "description": "URI to token metadata",
-            "nullable": true
+            
           },
           "price_usd": {
             "type": "number",
             "description": "Current price of token, if available",
-            "nullable": true
+            
           },
           "liquidity_usd": {
             "type": "number",
             "description": "Liquidity in USD, if available",
-            "nullable": true
+            
           },
           "pool_type": {
             "type": "string",
             "description": "Type of liquidity pool, if available",
-            "nullable": true
+            
           },
           "pool_address": {
             "type": "string",
             "description": "Address of liquidity pool, if available",
-            "nullable": true
+            
           },
           "mint_authority": {
             "type": "string",
             "description": "Mint authority address, if available",
-            "nullable": true
+            
           }
         }
       },
@@ -230,7 +228,7 @@
           "next_offset": {
             "type": "string",
             "description": "Pagination token for the next page of results",
-            "nullable": true
+            
           },
           "balances_count": {
             "type": "number",
