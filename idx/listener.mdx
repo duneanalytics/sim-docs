@@ -90,6 +90,7 @@ The sample app places this logic in `listeners/src/UniswapV3FactoryListener.sol`
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import "sim-idx-sol/Simidx.sol";
 import "sim-idx-generated/Generated.sol";
 
 /// Index calls to the UniswapV3Factory.createPool function on Ethereum
@@ -168,12 +169,16 @@ function onCreatePoolFunction(...) external override {
         inputs.tokenA,
         inputs.tokenB,
         inputs.fee,
-        block.number // pass the new value
+        blockNumber() // pass the new value
     );
 }
 ```
 
 After deploying these changes, your `pool_created` table will automatically include the new `block_number` column.
+
+<Tip>
+Prefer `blockNumber()` over Solidity's `block.number` to standardize access across all supported blockchains.
+</Tip>
 
 ## Trigger Onchain Activity
 
