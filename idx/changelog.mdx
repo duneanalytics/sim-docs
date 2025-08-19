@@ -3,6 +3,42 @@ title: "Changelog"
 description: "Product updates and announcements"
 ---
 
+<Update label="August 19, 2025" description="CLI v0.0.95">
+  The Sim IDX framework has been updated with a new core import and a standardized function for accessing the block number in listener contracts.
+
+  **What's new:**
+
+  *   **Core Import:** All listeners should now include `import "sim-idx-sol/Simidx.sol";`. This file provides essential framework helpers required for core functionality.
+  *   **`blockNumber()` Function:** This function is now available to get the current block number. Use this instead of `block.number` for standardized access across all supported blockchains.
+
+  **Impact:**
+
+  To use the `blockNumber()` function, listeners must include the `sim-idx-sol/Simidx.sol` import. Attempting to call the function without the import will result in a compilation error. Going forward, all listener contracts should adopt this pattern to access core framework features.
+
+  ```diff Example Listener
+  // SPDX-License-Identifier: UNLICENSED
+  pragma solidity ^0.8.13;
+
+  + import "sim-idx-sol/Simidx.sol";
+    import "sim-idx-generated/Generated.sol";
+
+  contract MyListener is MyContract$OnMyEvent {
+      event MyEvent(uint64 chainId, uint256 blockNum);
+
+      function onMyEvent(
+          EventContext memory /*ctx*/,
+          MyContract$MyEventParams memory /*inputs*/
+      ) external override {
+          emit MyEvent(
+              uint64(block.chainid),
+  -           block.number
+  +           blockNumber()
+          );
+      }
+  }
+  ```
+</Update>
+
 <Update label="August 5, 2025" description="CLI v0.0.86">
   **New Feature: Custom Block Range Support**
 

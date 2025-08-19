@@ -91,7 +91,7 @@ Refer to the complete Sim IDX documentation for detailed information: `https://d
 ### Context and Inputs
 
 - Handler functions receive context objects (`EventContext`, `FunctionContext`) and typed input/output structs. To find the correct context objects, look in `lib/sim-idx-generated/`.
-- Access block/transaction data via `block.timestamp`, `ctx.txn.hash`, `ctx.txn.chainId`, etc.
+- Access block/transaction data via global helpers and context objects. Key values include `blockNumber()`, `block.timestamp`, `block.chainid`, and `ctx.txn.hash`. Note that `blockNumber()` is a function call.
 - Access event/function parameters via the `inputs` struct (e.g., `inputs.from`, `inputs.value`).
 
 ### Common Pitfalls & Solutions

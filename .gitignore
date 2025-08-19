@@ -1,2 +1,5 @@
 **/.DS_Store
 .DS_Store
+# Also ignore variant filenames that sometimes appear
+**/.DS_Store?
+.DS_Store?
