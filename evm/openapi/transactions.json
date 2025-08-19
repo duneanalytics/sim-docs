@@ -29,10 +29,8 @@
             "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
-            },
-            "example": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+              "type": "string"
+            }
           },
           {
             "name": "uri",

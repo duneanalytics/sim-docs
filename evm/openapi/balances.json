@@ -29,8 +29,7 @@
             "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "sim_p1bmRCWWOBPaaYdHYvy1a33PuvQ8gJVW"
+              "type": "string"
             }
           },
           {
@@ -172,7 +171,6 @@
                       "low_liquidity": true
                     }
                   ],
-                        ],
                         "next_offset": "opaque-pagination-token",
                         "request_time": "2025-08-13T10:31:08Z",
                         "response_time": "2025-08-13T10:31:08Z"
