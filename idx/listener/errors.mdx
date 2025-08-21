@@ -157,6 +157,7 @@ Implement struct flattening in your listener contract code (in `listeners/src/`)
         EmitSwapData memory emitData;
         emitData.chainId = uint64(block.chainid);
         emitData.txnHash = ctx.txn.hash;
+        emitData.blockNumber = blockNumber();
         // ... populate all other fields
 
         emit Swap(emitData);

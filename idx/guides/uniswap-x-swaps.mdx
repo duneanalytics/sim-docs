@@ -60,6 +60,7 @@ Sim IDX solves this with ABI-based triggers. Instead of targeting specific addre
 We achieve this with the `ChainIdAbi` helper in our `Triggers` contract. The code below sets up our listener to trigger on the `execute` function family for *any* contract on Ethereum, Unichain, and Base that implements the `IReactor` interface.
 
 ```solidity listeners/src/Main.sol
+import "sim-idx-sol/Simidx.sol";
 contract Triggers is BaseTriggers {
     function triggers() external virtual override {
         Listener listener = new Listener();
@@ -169,7 +170,7 @@ function emitUniswapXTrade(
         SwapData(
             uint64(block.chainid),
             txnHash,
-            uint64(block.number),
+            blockNumber(),
             uint64(block.timestamp),
             makingToken,
             makingAmount,
