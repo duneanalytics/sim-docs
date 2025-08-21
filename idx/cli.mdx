@@ -193,3 +193,46 @@ INFO deploy: {
   "errors": []
 }
 ```
+
+##### Handling Failed Transaction Events
+
+When you run `sim listeners evaluate`, the output in your terminal may include events where the value of the `name` property is prefixed with `fail_`, such as `fail_PoolCreated`. A `fail_` prefix indicates that the event data was generated from a transaction that **failed** or was **reverted** onchain.
+
+<Info>
+This output appears exclusively in the terminal during a local `evaluate` run to give you a complete picture of how your listener reacts to all transactions within a block, including failed ones.
+
+Data from these failed transactions is **not** written to your app's database.It is for informational purposes only.
+</Info>
+
+Here's an example of a failed trace in the terminal:
+
+```text Failed Transaction Example
+INFO deploy: {
+  "events": [
+    {
+      "name": "fail_TracesBase",
+      "fields": {
+        "block_number": 34190545,
+        "block_timestamp": 1755170437,
+        "call_depth": 2,
+        "call_type": 3,
+        "callee": "0x7458bfdc30034eb860b265e6068121d18fa5aa72",
+        "caller": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "func_sig": "0x70a08231",
+        "parent_func_sig": "0x70a08231",
+        "success": false,
+        "trace_address": "1,4,0",
+        "tx_from": "0x17288b66bcadf1a3d083eb33e6c9ce772ff4e74f",
+        "tx_to": "0x0000000000000000000000000000000000000000",
+        "txn_hash": "0x9e00c37c073b300294398b2e028dfe58e1daf6ee0df53ef593de891714010fed",
+        "user_op_from": "0x0000000000000000000000000000000000000000"
+      },
+      "metadata": {
+        "blockNumber": 34190545,
+        "chainId": 8453
+      }
+    }
+  ],
+  "errors": []
+}
+```
