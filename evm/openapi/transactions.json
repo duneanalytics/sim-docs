@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/transactions/{uri}": {
+    "/v1/evm/transactions/{wallet_address}": {
       "get": {
         "tags": [
           "evm-transactions"
@@ -33,9 +33,9 @@
             }
           },
           {
-            "name": "uri",
+            "name": "wallet_address",
             "in": "path",
-            "description": "EVM address",
+            "description": "EVM wallet address",
             "required": true,
             "schema": {
               "type": "string",
@@ -46,7 +46,7 @@
           {
             "name": "chain_ids",
             "in": "query",
-            "description": "A comma separated list of chain_ids or tags for blockchains to get transactions for. Examples: chain_ids=1,8453,10, chain_ids=mainnet,testnet.",
+            "description": "Filter by chain(s). Accepts a single numeric chain ID (e.g. ?chain_ids=1), a single chain name (e.g. ?chain_ids=ethereum), or a comma separated list of either (e.g. ?chain_ids=1,137 or ?chain_ids=ethereum,polygon). If omitted, results include collectibles from chains with the \"default\" tag for the address. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
             "required": false,
             "schema": {
               "type": "string"
@@ -73,6 +73,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "decode",
+            "in": "query",
+            "description": "When true, it includes decoded transaction logs in the response. Accepts only boolean values true or false. You can also omit this parameter to disable decoding. Invalid values will return an error.",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            },
+            "example": true
           }
         ],
         "responses": {
@@ -87,40 +97,109 @@
                   "transactions": [
                     {
                       "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                      "block_hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-                      "block_number": "12345678",
-                      "block_time": "2023-11-07T05:31:56Z",
-                      "block_version": 1,
-                      "chain": "ethereum",
-                      "from": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
-                      "to": "0x1234567890abcdef1234567890abcdef12345678",
+                      "block_hash": "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                      "block_number": "75552358",
+                      "block_time": "2025-08-23T09:01:45Z",
+                      "chain": "polygon",
+                      "from": "0xd727439199fe43b9b0de6fc3b72c686a28fa131f",
+                      "to": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
                       "data": "0x",
-                      "gas_price": "0x1234567890",
-                      "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
-                      "index": "0",
-                      "max_fee_per_gas": "0x1234567890",
-                      "max_priority_fee_per_gas": "0x1234567890",
-                      "nonce": "0x1234",
+                      "gas_price": "0xb334fb607",
+                      "hash": "0x781fa87a793a4e0087f8bcc89ff9af58ec18ab7ee6028b627d7b73690142052e",
+                      "index": "36",
+                      "max_fee_per_gas": "0xb334fb607",
+                      "max_priority_fee_per_gas": "0xb334fb607",
+                      "nonce": "0x1",
                       "transaction_type": "0x2",
-                      "value": "0x1234567890abcdef"
+                      "value": "0x12eae0eca606880",
+                      "logs": [
+                        {
+                          "address": "0x0000000000000000000000000000000000001010",
+                          "data": "0x...",
+                          "topics": [
+                            "0xe6497e3ee548a3372136af2fcb0696db31fc6cf20260707645068bd3fe97f3c4",
+                            "0x0000000000000000000000000000000000000000000000000000000000001010",
+                            "0x000000000000000000000000d727439199fe43b9b0de6fc3b72c686a28fa131f",
+                            "0x000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045"
+                          ],
+                          "decoded": {
+                            "name": "LogTransfer",
+                            "inputs": [
+                              { "name": "token", "type": "address", "value": "0x0000000000000000000000000000000000001010" },
+                              { "name": "from", "type": "address", "value": "0xd727439199fe43b9b0de6fc3b72c686a28fa131f" },
+                              { "name": "to", "type": "address", "value": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045" },
+                              { "name": "amount", "type": "uint256", "value": "85196821514709120" }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "block_hash": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "block_number": "23226171",
+                      "block_time": "2025-08-26T15:25:59Z",
+                      "chain": "ethereum",
+                      "from": "0xb6ea791ee66c6813798743a5e5f11aff170a1eda",
+                      "to": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "data": "0x",
+                      "gas_price": "0x858ab1c1",
+                      "hash": "0xb5779671171c14bc65b30caf0dece3643b6926c105c6120bbb3b89e4aeead7e6",
+                      "index": "78",
+                      "max_fee_per_gas": "0x858ab1c1",
+                      "max_priority_fee_per_gas": "0x858ab1c1",
+                      "nonce": "0xc3c",
+                      "transaction_type": "0x2",
+                      "value": "0x0",
+                      "logs": []
+                    },
+                    {
+                      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "block_hash": "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+                      "block_number": "75665618",
+                      "block_time": "2025-08-26T05:13:11Z",
+                      "chain": "polygon",
+                      "from": "0x6d359d23078ea94dd02af3122ab95b64551332c1",
+                      "to": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "data": "0x",
+                      "gas_price": "0x7e1c0113c",
+                      "hash": "0x8d49b7b2036c10725b4ebe4b2ae605cf66ea568777b28b2f9e754c2e39a59159",
+                      "index": "44",
+                      "max_fee_per_gas": "0x7e1c0113c",
+                      "max_priority_fee_per_gas": "0x7e1c0113c",
+                      "nonce": "0x84",
+                      "transaction_type": "0x2",
+                      "value": "0xf4240",
+                      "logs": [
+                        {
+                          "address": "0x0000000000000000000000000000000000001010",
+                          "data": "0x...",
+                          "topics": [
+                            "0xe6497e3ee548a3372136af2fcb0696db31fc6cf20260707645068bd3fe97f3c4",
+                            "0x0000000000000000000000000000000000000000000000000000000000001010",
+                            "0x0000000000000000000000006d359d23078ea94dd02af3122ab95b64551332c1",
+                            "0x000000000000000000000000d8da6bf26964af9d7eed9e03e53415d37aa96045"
+                          ],
+                          "decoded": {
+                            "name": "LogTransfer",
+                            "inputs": [
+                              { "name": "token", "type": "address", "value": "0x0000000000000000000000000000000000001010" },
+                              { "name": "from", "type": "address", "value": "0x6d359d23078ea94dd02af3122ab95b64551332c1" },
+                              { "name": "to", "type": "address", "value": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045" },
+                              { "name": "amount", "type": "uint256", "value": "1000000" }
+                            ]
+                          }
+                        }
+                      ]
                     }
                   ],
                   "next_offset": "dKMBWDLqM7vlyn5OMEXsLWp0nI4AAAABA5JLazNO7x4poVGqUwsgxgqvvIg",
-                  "request_time": "2023-11-07T05:31:56Z",
-                  "response_time": "2023-11-07T05:31:56Z",
+                  "request_time": "2025-08-26T15:31:56Z",
+                  "response_time": "2025-08-26T15:31:56Z",
                   "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
                 }
               }
             }
-          },
-          "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
           }
         }
       }
@@ -207,6 +286,63 @@
           "value": {
             "type": "string",
             "description": "Value of transaction as hexadecimal string"
+          },
+          "logs": {
+            "type": "array",
+            "description": "Raw EVM logs for this transaction. When decoding is enabled via the decode query parameter, individual log entries may include a decoded object.",
+            "items": {
+              "$ref": "#/components/schemas/TransactionLog"
+            }
+          }
+        }
+      },
+      "TransactionLog": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Contract address that emitted the log"
+          },
+          "data": {
+            "type": "string",
+            "description": "Hex-encoded log data"
+          },
+          "topics": {
+            "type": "array",
+            "description": "Array of 0x-prefixed topic hashes",
+            "items": {
+              "type": "string"
+            }
+          },
+          "decoded": {
+            "type": "object",
+            "description": "Present only when decode=true and a matching ABI signature is found for this log.",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Decoded event name"
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/DecodedInput"
+                }
+              }
+            }
+          }
+        }
+      },
+      "DecodedInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
           }
         }
       },
@@ -233,8 +369,7 @@
         "type": "object",
         "properties": {
           "error_message": {
-            "type": "string",
-            
+            "type": "string"
           },
           "transaction_errors": {
             "type": "array",
@@ -265,16 +400,13 @@
             ]
           },
           "next_offset": {
-            "type": "string",
-            
+            "type": "string"
           },
           "request_time": {
-            "type": "string",
-            
+            "type": "string"
           },
           "response_time": {
-            "type": "string",
-            
+            "type": "string"
           },
           "wallet_address": {
             "type": "string",

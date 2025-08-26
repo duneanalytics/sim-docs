@@ -1,7 +1,7 @@
 ---
 title: "Transactions"
 description: "Retrieve granular transaction details including block information, gas data, transaction types, and raw transaction values."
-openapi: "/evm/openapi/transactions.json GET /v1/evm/transactions/{uri}"
+openapi: "/evm/openapi/transactions.json GET /v1/evm/transactions/{wallet_address}"
 sidebarTitle: "Transactions"
 ---
 
@@ -13,6 +13,16 @@ The Transactions API allows for quick and accurate lookup of transactions associ
 Transactions are ordered by descending block time, so the most recent transactions appear first.
 
 <SupportedChains endpoint="transactions" />
+
+## Decoded transactions
+
+Enable decoded logs by adding the `?decode=true` query parameter to your request.
+When a transaction contains EVM logs, each log may include an additional `decoded` object representing the parsed event.
+See the [specification](#response-logs-decoded) below for response details.
+
+<Note>
+  Transactions without logs, or logs without a known signature, **will not** include decoded logs.
+</Note>
 
 ## Pagination
 
