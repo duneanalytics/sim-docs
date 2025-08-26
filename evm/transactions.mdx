@@ -34,3 +34,64 @@ The `next_offset` value is included in the initial response and can be utilized 
 <Warning>
   You can only use the value from `next_offset` to set the `offset` parameter of the next page of results. Using your own `offset` value will not have any effect.
 </Warning>
+
+## Usage
+
+<RequestExample>
+
+```bash cURL
+curl -X GET "https://api.sim.dune.com/v1/evm/transactions/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet&decode=true&limit=50" \
+  -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const url = "https://api.sim.dune.com/v1/evm/transactions/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet&decode=true&limit=50";
+const res = await fetch(url, { headers: { "X-Sim-Api-Key": "YOUR_API_KEY" } });
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/transactions/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+params = {"chain_ids": "mainnet", "decode": True, "limit": 50}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "transactions": [
+    {
+      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+      "block_hash": "0xbbbbbb...",
+      "block_number": "75552358",
+      "block_time": "2025-08-23T09:01:45Z",
+      "chain": "polygon",
+      "from": "0xd727439199fe43b9b0de6fc3b72c686a28fa131f",
+      "to": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+      "hash": "0x781fa87a793a4e0087f8bcc89ff9af58ec18ab7ee6028b627d7b73690142052e",
+      "logs": [
+        {
+          "address": "0x0000000000000000000000000000000000001010",
+          "decoded": {
+            "name": "LogTransfer",
+            "inputs": [ { "name": "from", "type": "address", "value": "0xd727..." } ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+```json 400
+{ "error": "Bad Request" }
+```
+
+</ResponseExample>

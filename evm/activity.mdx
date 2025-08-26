@@ -41,3 +41,60 @@ This re-org handling is an automatic, non-configurable feature designed to provi
 ## Token Filtering
 
 We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
+
+## Usage
+
+<RequestExample>
+
+```bash cURL
+curl -X GET "https://api.sim.dune.com/v1/evm/activity/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?limit=20" \
+  -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const res = await fetch("https://api.sim.dune.com/v1/evm/activity/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?limit=20", {
+  headers: { "X-Sim-Api-Key": "YOUR_API_KEY" }
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/activity/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+params = {"limit": 20}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "activity": [
+    {
+      "chain_id": 8453,
+      "block_number": 26635101,
+      "block_time": "2025-02-20T13:52:29+00:00",
+      "tx_hash": "0x184544c8d67a0cbe...",
+      "type": "receive",
+      "asset_type": "erc20",
+      "token_address": "0xf92e740ad181b13a484a886ed16aa6d32d71b19a",
+      "from": "0xd152f5...",
+      "value": "123069652500000000000",
+      "value_usd": 0.14017,
+      "token_metadata": { "symbol": "ENT", "decimals": 18, "price_usd": 0.00113, "pool_size": 5.2274 }
+    }
+  ],
+  "next_offset": "opaque-pagination-token"
+}
+```
+
+```json 400
+{ "error": "Bad Request" }
+```
+
+</ResponseExample>

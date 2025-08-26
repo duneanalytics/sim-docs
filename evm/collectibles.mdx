@@ -12,3 +12,61 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 The Collectibles API provides information about NFTs (ERC721 and ERC1155 tokens) owned by a specific address on supported EVM blockchains.
 
 <SupportedChains endpoint="collectibles" />
+
+## Usage
+
+<RequestExample>
+
+```bash cURL
+curl -X GET "https://api.sim.dune.com/v1/evm/collectibles/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet&limit=100" \
+  -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const res = await fetch("https://api.sim.dune.com/v1/evm/collectibles/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet&limit=100", {
+  headers: { "X-Sim-Api-Key": "YOUR_API_KEY" }
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/collectibles/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+params = {"chain_ids": "mainnet", "limit": 100}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+  "entries": [
+    {
+      "contract_address": "0x3c020f2124b84bd079985c77f93d4a750512448c",
+      "token_standard": "ERC721",
+      "token_id": "5132",
+      "chain": "ethereum",
+      "chain_id": 1,
+      "name": "Ethereum Puppet #5132",
+      "image_url": "https://api.sim.dune.com/v1/evm/collectible/image/1/0x3c020f2124b84bd079985c77f93d4a750512448c/5132",
+      "balance": "1",
+      "last_acquired": "2025-08-09T23:07:47Z"
+    }
+  ],
+  "next_offset": null,
+  "request_time": "2025-01-01T00:00:00Z",
+  "response_time": "2025-01-01T00:00:00Z"
+}
+```
+
+```json 400
+{ "error": "Verify the address format and other parameters in your request" }
+```
+
+</ResponseExample>

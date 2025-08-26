@@ -65,3 +65,57 @@ The `next_offset` value is included in the initial response and can be utilized 
 <Warning>
   You can only use the value from `next_offset` to set the `offset` parameter of the next page of results. Using your own `offset` value will not have any effect.
 </Warning>
+
+## Usage
+
+<RequestExample>
+
+```bash cURL
+curl -X GET "https://api.sim.dune.com/v1/evm/token-info/native?chain_ids=8453&historical_prices=1,6,24" \
+  -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const url = "https://api.sim.dune.com/v1/evm/token-info/native?chain_ids=8453&historical_prices=1,6,24";
+const res = await fetch(url, { headers: { "X-Sim-Api-Key": "YOUR_API_KEY" } });
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/token-info/native"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+params = {"chain_ids": "8453", "historical_prices": "1,6,24"}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "contract_address": "native",
+  "tokens": [
+    {
+      "chain": "base",
+      "chain_id": 8453,
+      "symbol": "ETH",
+      "price_usd": 3897.49,
+      "historical_prices": [
+        { "offset_hours": 24, "price_usd": 3816.56 },
+        { "offset_hours": 6,  "price_usd": 3914.21 },
+        { "offset_hours": 1,  "price_usd": 3898.93 }
+      ]
+    }
+  ]
+}
+```
+
+```json 400
+{ "error": "Bad Request" }
+```
+
+</ResponseExample>
