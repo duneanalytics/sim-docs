@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/activity/{uri}": {
+    "/v1/evm/activity/{address}": {
       "get": {
         "tags": [
           "activity"
@@ -33,15 +33,24 @@
             }
           },
           {
-            "name": "uri",
+            "name": "address",
             "in": "path",
-            "description": "Wallet to get activity for",
+            "description": "Wallet address to get activity for",
             "required": true,
             "schema": {
               "type": "string",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             },
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter by chain(s). Accepts a single numeric chain ID (e.g. `?chain_ids=1`), a single chain name (e.g. `?chain_ids=ethereum`), or a comma separated list of either (e.g. `?chain_ids=1,137` or `?chain_ids=ethereum,polygon`). If omitted, results include activity from chains with the \"default\" tag for the address. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "offset",
