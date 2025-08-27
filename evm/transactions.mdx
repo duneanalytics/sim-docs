@@ -16,12 +16,16 @@ Transactions are ordered by descending block time, so the most recent transactio
 
 ## Decoded transactions
 
-Enable decoded logs by adding the `?decode=true` query parameter to your request.
-When a transaction contains EVM logs, each log may include an additional `decoded` object representing the parsed event.
+Enable decoded transaction data and logs by adding the `?decode=true` query parameter to your request.
+When decoding is enabled, two types of data may be decoded:
+
+1. **Transaction call data**: The `data` field of each transaction may include an additional `decoded` object at the root level of the transaction, representing the parsed function call.
+2. **Event logs**: When a transaction contains EVM logs, each log may include an additional `decoded` object representing the parsed event.
+
 For more details, see the [response information](#response-logs-decoded) below.
 
 <Note>
-  Transactions without logs, or logs without a known signature, **will not** include decoded logs.
+  Decoding is only available for contracts that exist on [Dune.com](https://dune.com). Search for your contract on Dune to check if it's available for decoding. Transactions without logs, logs without known signatures, or contracts not indexed on Dune **will not** include decoded data.
 </Note>
 
 ## Pagination
