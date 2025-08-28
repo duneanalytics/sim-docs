@@ -7,15 +7,7 @@ openapi: "/evm/openapi/supported-chains.json"
 
 import { SupportedChainsAccordion } from '/snippets/supported-chains-accordion.mdx';
 
-<Frame>
-  <img
-    src="/images/evm/Chains.svg"
-    alt="Chains"
-    title="Chains"
-    className="mx-auto"
-    style={{ width:"100%" }}
-  />
-</Frame>
+<img src="/images/evm/Chains.svg" alt="Sim APIs Supported Chains" className="w-full mx-auto" />
 
 The Supported Chains endpoint provides realtime information about which blockchains are supported by Sim's EVM API endpoints.
 Chain support varies by API endpoint. Use the dropdown below to check which chains are available for each API:
@@ -220,4 +212,3 @@ async function validateChainSupport(chainId, endpointName) {
 const result = await validateChainSupport(1, 'balances');
 console.log(result.message); // "Chain ethereum supports balances"
 ```
-

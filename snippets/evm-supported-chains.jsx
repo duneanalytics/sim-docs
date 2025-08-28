@@ -17,6 +17,52 @@ export const EVMSupportedChains = () => {
     return enumName.replace(/([A-Z])/g, ' $1').trim();
   };
 
+  // Build icon URL from chain name using web3icons naming
+  const getIconUrlForChain = (chainName) => {
+    if (!chainName || typeof chainName !== 'string') {
+      return undefined;
+    }
+    const baseUrl = 'https://raw.githubusercontent.com/0xa3k5/web3icons/refs/heads/main/raw-svgs/networks/branded';
+    // Normalize to tokens for robust matching
+    const originalLower = chainName.toLowerCase().trim();
+    const tokenized = originalLower
+      .replace(/[()]/g, ' ')
+      .replace(/[_\-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Explicit handling for Sepolia variants
+    if (tokenized.includes('sepolia')) {
+      if (tokenized.includes('base')) {
+        return `${baseUrl}/base.svg`;
+      }
+      return `${baseUrl}/ethereum.svg`;
+    }
+
+    // General normalization: drop environment suffixes and hyphenate
+    let iconName = tokenized
+      .replace(/\b(mainnet|testnet|devnet)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\s+/g, '-');
+    // If it's a Sepolia variant, use the base chain icon (e.g., ethereum, base)
+    iconName = iconName
+      .replace(/\bsepolia\b/g, '')
+      .replace(/\bmainnet\b/g, '')
+      .replace(/\btestnet\b/g, '')
+      .replace(/\bdevnet\b/g, '')
+      .replace(/[_\s]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Safety: if empty, fallback to ethereum
+    if (!iconName) {
+      iconName = 'ethereum';
+    }
+
+    return `${baseUrl}/${iconName}.svg`;
+  };
+
   useEffect(function() {
     fetch("https://api.sim.dune.com/idx/supported-chains", {
       method: "GET",
@@ -51,7 +97,7 @@ export const EVMSupportedChains = () => {
           <Card 
             key={chain.name} 
             title={displayName}
-            icon="link"
+            icon={getIconUrlForChain(chain.name)}
           >
             <br />
             <code>Chains.{enumFormat}</code>
