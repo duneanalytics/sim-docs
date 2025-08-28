@@ -73,7 +73,8 @@
             "group": "Sim IDX",
             "pages": [
               "idx",
-              "idx/changelog"
+              "idx/changelog",
+              "idx/supported-chains"
             ]
           },
           {

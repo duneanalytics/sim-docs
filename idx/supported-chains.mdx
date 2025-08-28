@@ -1,0 +1,99 @@
+---
+title: "Supported Chains"
+description: "Complete reference for blockchain networks supported by IDX, including chain enums, IDs, and usage in triggers and evaluation"
+---
+
+import { EVMSupportedChains } from '/snippets/evm-supported-chains.jsx';
+
+IDX is a multi-chain indexing platform that lets you to build apps across multiple blockchain networks simultaneously.
+You can choose to build on a single blockchain, or build real-time apps that span across any combination of the supported networks below.
+
+<Note>
+  IDX support for additional chains is continuously expanding. If you need support for a specific chain that's not listed here, please reach out to our team through the [support channels](/support).
+</Note>
+
+## Available Chains
+
+We currently support the following blockchain networks. Each card shows the chain's display name, the corresponding enum value for use in your code (`Chains.EnumName`), and the chain ID for direct reference:
+
+<EVMSupportedChains />
+
+For more information on setting up triggers and working with different chains, see the [IDX Framework documentation](/idx/listener).
+
+## Using chainContract in Triggers
+
+To listen to events on any supported chain, use the `chainContract` function with the corresponding chain enum. This function takes a chain enum and contract address to create triggers for specific smart contracts:
+
+```solidity
+// Example: Listen to events on Ethereum mainnet
+addTrigger(
+    chainContract(Chains.Ethereum, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+
+// Example: Listen to events on Base
+addTrigger(
+    chainContract(Chains.Base, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+
+// Example: Multi-chain app listening to the same contract on different chains
+addTrigger(
+    chainContract(Chains.Arbitrum, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+addTrigger(
+    chainContract(Chains.Optimism, 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+```
+
+<Note>
+If you want to register other types of triggers, like triggering on ABI or triggering globally, visit the [Listener Features page](/idx/listener/features) to learn more.
+</Note>
+
+### Block Range Support
+
+You can specify custom block ranges for your triggers to target specific blocks or time periods. Chain helper functions support `.withStartBlock()`, `.withEndBlock()`, and `.withBlockRange()` methods:
+
+```solidity
+// Listen to events starting from a specific block onwards
+addTrigger(
+    chainContract(Chains.Ethereum.withStartBlock(10000000), 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+
+// Listen to events within a specific block range (inclusive)
+addTrigger(
+    chainContract(Chains.Base.withStartBlock(5000000).withEndBlock(5000100), 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+```
+
+Block ranges are particularly useful for historical data analysis, testing specific time periods, or limiting triggers to certain blockchain events.
+
+## Testing with Chain-Specific Evaluation
+
+When developing and testing your IDX app, you can use the `sim listeners evaluate` command with the `--chain-id` parameter to test your listeners on specific chains:
+
+```bash
+# Test listeners on Ethereum mainnet only
+sim listeners evaluate --chain-id 1
+
+# Test listeners on Base only  
+sim listeners evaluate --chain-id 8453
+
+# Test listeners on Arbitrum only
+sim listeners evaluate --chain-id 42161
+```
+
+If you omit the `--chain-id` parameter, the evaluation will run across all chains that your triggers are configured for:
+
+```bash
+# Test listeners on all configured chains
+sim listeners evaluate
+```
+
+<Note>
+To learn more about the `sim listeners evaluate` command, visit the [CLI documentation](/idx/cli#sim-listeners-evaluate) page to learn more.
+</Note>

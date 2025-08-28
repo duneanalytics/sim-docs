@@ -2,9 +2,9 @@ export const SupportedChains = ({ endpoint }) => {
   const dataState = useState(null);
   const data = dataState[0];
   const setData = dataState[1];
-
+  
   useEffect(function() {
-    fetch("https://sim-proxy.dune-d2f.workers.dev/v1/evm/supported-chains", {
+    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
       method: "GET",
     })
       .then(function(response) {
