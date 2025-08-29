@@ -67,3 +67,59 @@ The `next_offset` value is passed back by the initial response and can be used t
 <Warning>
   You can only use the value from `next_offset` to set the `offset` query parameter of the next page of results.
 </Warning>
+
+## Usage
+
+<RequestExample>
+
+```bash cURL
+curl -X GET "https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet" \
+  -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const res = await fetch("https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?chain_ids=mainnet", {
+  headers: { "X-Sim-Api-Key": "YOUR_API_KEY" }
+});
+const data = await res.json();
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+params = {"chain_ids": "mainnet"}
+response = requests.get(url, headers=headers, params=params)
+print(response.json())
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "wallet_address": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  "balances": [
+    {
+      "chain": "ethereum",
+      "address": "native",
+      "amount": "605371497350928252303",
+      "symbol": "ETH",
+      "decimals": 18,
+      "price_usd": 3042.8169,
+      "value_usd": 1842034.66
+    }
+  ],
+  "next_offset": null,
+  "request_time": "2025-01-01T00:00:00Z",
+  "response_time": "2025-01-01T00:00:00Z"
+}
+```
+
+```json 400
+{ "error": "Bad Request" }
+```
+
+</ResponseExample>
