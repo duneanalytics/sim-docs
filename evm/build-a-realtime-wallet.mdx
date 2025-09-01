@@ -973,6 +973,231 @@ You should now see the total wallet value at the top of the UI accurately reflec
   />
 </Frame>
 
+## Add Historical Price Tracking
+
+Now let's improve the wallet by showing price movement over time. Historical price context helps users understand how their tokens are gaining or losing value. The [Balances API](/evm/balances) can return historical price points when you include the `historical_prices` query parameter, which lets you display price changes for any hour offset from 1 to 24 hours ago.
+
+<Frame caption="Token balances with twenty four hour price change indicators showing gains and losses.">
+  <img
+    src="/images/wallet-ui/wallet-historical-prices.png"
+    className="mx-auto"
+    style={{ width:"100%" }}
+    alt=""
+    title=""
+  />
+</Frame>
+
+<Note>
+  To learn more about historical prices, visit the [historical prices section](/evm/balances#historical-prices) in the Balances API documentation.
+</Note>
+
+### Understanding historical price data
+
+When you pass the `historical_prices` query parameter, the API accepts a comma separated list of hour offsets such as `1,6,24`. Each token in the response will then include a `historical_prices` array. Each entry contains an `offset_hours` value that indicates how many hours ago the price was recorded and a `price_usd` value that represents the token price at that time.
+
+### Create price utilities
+
+Add a small utility module to calculate percentage changes and format them for display. Create `utils/prices.js` and include the following code.
+
+```javascript utils/prices.js
+export const pct = (curr, past) =>
+    curr == null || past == null || past === 0 ? null : ((curr - past) / past) * 100;
+
+export const priceAt = (hist, h) =>
+    Array.isArray(hist) ? (hist.find(p => p && p.offset_hours === h)?.price_usd) : undefined;
+
+export const change1h = (price, hist) => pct(price, priceAt(hist, 1));
+export const change6h = (price, hist) => pct(price, priceAt(hist, 6));
+export const change24h = (price, hist) => pct(price, priceAt(hist, 24));
+
+export const formatSignedPercent = (x) =>
+    x == null ? '—' : `${x >= 0 ? '+' : ''}${x.toFixed(2)}%`;
+```
+
+These utility functions are necessary because the API returns only raw prices at specific times. You need these utilities to convert the price differences into percentage changes for display.
+
+### Request historical prices in your balances call
+
+Update `getWalletBalances` to optionally include historical prices. Only request this data when viewing the tokens tab to keep responses fast.
+
+```javascript server.js (getWalletBalances with historical prices) [expandable] {5,9,16,17,18,19,20,21,22,23,24}
+/**
+ * Fetch wallet balances. Optionally include historical prices for deltas.
+ * @param {string} walletAddress
+ * @param {{ includeHistoricalPrices?: boolean }} [options]
+ */
+async function getWalletBalances(walletAddress, options = {}) {
+    const { includeHistoricalPrices = false } = options;
+    if (!walletAddress) return [];
+
+    // Construct the query parameters
+    // metadata=url,logo fetches token URLs and logo images
+    // exclude_spam_tokens filters out known spam tokens
+    const baseParams = new URLSearchParams({
+        'metadata': 'url,logo'
+    });
+    if (includeHistoricalPrices) {
+        baseParams.set('historical_prices', '1,6,24');
+    }
+    const queryParams = `${baseParams.toString()}&exclude_spam_tokens`;
+
+    const url = `https://api.sim.dune.com/v1/evm/balances/${walletAddress}?${queryParams}`;
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'X-Sim-Api-Key': SIM_API_KEY,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`API request failed with status ${response.status}: ${response.statusText}`, errorBody);
+            throw new Error(`API request failed: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return (data.balances || []).map(token => {
+            const numericAmount = parseFloat(token.amount) / Math.pow(10, parseInt(token.decimals));
+            const numericValueUSD = parseFloat(token.value_usd);
+            const valueUSDFormatted = numbro(numericValueUSD).format('$0,0.00');
+            const amountFormatted = numbro(numericAmount).format('0,0.[00]A');
+
+            return {
+                ...token,
+                valueUSDFormatted,
+                amountFormatted
+            };
+        }).filter(token => token.symbol !== 'RTFKT');
+
+    } catch (error) {
+        console.error("Error fetching wallet balances:", error.message);
+        return [];
+    }
+}
+```
+
+This change adds an optional `includeHistoricalPrices` parameter, conditionally appends `historical_prices=1,6,24` to the request, and preserves the existing formatting behavior.
+
+### Make price utilities available to the template
+
+Import the utilities in `server.js`, request historical prices when the tokens tab is active, and pass the helpers into the template render context.
+
+```javascript server.js (imports and route updates) [expandable] {4,18,30,49}
+import express from 'express';
+import numbro from 'numbro';
+import dotenv from 'dotenv';
+import * as priceUtils from './utils/prices.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ... existing setup code ...
+
+app.get('/', async (req, res) => {
+    const { 
+        walletAddress = '',
+        tab = 'tokens'
+    } = req.query;
+
+    let tokens = [];
+    let totalWalletUSDValue = 0;
+    let errorMessage = null;
+
+    if (walletAddress) {
+        try {
+            const includeHistorical = tab === 'tokens';
+            tokens = await getWalletBalances(walletAddress, { includeHistoricalPrices: includeHistorical });
+
+            if (tokens && tokens.length > 0) {
+                tokens.forEach(token => {
+                    const individualValue = parseFloat(token.value_usd);
+                    if (!isNaN(individualValue)) {
+                        totalWalletUSDValue += individualValue;
+                    }
+                });
+            }
+            totalWalletUSDValue = numbro(totalWalletUSDValue).format('$0,0.00');
+
+        } catch (error) {
+            console.error("Error in route handler:", error);
+            errorMessage = "Failed to fetch wallet data. Please try again.";
+        }
+    }
+
+    res.render('wallet', {
+        walletAddress: walletAddress,
+        currentTab: tab,
+        totalWalletUSDValue: totalWalletUSDValue,
+        tokens: tokens,
+        activities: [],
+        collectibles: [],
+        errorMessage: errorMessage,
+        priceUtils
+    });
+});
+```
+
+### Show twenty four hour change in the UI
+
+Add a compact badge below the amount display for each token. Insert this snippet in `views/wallet.ejs` within the tokens list item, after the amount text.
+
+```ejs views/wallet.ejs (price change badges)
+<% if (typeof token.price_usd === 'number' && Array.isArray(token.historical_prices)) { %>
+    <%
+        const d24 = priceUtils.change24h(token.price_usd, token.historical_prices);
+        const d24Text = priceUtils.formatSignedPercent(d24);
+        const badgeClass = d24 == null ? 'neutral' : (d24 >= 0 ? 'pos' : 'neg');
+    %>
+    <% if (d24 != null) { %>
+        <div class="price-delta-badges">
+            <span class="delta-badge <%= badgeClass %>"><%= d24Text %> 24h</span>
+        </div>
+    <% } %>
+<% } %>
+```
+
+### Style the badges
+
+Add these styles to `public/styles.css` so the badges match the existing design system.
+
+```css public/styles.css (price change styles) [expandable]
+.price-delta-badges {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 4px;
+}
+
+.delta-badge {
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    padding: 2px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--color-border-secondary);
+    background: rgba(255,255,255,0.03);
+    color: var(--color-text-muted);
+}
+
+.delta-badge.pos { 
+    color: var(--color-accent-green); 
+    border-color: rgba(80, 227, 194, 0.5); 
+}
+
+.delta-badge.neg { 
+    color: var(--color-accent-red); 
+    border-color: rgba(255, 120, 117, 0.5); 
+}
+
+.delta-badge.neutral { 
+    color: var(--color-text-muted); 
+}
+```
+
+<Warning>
+  Historical prices are not available for every token. If the API does not return historical data for a token, the badge will not appear and the layout remains consistent.
+</Warning>
+
 ## Conclusion
 
 You have successfully set up the basic structure of your multichain wallet and integrated Sim APIs `Balances API` endpoint to display realtime token balances and total portfolio value.
