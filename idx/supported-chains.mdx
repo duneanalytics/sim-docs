@@ -74,6 +74,22 @@ addTrigger(
 
 Block ranges are particularly useful for historical data analysis, testing specific time periods, or limiting triggers to certain blockchain events.
 
+### Arbitrum One Pre-Nitro Limitation
+
+<Warning>
+Sim IDX does not support blocks on Arbitrum One created before the Nitro upgrade. Any triggers configured with a start block earlier than the Nitro boundary (block **22,207,818**, which occurred on 2022-08-31) will not be able to process pre-Nitro blocks.
+</Warning>
+
+When setting a block range for Arbitrum One, ensure your start block is `22207818` or greater.
+
+```solidity Correct Usage
+// Correct: Start indexing after the Nitro upgrade
+addTrigger(
+    chainContract(Chains.Arbitrum.withStartBlock(22207818), 0x...), 
+    listener.triggerOnPoolCreatedEvent()
+);
+```
+
 ## Testing with Chain-Specific Evaluation
 
 When developing and testing your IDX app, you can use the `sim listeners evaluate` command with the `--chain-id` parameter to test your listeners on specific chains:

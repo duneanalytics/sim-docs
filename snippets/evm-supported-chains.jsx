@@ -103,6 +103,13 @@ export const EVMSupportedChains = () => {
             <code>Chains.{enumFormat}</code>
             <br />
             ID: <code>{chain.chain_id}</code>
+            {(enumFormat === 'Arbitrum' || enumFormat === 'ArbitrumOne') && (
+              <>
+                <br />
+                <br />
+                <strong>Note:</strong> Pre-Nitro blocks (&lt; 22,207,818) are not supported. See <a href="#block-range-support">Block Range Support</a> for details.
+              </>
+            )}
           </Card>
         );
       })}
