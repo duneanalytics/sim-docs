@@ -16,7 +16,8 @@
           {
             "group": "Sim APIs",
             "pages": [
-              "index"
+              "index",
+              "support"
             ]
           },
           {
@@ -60,8 +61,7 @@
               "build-with-ai",
               "token-filtering",
               "error-handling",
-              "proxy",
-              "support"
+              "proxy"
             ]
           }
         ]
@@ -193,7 +193,8 @@
   "footer": {
     "socials": {
       "x": "https://x.com/dunesim",
-      "telegram": "https://t.me/+nvyoX5xyxNwyNjU0"
+      "telegram": "https://t.me/+nvyoX5xyxNwyNjU0",
+      "discord": "https://discord.com/invite/ErrzwBz"
     }
   },
   "feedback": {
