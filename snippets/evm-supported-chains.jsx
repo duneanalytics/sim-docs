@@ -31,6 +31,17 @@ export const EVMSupportedChains = () => {
       .replace(/\s+/g, ' ')
       .trim();
 
+    // Explicit mappings for chains with different icon names
+    const chainMappings = {
+      'arbitrum': 'arbitrum-one',
+      'shape': 'ethereum' // Fallback to ethereum icon since shape.svg doesn't exist in web3icons
+    };
+
+    // Check if we have a specific mapping for this chain
+    if (chainMappings[originalLower]) {
+      return `${baseUrl}/${chainMappings[originalLower]}.svg`;
+    }
+
     // Explicit handling for Sepolia variants
     if (tokenized.includes('sepolia')) {
       if (tokenized.includes('base')) {
@@ -103,6 +114,13 @@ export const EVMSupportedChains = () => {
             <code>Chains.{enumFormat}</code>
             <br />
             ID: <code>{chain.chain_id}</code>
+            {(enumFormat === 'Arbitrum' || enumFormat === 'ArbitrumOne') && (
+              <>
+                <br />
+                <br />
+                <strong>Note:</strong> Pre-Nitro blocks (&lt; 22,207,818) are not supported. See <a href="#block-range-support">Block Range Support</a> for details.
+              </>
+            )}
           </Card>
         );
       })}

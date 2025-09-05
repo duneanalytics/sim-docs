@@ -347,6 +347,8 @@ sim listeners evaluate \
   --listeners=UniswapV3FactoryListener
 ```
 
+When evaluating historical data, be aware that data availability can vary by chain. For example, Arbitrum One does not support indexing blocks prior to its Nitro upgrade. For more information on chain-specific limitations, visit the [Supported Chains page](/idx/supported-chains).
+
 <Note>
 Use the `--listeners` flag to specify which listener contract to evaluate. Set this to your contract's name. When running `evaluate`, the output may include events with names prefixed by `fail_` which indicates data from failed or reverted transactions. For details on these outputs and available flags, see the [`sim listeners evaluate`](/idx/cli#sim-listeners-evaluate) documentation.
 </Note>
