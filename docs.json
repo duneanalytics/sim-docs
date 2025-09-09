@@ -95,6 +95,12 @@
             ]
           },
           {
+            "group": "Data Sinks",
+            "pages": [
+              "idx/sinks/kafka"
+            ]
+          },
+          {
             "group": "Deployment",
             "pages": [
               "idx/deployment",

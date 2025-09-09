@@ -1,0 +1,131 @@
+---
+title: Streaming to External Kafka Sinks
+sidebarTitle: Kafka
+---
+
+Sim IDX can stream the data from your listener's events in real-time to an external data sink. This allows you to integrate your indexed blockchain data directly into your own infrastructure for real-time analytics, monitoring, or complex event processing.
+
+This feature currently supports [Apache Kafka](https://kafka.apache.org/) as a sink type, enabling you to send your data to managed services like Confluent Cloud and Redpanda Cloud, or to your own self-hosted Kafka cluster.
+
+<Note>
+    Currently, configuring a sink sends data to your Kafka topic **in addition to** the default Neon Postgres database provided by Sim IDX. It does not replace it.
+</Note>
+
+## Configuring Your Sink in `sim.toml`
+
+To enable streaming to an external sink, you must define it within your `sim.toml` file under a new `[[env.<name>.sinks]]` table. You can define multiple sinks for different environments. For example, you might have one sink for `dev` and another for `prod`.
+
+The configuration maps specific events from your listener to specific topics in your Kafka cluster.
+
+Here is an example configuration for a development environment named `dev`:
+
+```toml sim.toml
+[app]
+name = "my-uniswap-indexer"
+
+# Define a development environment named "dev"
+[[env.dev.sinks]]
+type = "kafka"
+name = "dev_kafka_cluster"
+brokers = ["pkc-00000.us-central1.gcp.confluent.cloud:9092"]
+username = "YOUR_KAFKA_API_KEY"
+password = "YOUR_KAFKA_API_SECRET"
+sasl_mechanism = "PLAIN"
+event_to_topic = { "PoolCreated" = "uniswap_pool_created_dev" }
+```
+
+### Sink Parameters
+
+| Parameter | Required | Description |
+| :--- | :--- | :--- |
+| `type` | Yes | The type of sink. Currently, the only supported value is `"kafka"`. |
+| `name` | Yes | A unique name for this sink configuration within the environment. |
+| `brokers` | Yes | An array of broker addresses for your Kafka cluster. |
+| `username` | Yes | The username for authenticating with your Kafka cluster. |
+| `password` | Yes | The password for authenticating with your Kafka cluster. |
+| `sasl_mechanism` | Yes | The SASL mechanism to use. Supported values are `"PLAIN"`, `"SCRAM-SHA-256"`, and `"SCRAM-SHA-512"`. |
+| `event_to_topic` | Yes | A map where the key is the name of the event emitted by your listener and the value is the destination Kafka topic name. For example, `"PoolCreated"` might map to `"uniswap_pool_created_dev"`. |
+| `compression_type`| No | The compression codec to use for compressing messages. Supported values are `"GZIP"`, `"SNAPPY"`, `"LZ4"`, and `"ZSTD"`. |
+
+## Deploying with a Sink Environment
+
+After you have configured your sink in `sim.toml`, you must explicitly deploy your application using the CLI with the `sim deploy` command and specify which environment to use. This is different from the automatic deployment that occurs when you push changes to your repository.
+
+To use Kafka sinks, you must use the `--environment` flag with the `sim deploy` command. The name you provide to the `--environment` flag must exactly match the environment name defined in your `sim.toml` file. For example, if you defined `[[env.dev.sinks]]`, you would use `dev` as the environment name.
+
+```bash
+sim deploy --environment dev
+```
+
+<Warning>
+  **The `--environment` flag is required to activate your sink configuration.**
+
+  If you run `sim deploy` without the `--environment` flag, your sink configuration will be ignored. The deployment will succeed, but it will only write data to the default Neon Postgres database, and no data will be sent to your Kafka topics.
+</Warning>
+
+## Setting up Redpanda Cloud
+
+<Steps>
+    <Step title="Create a Cluster">
+        First, create a new serverless cluster from the **Clusters** dashboard. Click **Create cluster**, select the `Serverless` type, provide a **Cluster name**, choose your cloud provider and region, and then click **Create**.
+        
+        <img src="/images/data-sinks/redpanda-1.png" alt="Redpanda Cloud Create Serverless cluster page" />
+    </Step>
+    <Step title="Get the Bootstrap Server URL">
+        Once the cluster is running, you can get the connection URL. On the cluster's **Overview** page, select the **Kafka API** tab and copy the **Bootstrap server URL**. This value is used for the `brokers` field in your `sim.toml` file.
+        
+        <img src="/images/data-sinks/redpanda-3.png" alt="Redpanda Cloud Kafka API tab showing Bootstrap server URL" />
+    </Step>
+    <Step title="Create a Kafka Topic">
+        Next, create the topic where your listener events will be sent. From the cluster's navigation menu, select **Topics** and click **Create topic**. Enter a **Topic Name**, which is the name you will use in your `sim.toml` file. For example, you might name it `my_topic`.
+        
+        <img src="/images/data-sinks/redpanda-2.png" alt="Redpanda Cloud Create topic dialog" />
+    </Step>
+    <Step title="Create a User and Set Permissions">
+        Finally, create a user and grant it permissions to access your topic. Navigate to the **Security** section and create a new user, providing a **Username** and saving the generated **Password**. Then, go to the **ACLs** tab to create an ACL for that user. Configure it to `Allow` all operations for your `Prefixed` topic name. The **Username** and **Password** you created correspond to the `username` and `password` fields in `sim.toml`.
+
+        <img src="/images/data-sinks/redpanda-4.png" alt="Redpanda Cloud ACL creation dialog showing user and topic permissions" />
+    </Step>
+</Steps>
+
+## Setting up Confluent Cloud
+
+While the `sim.toml` configuration is standardized, setting up credentials and permissions can vary between different managed Kafka providers.
+
+<Callout type="info" title="Confluent Cloud Authentication">
+  When configuring your `sim.toml` file for a Confluent Cloud cluster, you must use the following settings:
+  - `sasl_mechanism`: Set this to `"PLAIN"`.
+  - `username`: Use the **API Key** generated from the Confluent Cloud dashboard.
+  - `password`: Use the **API Secret** associated with that key.
+</Callout>
+
+<Steps>
+    <Step title="Create an Environment">
+        First, create a new cloud environment to house your cluster. In the Confluent Cloud dashboard, navigate to **Environments** and click **Add cloud environment**. Provide an **Environment name** such as `new_cluster`, select the `Essentials` Stream Governance package, and click **Create**.
+        
+    </Step>
+    <Step title="Create a Kafka Cluster">
+        Next, launch a new Kafka cluster within your environment. On the "Create cluster" page, select the `Standard` cluster type, give it a **Cluster name** such as `cluster_0`, choose a cloud provider and region, then click **Launch cluster**.
+        
+    </Step>
+    <Step title="Create a Kafka Topic">
+        Now you will need to create a topic where your listener events will be sent. From your cluster's navigation menu, select **Topics**, then click **Create topic**. Enter a **Topic name**, which is the name you will use in your `sim.toml` file, and click **Create with defaults**. For example, you might name it `topic_0`.
+        
+        <img src="/images/data-sinks/confluent-1.png" alt="Confluent Cloud New topic creation dialog" />
+    </Step>
+    <Step title="Create an API Key and Set Permissions">
+        To allow Sim IDX to connect, generate an API key and grant it the necessary permissions. From the cluster's navigation menu, select **API Keys**, then click **Create key**. Choose to create a new **Service account** and give it a descriptive name like `my_account`. You must then add an Access Control List (ACL) to grant `WRITE` and `CREATE` permissions for your `PREFIXED` topic (`topic_0`).
+        
+        <img src="/images/data-sinks/confluent-2.png" alt="Confluent Cloud ACL configuration screen" />
+    </Step>
+    <Step title="Save Your Credentials">
+        After creation, Confluent will display your API Key and Secret. Copy and save these credentials securely, as the Secret will not be shown again. The **Key** corresponds to the `username` field and the **Secret** corresponds to the `password` field in your `sim.toml` file.
+        
+        <img src="/images/data-sinks/confluent-3.png" alt="Confluent Cloud screen showing the generated API Key and Secret" />
+    </Step>
+    <Step title="Get the Bootstrap Server Address">
+        Finally, retrieve the broker address for your cluster. Navigate to **Cluster settings** and, under the **Endpoints** section, copy the **Bootstrap server** address. This value is used for the `brokers` field in your `sim.toml` file.
+        
+        <img src="/images/data-sinks/confluent-4.png" alt="Confluent Cloud Cluster settings showing Bootstrap server address" />
+    </Step>
+</Steps>
