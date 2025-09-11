@@ -293,3 +293,51 @@ The `sim build` command automatically validates your index definitions. If it de
 For example, if you misspell a column name:
 `Error: Cannot find column(s): 'block_numbr' in event PositionOwnerChanges`
 
+## Block Ranges
+
+You can specify custom block ranges for your triggers to target specific blocks or time periods. This is particularly useful for historical data analysis, testing specific time periods, or limiting triggers to certain blockchain events.
+
+Chain helper functions support `.withStartBlock()`, `.withEndBlock()`, and `.withBlockRange()` methods:
+
+```solidity
+// Listen to events starting from a specific block onwards
+addTrigger(
+    chainContract(Chains.Ethereum.withStartBlock(10000000), 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+
+// Listen to events within a specific block range (inclusive)
+addTrigger(
+    chainContract(Chains.Base.withStartBlock(5000000).withEndBlock(5000100), 0x1F98431c8aD98523631AE4a59f267346ea31F984), 
+    listener.triggerOnPoolCreatedEvent()
+);
+
+// Block range support works with ABI triggers as well
+addTrigger(
+    chainAbi(Chains.Ethereum.withStartBlock(18000000), UniswapV3Pool$Abi()), 
+    listener.triggerOnBurnEvent()
+);
+
+// And with global triggers
+addTrigger(
+    chainGlobal(Chains.Ethereum.withBlockRange(19000000, 19001000)), 
+    listener.triggerOnBlock()
+);
+```
+
+### Arbitrum One Pre-Nitro Limitation
+
+<Warning>
+Sim IDX does not support blocks on Arbitrum One created before the Nitro upgrade. Any triggers configured with a start block earlier than the Nitro boundary (block **22,207,818**, which occurred on 2022-08-31) will not be able to process pre-Nitro blocks.
+</Warning>
+
+When setting a block range for Arbitrum One, ensure your start block is `22207818` or greater:
+
+```solidity
+// Correct: Start indexing after the Nitro upgrade
+addTrigger(
+    chainContract(Chains.Arbitrum.withStartBlock(22207818), 0x...), 
+    listener.triggerOnPoolCreatedEvent()
+);
+```
+
