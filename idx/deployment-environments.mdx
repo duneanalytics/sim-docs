@@ -1,37 +1,12 @@
 ---
-title: Branch Environments
+title: Build and Ingestion Lifecycle
 ---
 
-Sim IDX streamlines your development and deployment lifecycle by integrating directly with your Git branching strategy.
-This allows you to build, test, and ship changes using isolated environments.
+Sim IDX manages your deployment environments and data ingestion through an automated build and ingestion lifecycle.
 
-Every Sim IDX app operates in one of two environments: **Production** or **Preview**.
+Every Sim IDX app operates across isolated environments based on your Git branching strategy, with each deployment following a predictable lifecycle that governs when your code is compiled, when data is indexed, and what changes trigger historical backfill.
 
-## Production Environment
-
-When you push a new commit to the `main` branch of your connected repo, a new production deployment is automatically created.
-
-A new, dedicated PostgreSQL database is provisioned for every deployment.
-A new base URL for your APIs is also created.
-
-<Note>
-If you're using these values during development, make sure you update them after every push.
-</Note>
-
-<Frame caption="The Current Deployment section of your App Page represents your latest production deployment.">
-  <img src="/images/idx/deployment/current-deployment.png" />
-</Frame>
-
-## Preview Environments
-
-When you push a new commit to any branch that _is not_ `main`, Sim IDX automatically spins up a completely separate environment for it.
-Each preview deployment will get its own isolated database and unique API URL.
-
-<Frame caption="The Other Deployments section of your App Page is where you can find preview deployments.">
-  <img src="/images/idx/deployment/other-deployments.png" />
-</Frame>
-
-## Build and Ingestion Lifecycle
+## Deployment Lifecycle
 
 Every deployment progresses through three statuses: **Building → Ingesting → Ready**. This lifecycle governs when your code is compiled, when data is indexed, and what changes re-trigger historical backfill.
 
@@ -55,6 +30,48 @@ Backfill is re-triggered only when you change your Listener Contract (including 
 ### Ready
 
 Backfill has completed (100%). Your app continues to index new onchain activity in real time.
+
+## Incremental Deployments
+
+Sim IDX optimizes your development workflow through incremental deployments, which avoid unnecessary reprocessing when you make changes that don't affect data ingestion.
+
+**First Deployment per Branch**: When you make the first commit to any branch (including `main`), Sim IDX triggers a complete build and ingestion process. Your code is compiled, a new database is provisioned, historical backfill begins from scratch, and new API endpoints are created.
+
+**Subsequent Deployments**: For additional commits to the same branch, the deployment behavior depends on what you've changed.
+
+**Non-Listener Changes** result in incremental deployments. This includes changes to your `sim.toml` configuration, updates to API route logic, and modifications to non-listener application code. These changes result in incremental deployments where your code is rebuilt and redeployed, the same database instance is reused, API base URLs remain unchanged, no historical backfill occurs, and real-time indexing continues uninterrupted.
+
+**Listener Changes** trigger a complete redeployment. Any modification to your listener contract requires a full build and ingestion cycle because they alter what data is indexed and how it's processed. This includes adding or modifying ABIs, changes to generated code that affect indexing logic, adding new listener files, creating new triggers in your main listener file, and any code changes within existing listener functions.
+
+## Deployment Environments
+
+Sim IDX operates with two types of environments based on your Git branching strategy:
+
+### Production Environment
+
+When you push commits to the `main` branch, Sim IDX creates production deployments. Each production deployment receives:
+- A dedicated PostgreSQL database
+- A unique base URL for your APIs
+- Full build and ingestion lifecycle processing
+
+<Note>
+If you're using database URLs or API endpoints during development, make sure you update them after every production push.
+</Note>
+
+<Frame caption="The Current Deployment section of your App Page represents your latest production deployment.">
+  <img src="/images/idx/deployment/current-deployment.png" />
+</Frame>
+
+### Preview Environments
+
+When you push commits to any branch other than `main`, Sim IDX automatically creates isolated preview environments. Each preview deployment gets:
+- Its own isolated database
+- A unique API URL separate from production
+- Independent build and ingestion lifecycle
+
+<Frame caption="The Other Deployments section of your App Page is where you can find preview deployments.">
+  <img src="/images/idx/deployment/other-deployments.png" />
+</Frame>
 
 ## PR Flow
 
