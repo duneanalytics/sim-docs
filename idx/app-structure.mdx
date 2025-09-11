@@ -51,6 +51,22 @@ The `codegen_naming_convention` field in the `[listeners]` table controls how fu
 *   **`"plain"` (Default):** Generates clean names without any prefixes (e.g., `onSwapFunction`). This is the most common setting, especially when you split logic for different ABIs into separate listener contracts.
 *   **`"abi_prefix"`:** Prefixes generated names with the ABI's name (e.g., `ABI1$onSwapFunction`). Use this option to prevent compilation errors when a single listener contract must handle functions with the same name from two different ABIs.
 
+```toml
+# Example sink configuration for development environment
+[[env.dev.sinks]]
+type = "kafka"
+name = "dev_kafka_cluster"
+brokers = ["your-kafka-broker:9092"]
+username = "your_username"
+password = "your_password"
+sasl_mechanism = "PLAIN"
+event_to_topic = { "PoolCreated" = "uniswap_pool_created_dev" }
+```
+
+You can also configure external data sinks in your `sim.toml` file to stream your indexed data to external systems like Kafka. This is done using environment-specific sink configurations:
+
+The `[[env.<environment>.sinks]]` table allows you to define multiple sinks for different environments (e.g., `dev`, `prod`). Each sink configuration specifies how to connect to your external data system and which events should be sent to which topics. For detailed configuration options and setup instructions, see the [Kafka Sinks](/idx/sinks/kafka) documentation.
+
 #### abis/
 
 The `abis/` folder contains JSON ABI files of smart contracts you want to index. The sample app includes `abis/UniswapV3Factory.json` for the Uniswap V3 Factory contract.
