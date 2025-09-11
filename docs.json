@@ -90,13 +90,13 @@
                   "idx/listener/errors"
                 ]
               },
-              "idx/db",
               "idx/apis"
             ]
           },
           {
-            "group": "Data Sinks",
+            "group": "Data",
             "pages": [
+              "idx/db",
               "idx/sinks/kafka"
             ]
           },

@@ -1,6 +1,6 @@
 ---
-title: Streaming to External Kafka Sinks
-sidebarTitle: Kafka
+title: External Kafka Sinks
+sidebarTitle: Kafka Sinks
 ---
 
 Sim IDX can stream the data from your listener's events in real-time to an external data sink. This allows you to integrate your indexed blockchain data directly into your own infrastructure for real-time analytics, monitoring, or complex event processing.
@@ -8,14 +8,14 @@ Sim IDX can stream the data from your listener's events in real-time to an exter
 This feature currently supports [Apache Kafka](https://kafka.apache.org/) as a sink type, enabling you to send your data to managed services like Confluent Cloud and Redpanda Cloud, or to your own self-hosted Kafka cluster.
 
 <Note>
-    Currently, configuring a sink sends data to your Kafka topic **in addition to** the default Neon Postgres database provided by Sim IDX. It does not replace it.
+    Currently, configuring a sink sends data to your Kafka topic **in addition to** the [default Neon Postgres database](/idx/db) provided by Sim IDX. It does not replace it.
 </Note>
 
 ## Configuring Your Sink in `sim.toml`
 
 To enable streaming to an external sink, you must define it within your `sim.toml` file under a new `[[env.<name>.sinks]]` table. You can define multiple sinks for different environments. For example, you might have one sink for `dev` and another for `prod`.
 
-The configuration maps specific events from your listener to specific topics in your Kafka cluster.
+The configuration maps [specific events](/idx/listener#define-and-emit-events) from your listener to specific topics in your Kafka cluster.
 
 Here is an example configuration for a development environment named `dev`:
 
@@ -49,7 +49,7 @@ event_to_topic = { "PoolCreated" = "uniswap_pool_created_dev" }
 
 ## Deploying with a Sink Environment
 
-After you have configured your sink in `sim.toml`, you must explicitly deploy your application using the CLI with the `sim deploy` command and specify which environment to use. This is different from the automatic deployment that occurs when you push changes to your repository.
+After you have configured your sink in `sim.toml`, you must explicitly deploy your application using the CLI with the `sim deploy` command and specify which environment to use. This is different from the [automatic deployment](/idx/deployment) that occurs when you push changes to your repository.
 
 To use Kafka sinks, you must use the `--environment` flag with the `sim deploy` command. The name you provide to the `--environment` flag must exactly match the environment name defined in your `sim.toml` file. For example, if you defined `[[env.dev.sinks]]`, you would use `dev` as the environment name.
 
@@ -92,12 +92,12 @@ sim deploy --environment dev
 
 While the `sim.toml` configuration is standardized, setting up credentials and permissions can vary between different managed Kafka providers.
 
-<Callout type="info" title="Confluent Cloud Authentication">
+<Note>
   When configuring your `sim.toml` file for a Confluent Cloud cluster, you must use the following settings:
   - `sasl_mechanism`: Set this to `"PLAIN"`.
   - `username`: Use the **API Key** generated from the Confluent Cloud dashboard.
   - `password`: Use the **API Secret** associated with that key.
-</Callout>
+</Note>
 
 <Steps>
     <Step title="Create an Environment">
