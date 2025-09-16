@@ -73,7 +73,7 @@
           {
             "name": "historical_prices",
             "in": "query",
-            "description": "24 hour price history selection. Accepts integer | integer[]. Provide whole numbers from 1 to 24, up to 3 time offsets (e.g. 24 or 1,6,24). When set, each balance includes a historical_prices array with one entry per offset.",
+            "description": "Historical price selection. Accepts integer | integer[]. Provide whole numbers representing hours in the past, up to 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
             "required": false,
             "style": "form",
             "explode": false,
@@ -82,16 +82,14 @@
                 {
                   "type": "integer",
                   "format": "int32",
-                  "minimum": 1,
-                  "maximum": 24
+                  "minimum": 1
                 },
                 {
                   "type": "array",
                   "items": {
                     "type": "integer",
                     "format": "int32",
-                    "minimum": 1,
-                    "maximum": 24
+                    "minimum": 1
                   },
                   "maxItems": 3
                 }
@@ -99,12 +97,12 @@
             },
             "examples": {
               "single_offset": {
-                "summary": "Single offset",
-                "value": "24"
+                "summary": "Single offset (1 week ago)",
+                "value": "168"
               },
               "three_offsets": {
-                "summary": "Three offsets",
-                "value": "1,6,24"
+                "summary": "Three offsets (1 month, 1 week, 1 day ago)",
+                "value": "720,168,24"
               }
             }
           },
@@ -205,8 +203,7 @@
           "offset_hours": {
             "type": "integer",
             "format": "int32",
-            "minimum": 1,
-            "maximum": 24
+            "minimum": 1
           },
           "price_usd": {
             "type": "number",
