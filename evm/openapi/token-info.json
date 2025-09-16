@@ -56,7 +56,7 @@
           {
             "name": "historical_prices",
             "in": "query",
-            "description": "Request point-in-time prices within the last 24 hours. Accepts integer | integer[]. Provide whole numbers from 1 to 24, with a maximum of 3 time offsets (e.g. 24 or 1,6,24). When present, each token includes a historical_prices array with one entry per offset.",
+            "description": "Request historical point-in-time prices. Accepts integer | integer[]. Provide whole numbers representing hours in the past, with a maximum of 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When present, each token includes a historical_prices array with one entry per offset.",
             "required": false,
             "style": "form",
             "explode": false,
@@ -65,16 +65,14 @@
                 {
                   "type": "integer",
                   "format": "int32",
-                  "minimum": 1,
-                  "maximum": 24
+                  "minimum": 1
                 },
                 {
                   "type": "array",
                   "items": {
                     "type": "integer",
                     "format": "int32",
-                    "minimum": 1,
-                    "maximum": 24
+                    "minimum": 1
                   },
                   "maxItems": 3
                 }
@@ -82,12 +80,12 @@
             },
             "examples": {
               "single_offset": {
-                "summary": "Single offset",
-                "value": "24"
+                "summary": "Single offset (1 week ago)",
+                "value": "168"
               },
               "three_offsets": {
-                "summary": "Three offsets",
-                "value": "1,6,24"
+                "summary": "Three offsets (1 month, 1 week, 1 day ago)",
+                "value": "720,168,24"
               }
             }
           },

@@ -24,7 +24,7 @@ Sim looks up prices onchain. We use the most liquid onchain pair to determine a 
 
 ## Historical prices
 
-You can request 24 hour point-in-time prices by adding the `historical_prices` query parameter. Use whole numbers only, from 1 to 24. You can request up to three offsets. For example, `&historical_prices=24` returns the price 24 hours ago. `&historical_prices=1,6,24` returns prices 1 hour ago, 6 hours ago, and 24 hours ago.
+You can request historical point-in-time prices by adding the `historical_prices` query parameter. Use whole numbers to specify the number of hours in the past. You can request up to three offsets. For example, `&historical_prices=168` returns the price 168 hours (1 week) ago. `&historical_prices=720,168,24` returns prices 720 hours (1 month) ago, 168 hours (1 week) ago, and 24 hours ago.
 
 <Note>
   The `historical_prices` parameter is currently supported only on the EVM Balances and EVM Token Info endpoints.
@@ -39,9 +39,9 @@ When set, each balance includes a `historical_prices` array with one entry per o
       "symbol": "ETH",
       "price_usd": 3896.8315,
       "historical_prices": [
-        { "offset_hours": 24, "price_usd": 3816.476803 },
-        { "offset_hours": 6,  "price_usd": 3910.384068 },
-        { "offset_hours": 1,  "price_usd": 3898.632723 }
+        { "offset_hours": 8760, "price_usd": 2816.476803 },
+        { "offset_hours": 720,  "price_usd": 3710.384068 },
+        { "offset_hours": 168,  "price_usd": 3798.632723 }
       ]
     }
   ]
@@ -51,7 +51,7 @@ When set, each balance includes a `historical_prices` array with one entry per o
 **Percent changes are not returned**. You can compute your own differences using the `price_usd` on the balance and the values in `historical_prices[].price_usd`.
 
 <Warning>
-  The maximum number of historical price offsets is 3. Only whole numbers 1–24 are accepted. If more than 3 are provided, the API returns an error.
+  The maximum number of historical price offsets is 3. If more than 3 are provided, the API returns an error.
 </Warning>
 
 ## Token Filtering
