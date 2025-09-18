@@ -11,7 +11,7 @@ This feature currently supports [Apache Kafka](https://kafka.apache.org/) as a s
     Currently, configuring a sink sends data to your Kafka topic **in addition to** the [default Neon Postgres database](/idx/db) provided by Sim IDX. It does not replace it.
 </Note>
 
-## Configuring Your Sink in `sim.toml`
+## Configure Your Sink in `sim.toml`
 
 To enable streaming to an external sink, you must define it within your `sim.toml` file under a new `[[env.<name>.sinks]]` table. You can define multiple sinks for different environments. For example, you might have one sink for `dev` and another for `prod`.
 
@@ -47,7 +47,7 @@ event_to_topic = { "PoolCreated" = "uniswap_pool_created_dev" }
 | `event_to_topic` | Yes | A map where the key is the name of the event emitted by your listener and the value is the destination Kafka topic name. For example, `"PoolCreated"` might map to `"uniswap_pool_created_dev"`. |
 | `compression_type`| No | The compression codec to use for compressing messages. Supported values are `"GZIP"`, `"SNAPPY"`, `"LZ4"`, and `"ZSTD"`. |
 
-## Deploying with a Sink Environment
+## Deploy with a Sink Environment
 
 After you have configured your sink in `sim.toml`, you must explicitly deploy your application using the CLI with the `sim deploy` command and specify which environment to use. This is different from the [automatic deployment](/idx/deployment) that occurs when you push changes to your repository.
 
@@ -63,7 +63,57 @@ sim deploy --environment dev
   If you run `sim deploy` without the `--environment` flag, your sink configuration will be ignored. The deployment will succeed, but it will only write data to the default Neon Postgres database, and no data will be sent to your Kafka topics.
 </Warning>
 
-## Setting up Redpanda Cloud
+### Deployment Output and Tracking
+
+When you successfully deploy with a sink environment, the command will output deployment details including a unique **Deployment ID**. Here's an example of what the output looks like:
+
+```bash
+sim deploy --environment dev
+2025-09-18T16:13:26.816281Z  INFO build_probe: deploy::listeners: Building all contracts
+2025-09-18T16:13:35.322414Z  INFO build_probe: deploy::listeners: Calculating triggers
+2025-09-18T16:13:35.624276Z  INFO build_probe:create_probes_from_listeners: deploy::listeners: Building listeners
+2025-09-18T16:13:35.707338Z  INFO deploy::api: Building APIs...
+2025-09-18T16:13:54.344313Z  INFO deploy: Submitting listener
+2025-09-18T16:14:14.317367Z  INFO sim::deploy: Deployed:
+Deployment {
+    deployment_id: "ff27355a-a1a9-4b43-9a01-75a6060f3dfa",
+    api_url: Some(
+        "https://a4d175722c-457c96ab-1.idx.sim.io",
+    ),
+    connection_string: Some(
+        "postgres://firstly-as-E6uSqoeXzc:ddiH%29w%28tUUKCDilY@ep-yellow-haze-a4wva18x.us-east-1.aws.neon.tech/agreeable-care-HxcJ3J2yLJ?sslmode=require&options=-c%20search_path%3D%22who-here-UBOQMdSdNP%22%2Cpublic",
+    ),
+    // ... additional deployment details
+}
+```
+
+Keep track of your deployment ID, API URL, and connection string from the output above. You can also find this information in the [developer portal](/idx/app-page).
+
+## Delete a Sink Environment Deployment
+
+To stop data streaming to your Kafka topics, you need to delete the specific deployment that was created with the sink environment. This is the only way to stop the writing to the sink from the Sim side.
+
+Use the `sim deploy delete` command with the deployment ID:
+
+```bash
+sim deploy delete --deployment-id <deployment-id>
+```
+
+To retrieve your deployment ID, you should have gotten that after running the `sim deploy` command. If necessary, you can also retrieve the deployment ID by visiting the [developer portal](/idx/app-page) where it's displayed in the Current Deployment section.
+
+The deployment will be deleted almost immediately upon successful execution, which will stop all existing writes to your Kafka topics.
+
+<Note>
+  **Additional Kafka Cleanup:** After deleting the deployment, you may also need to clean up resources on the Kafka side (topics, ACLs, etc.) depending on your setup and requirements. This cleanup should be done directly in your Kafka provider's console or CLI.
+</Note>
+
+### Redeploy Without Sinks
+
+After deleting a deployment that was using sinks, you can redeploy without sinks by using the standard Git deployment method. Push changes to your repository, which will create a deployment that writes only to the default Postgres database.
+
+For more information on standard deployments, see the [Deployment guide](/idx/deployment).
+
+## Set up Redpanda Cloud
 
 <Steps>
     <Step title="Create a Cluster">
@@ -88,7 +138,7 @@ sim deploy --environment dev
     </Step>
 </Steps>
 
-## Setting up Confluent Cloud
+## Set up Confluent Cloud
 
 While the `sim.toml` configuration is standardized, setting up credentials and permissions can vary between different managed Kafka providers.
 
