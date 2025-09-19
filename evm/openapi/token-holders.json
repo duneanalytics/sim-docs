@@ -158,10 +158,10 @@
             }
           },
           {
-            "name": "next_offset",
+            "name": "offset",
             "in": "query",
             "required": false,
-            "description": "Offset value for fetching the next page of results.",
+            "description": "Pagination token from the previous response's next_offset field.",
             "schema": {
               "type": "string"
             }
