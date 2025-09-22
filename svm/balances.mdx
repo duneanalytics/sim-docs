@@ -36,6 +36,7 @@ Each item in the `balances` array contains the following fields:
 | address                        | Token contract address or blockchain name for native token    | string        |
 | amount                         | Amount of token owned in smallest unit                        | string        |
 | balance                        | Formatted amount with decimals applied                        | string        |
+| raw_balance                    | Raw balance from account info divided by 10^decimals         | string        |
 | value_usd                      | Current value of token owned, if available                    | number        |
 | program_id                     | Program ID of the token (for SPL tokens)                      | string        |
 | decimals                       | Decimals of token                                             | number        |
@@ -48,6 +49,10 @@ Each item in the `balances` array contains the following fields:
 | pool_type                      | Type of liquidity pool, if available                          | string/null   |
 | pool_address                   | Address of liquidity pool, if available                       | string/null   |
 | mint_authority                 | Mint authority address, if available                          | string/null   |
+
+<Note>
+The `amount` field is based on `uiAmountString` from the account info (not the raw `amount`) to maintain backward compatibility. The new `raw_balance` field provides the raw `amount` divided by 10^decimals, which usually matches `balance` except when contracts implement scaling logic.
+</Note>
 
 
 # Pagination

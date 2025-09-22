@@ -93,6 +93,7 @@
                       "address": "native",
                       "amount": "1000000000",
                       "balance": "1.0",
+                      "raw_balance": "1.0",
                       "value_usd": 20.5,
                       "program_id": null,
                       "decimals": 9,
@@ -149,6 +150,10 @@
           "balance": {
             "type": "string",
             "description": "Formatted amount with decimals applied"
+          },
+          "raw_balance": {
+            "type": "string",
+            "description": "Raw balance from account info divided by 10^decimals"
           },
           "value_usd": {
             "type": "number",
