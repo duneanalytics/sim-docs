@@ -26,7 +26,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "API key to access the service",
+            "description": "Sim API key to access the service",
             "required": true,
             "schema": {
               "type": "string"
@@ -46,7 +46,7 @@
           {
             "name": "chains",
             "in": "query",
-            "description": "Comma-separated list of chains to include",
+            "description": "Comma-separated list of chains to include. You can specify either solana or eclipse. For example, `?chains=solana,eclipse`.",
             "required": false,
             "schema": {
               "type": "string"
@@ -179,7 +179,7 @@
           },
           "amount": {
             "type": "string",
-            "description": "Amount of token owned in smallest unit"
+            "description": "Amount of token owned in smallest unit. The amount field is based on uiAmountString from the account info to maintain backward compatibility."
           },
           "balance": {
             "type": "string",
@@ -187,7 +187,7 @@
           },
           "raw_balance": {
             "type": "string",
-            "description": "Raw balance from account info divided by 10^decimals"
+            "description": "Raw balance that provides the raw amount divided by 10^decimals, which usually matches balance except when contract implements scaling logic."
           },
           "value_usd": {
             "type": "number",
