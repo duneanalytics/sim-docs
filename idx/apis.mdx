@@ -2,8 +2,7 @@
 title: API Development
 ---
 
-Sim IDX provides a complete serverless API development environment with built-in database connectivity, automatic scaling, and edge deployment.
-Whether you're building simple data endpoints or advanced features, the platform handles infrastructure concerns so you can focus on your business logic.
+Sim IDX provides a complete serverless API development environment with built-in database connectivity, automatic scaling, and edge deployment. Whether you're building simple data endpoints or advanced features, the platform handles infrastructure concerns so you can focus on your business logic.
 
 This guide walks you through the complete API development lifecycle on the platform.
 
@@ -11,17 +10,21 @@ This guide walks you through the complete API development lifecycle on the platf
 
 Your API runs on **Cloudflare Workers** with the **Hono** framework.
 Anything you can do in Hono will also work here.
-Your data is stored in a **Neon** Postgres accessed through Cloudflare **Hyperdrive**.
-Requests execute at the edge close to users, and database connections are pooled automatically, so you don’t have to manage servers or connection limits.
+Your data is stored, by default in a [**Neon** Postgres database](/idx/db) accessed through Cloudflare **Hyperdrive**.
 
 <Note>
-The setup scales with your traffic, but there are sensible platform limits. If you anticipate sustained very high volume, please [contact us](/support) so we can make sure everything runs smoothly.
+  As an alternative, you can also set up [Kafka sinks](/idx/sinks/kafka) to stream your indexed blockchain data in real-time to external data sinks like Confluent Cloud or Redpanda Cloud, in addition to the default Postgres database.
 </Note>
+
+Requests execute at the edge close to users, and database connections are pooled automatically, so you don't have to manage servers or connection limits.
+
+<Info>
+  The setup scales with your traffic, but there are sensible platform limits. If you anticipate sustained very high volume, please [contact us](/support).
+</Info>
 
 ## Local Development Setup
 
-Building APIs on Sim IDX follows a streamlined workflow: develop locally, write endpoints to query your indexed data, and deploy with a simple git push.
-The boilerplate API in the `apis/` directory gives you a starting point with common patterns for querying your indexed blockchain data and serving it through HTTP endpoints.
+Building APIs on Sim IDX follows a streamlined workflow. You develop locally, write endpoints to query your indexed data, and [deploy with a simple git push](/idx/deployment). The boilerplate API in the `apis/` directory gives you a starting point with common patterns for querying your indexed blockchain data and serving it through HTTP endpoints.
 
 Before deploying, you can run and test your API locally.
 
@@ -33,12 +36,14 @@ Before deploying, you can run and test your API locally.
   </Step>
 
   <Step title="Set Up Environment Variable">
-
     Create a file named `.dev.vars` in the `apis/` directory. Add the database connection string, which you can find on the [App Page](/idx/app-page#db-connection) after deploying your app for the first time.
 
-    ```plaintext .dev.vars
-    DB_CONNECTION_STRING="your_database_connection_string_from_app_page"
-    ```
+````
+```plaintext .dev.vars
+DB_CONNECTION_STRING="your_database_connection_string_from_app_page"
+```
+````
+
   </Step>
 
   <Step title="Install Dependencies">
@@ -52,32 +57,37 @@ Before deploying, you can run and test your API locally.
     npm run dev
     ```
 
-    Your API is now running locally at `http://localhost:8787`.
+```
+Your API is now running locally at `http://localhost:8787`.
+```
+
   </Step>
 </Steps>
 
 ## Understand the API Code
 
-The boilerplate API in `apis/src/index.ts` is a TypeScript application that runs on Cloudflare Workers. It connects to your indexed database and exposes HTTP endpoints to query your data. Let's understand how this works:
+The boilerplate API in `apis/src/index.ts` is a TypeScript application that runs on Cloudflare Workers. It connects to your indexed database and exposes HTTP endpoints to query your data. Let's understand how this works.
 
 ### Framework Setup
 
-The API uses the `sim-idx` helper library, which wraps **Hono** and **Drizzle** to simplify setup:
+The API uses the `@duneanalytics/sim-idx` helper library, which wraps **Hono** and **Drizzle** to simplify setup:
+
 ```typescript
-import { App, db, types } from "sim-idx";
+import { App, db, types } from "@duneanalytics/sim-idx";
 import { eq, sql } from "drizzle-orm";
-import { poolCreated, ownerQueried } from "./db/schema/Listener";
+import { poolCreated, ownerChanged } from "./db/schema/Listener";
 ```
 
 **Hono** handles HTTP requests and routing, while **Drizzle** provides a type-safe way to query your PostgreSQL database.
 
 ### Environment Configuration
 
-`sim-idx` handles database credentials for you in both local development and deployed environments, so no additional environment variables are required.
+`@duneanalytics/sim-idx` automatically handles credentials in production. For local development, place `DB_CONNECTION_STRING` in `.dev.vars` as shown above if you need to supply your own connection string.
 
 ### Application Instance
 
 Create the web application with a single call:
+
 ```typescript
 const app = App.create();
 ```
@@ -85,6 +95,7 @@ const app = App.create();
 ### Database Connection Management
 
 Instead of managing your own connection pool, call `db.client(c)` inside a request handler to reuse the shared Drizzle client:
+
 ```typescript
 const rows = await db.client(c)
   .select()
@@ -94,14 +105,11 @@ const rows = await db.client(c)
 
 ## Add a New Endpoint
 
-Let's build three endpoints to serve our indexed data:
-- `/api/pools` - Get recent Uniswap V3 pools
-- `/api/owner-changed` - Get recent owner changed events
-- `/api/pools/count` - Get total number of pools
+Let's build three endpoints to serve our indexed data: `/api/pools` to get recent Uniswap V3 pools, `/api/owner-changed` to get recent owner changed events, and `/api/pools/count` to get the total number of pools.
 
 ### Creating the Pools Endpoint
 
-Let's create our first endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint will query the `pool_created` table we created in our listener:
+Create an endpoint to fetch the 10 most recent Uniswap V3 pools. This endpoint queries the `pool_created` table from your listener.
 
 ```typescript
 // Endpoint to get the 10 most recent Uniswap V3 pools
@@ -120,12 +128,12 @@ app.get("/api/pools", async (c) => {
 });
 ```
 
-This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT 10` clause ensures we don't return too much data at once. In a production environment, you might want to add pagination and filtering options.
+This endpoint uses a simple SQL query to fetch the most recent pools. The `LIMIT 10` clause keeps the response small. In a production environment, consider adding pagination and filtering.
 
 ### Adding the Owner Changed Endpoint
 
 <Note>
-Before continuing, make sure you've added support for the `OwnerChanged` event in your listener contract by following the ["Triggering more functions and events"](/idx/listener#trigger-onchain-activity) section of the Listener guide and then running:
+  Before continuing, make sure you've added support for the `OwnerChanged` event in your listener contract by following the ["Triggering more functions and events"](/idx/listener#trigger-onchain-activity) section of the Listener guide and then running:
 
 ```bash
 sim build
@@ -134,7 +142,7 @@ sim build
 Running `sim build` regenerates `apis/src/db/schema/Listener.ts` with a new `ownerChanged` table binding that we import below.
 </Note>
 
-Now let's add an endpoint to fetch the 10 most recent owner changed events. This will query the `owner_changed` table:
+Add an endpoint to fetch the 10 most recent owner changed events. This endpoint queries the `owner_changed` table.
 
 ```typescript
 // Endpoint to get the 10 most recent owner changed events
@@ -155,7 +163,7 @@ app.get("/api/owner-changed", async (c) => {
 
 ### Creating the Pool Count Endpoint
 
-Finally, let's add an endpoint to get the total number of pools. This will be useful for pagination and analytics:
+Finally, add an endpoint to get the total number of pools. This is useful for pagination and analytics.
 
 ```typescript
 // Endpoint to get the total number of pools
@@ -173,33 +181,29 @@ app.get("/api/pools/count", async (c) => {
 });
 ```
 
-This endpoint uses an aggregate query to efficiently count pools without fetching every row.
+This endpoint uses an aggregate query to count pools without fetching every row.
 
 ### Testing Your Endpoints
 
-After adding all three endpoints, you can test them locally:
-
-- `http://localhost:8787/api/pools` - Get recent pools
-- `http://localhost:8787/api/owner-changed` - Get recent owner changed events
-- `http://localhost:8787/api/pools/count` - Get total pool count
+After adding all three endpoints, you can test them locally at `http://localhost:8787/api/pools`, `http://localhost:8787/api/owner-changed`, and `http://localhost:8787/api/pools/count`.
 
 ## Authenticate API Endpoints
 
 Sim IDX provides built-in authentication middleware that integrates seamlessly with your app and the platform.
 
-When deployed to production, the authentication middleware requires a valid Sim IDX App Endpoints API key to be passed with each request. Sim's infrastructure validates the key and, if successful, allows the request to proceed. Unauthenticated requests will be rejected with a `401 Unauthorized` error.
+When deployed to production, the authentication middleware requires a valid Sim IDX App Endpoints API key to be passed with each request. Sim's infrastructure validates the key and, if successful, allows the request to proceed. Unauthenticated requests return a `401 Unauthorized` error.
 
-During local development, the authentication middleware automatically disables authentication checks when your API is running locally (i.e., when `NODE_ENV` is not `production`). This allows for a frictionless development experience without needing to manage API keys while testing your endpoints.
+During local development, the authentication middleware automatically disables authentication checks when your API is running locally. This occurs when `NODE_ENV` is not `production`. This allows you to test endpoints without managing keys.
 
 ### Create a Sim IDX App Endpoints API Key
 
-Your API will need a Sim IDX App Endpoints API key to access your authenticated endpoints. They can generate a new key from the [Sim dashboard](https://sim.dune.com/).
+Your API will need a Sim IDX App Endpoints API key to access your authenticated endpoints. You can generate a new key from the [Sim dashboard](https://sim.dune.com/).
 
 <Frame caption="To generate a new API key, visit the Keys page and click the New button.">
-  <img src="/images/idx/sim-idx-app-endpoints-api-key.png" />
+  <img src="https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=431bc44f3d0138b9a69ebb3f44810104" width="2848" height="1786" data-path="images/idx/sim-idx-app-endpoints-api-key.png" srcset="https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=280&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=dcb8da4b7e3daa10f379666a38052ff3 280w, https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=560&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=f2713c3d2bd15a47ef3bfe1f312f1e5c 560w, https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=840&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=4ce12260054b9a010890a26771fda3e2 840w, https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=1100&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=ed328d6d183d7ae79c499f1112c69822 1100w, https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=1650&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=6d42912dbb93368967e59860efa98129 1650w, https://mintcdn.com/sim-dune/FaNfto3J8NMXXVaa/images/idx/sim-idx-app-endpoints-api-key.png?w=2500&fit=max&auto=format&n=FaNfto3J8NMXXVaa&q=85&s=0dde5d4f6d4e0c2e72a7125e5189f961 2500w" data-optimize="true" data-opv="2" />
 </Frame>
 
-When creating the key, its purpose should be set to **Sim IDX App Endpoints**. This key must be kept secure and should not be exposed in client-side code.
+When creating the key, its purpose should be set to **Sim IDX App Endpoints**. Keep this key secure and do not expose it in client-side code.
 
 ### Understanding the Authentication Middleware
 
@@ -227,15 +231,48 @@ The `middlewares.authentication` is applied to all routes using the `app.use("*"
 
 ### Calling Your Authenticated API
 
-Once your API is deployed, you must include their Sim IDX App Endpoints API key in the `Authorization` header with every request.
+Once your API is deployed, you must include your Sim IDX App Endpoints API key in the `Authorization` header with every request.
 
-Here's an example using cURL:
+Here is an example using cURL.
+
 ```bash
 curl --request GET \
   --url https://<your-api-url>/api/pools \
   --header 'Authorization: Bearer YOUR_SIM_IDX_APP_ENDPOINTS_API_KEY'
 ```
+
 Replace `<your-api-url>` with your deployment's base URL and `YOUR_SIM_IDX_APP_ENDPOINTS_API_KEY` with a valid Sim IDX App Endpoints API key.
+
+## Wrangler Configuration
+
+Your API uses a `wrangler.jsonc` file in the `apis/` directory for local tooling and build metadata. This file is already created when you initialize a new project. Sim IDX reads a minimal set of fields from this file during deployment. Other fields in this file are not used by the Sim IDX deployment flow.
+
+<Note>
+  Sim IDX deploys only the code that is reachable from your entrypoint during the build. Static files and local state are not packaged. Files on disk such as images, CSV or JSON blobs, or a local Wrangler state directory are not uploaded.
+</Note>
+
+The existing `apis/wrangler.jsonc` contains:
+
+```jsonc
+{
+  "name": "sim-apis-sample-app",
+  "compatibility_date": "2025-05-28", // Update this date to the current date
+  "main": "src/index.ts",
+  "compatibility_flags": ["nodejs_compat"]
+}
+```
+
+If you add additional keys to this file, the Sim IDX deployment will not use them. Some keys may appear harmless in local development, but they will not change how your production Cloudflare worker runs.
+
+### Local vs Deploy
+
+Local development tools can sometimes access files on your machine. The deployed worker does not have a filesystem. Do not read from disk in your request handlers. If you need small reference data then embed it at build time as a TypeScript module import. If you need larger assets then host them behind HTTPS and fetch them at runtime.
+
+| Capability                              | Local dev (`npm run dev`) | Deployed on Sim IDX | What to do                                     |
+| --------------------------------------- | ------------------------- | ------------------- | ---------------------------------------------- |
+| Read `./file.json`                      | May appear to work        | Not available       | Embed at build time or fetch remotely          |
+| Serve files from `assets/` or `public/` | May serve locally         | Not packaged        | Host externally and fetch                      |
+| Extra fields in `wrangler.jsonc`        | May work locally          | Not used            | Keep only `name`, `main`, `compatibility_date`, `compatibility_flags` |
 
 ## Deploy Your API
 
@@ -245,9 +282,10 @@ Replace `<your-api-url>` with your deployment's base URL and `YOUR_SIM_IDX_APP_E
   </Card>
 </Columns>
 
-Once your repository is connected, shipping updates is as simple as pushing code:
-
-- Push commits to the `main` branch to roll out a new **production** deployment.
-- Push to any other branch to spin up a **preview** deployment with its own URL — perfect for staging and pull-request reviews.
+Once your repository is connected, shipping updates is as simple as pushing code. Push commits to the `main` branch to roll out a new production deployment. Push to any other branch to spin up a preview deployment with its own URL. This is useful for staging and pull-request reviews.
 
 Sim IDX automatically builds your Cloudflare Worker and updates the deployment status in the dashboard. No CLI command is required.
+
+<Note>
+  Before pushing, review your `wrangler.jsonc` and remove fields that are not `name`, `main`, or `compatibility_date`. Also make sure your handlers do not read from the filesystem. If you need data, either embed it at build time or fetch it from a remote source.
+</Note>
