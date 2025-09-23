@@ -7,49 +7,6 @@ openapi: '/svm/openapi/balances.json GET /beta/svm/balances/{uri}'
 The Token Balances API provides accurate and fast real time balances of the native, SPL and SPL-2022 tokens of accounts on supported SVM blockchains.
 We currently support Solana and Eclipse.
 
-<Note>
-  - These endpoints are authenticated with a normal Sim API key.
-  - Specify `?chains=solana,eclipse` to fetch balances only for select chains.
-  - Token metadata includes symbols, decimals, and price information when available.
-</Note>
-
-
-# Response Structure
-
-The API returns a JSON object with the following top-level fields:
-
-| Field                          | Description                                                   | Type          |
-|--------------------------------|---------------------------------------------------------------|---------------|
-| processing_time_ms             | Time taken to process the request in milliseconds             | number        |
-| wallet_address                 | The queried wallet address                                    | string        |
-| next_offset                    | Pagination token for the next page of results                 | string/null   |
-| balances_count                 | Total number of balances returned                             | number        |
-| balances                       | Array of token balance objects                                | array         |
-
-# Balance Object Fields
-
-Each item in the `balances` array contains the following fields:
-
-| Field                          | Description                                                   | Type          |
-|--------------------------------|---------------------------------------------------------------|---------------|
-| chain                          | Name of blockchain of token                                   | string        |
-| address                        | Token contract address or blockchain name for native token    | string        |
-| amount                         | Amount of token owned in smallest unit                        | string        |
-| balance                        | Formatted amount with decimals applied                        | string        |
-| value_usd                      | Current value of token owned, if available                    | number        |
-| program_id                     | Program ID of the token (for SPL tokens)                      | string        |
-| decimals                       | Decimals of token                                             | number        |
-| total_supply                   | Total supply of the token                                     | string        |
-| name                           | Name of token                                                 | string        |
-| symbol                         | Symbol of token                                               | string        |
-| uri                            | URI to token metadata                                         | string        |
-| price_usd                      | Current price of token, if available                          | number        |
-| liquidity_usd                  | Liquidity in USD, if available                                | number/null   |
-| pool_type                      | Type of liquidity pool, if available                          | string/null   |
-| pool_address                   | Address of liquidity pool, if available                       | string/null   |
-| mint_authority                 | Mint authority address, if available                          | string/null   |
-
-
 # Pagination
 
 This endpoint is using cursor based pagination. You can use the `limit` parameter to define the maximum page size.

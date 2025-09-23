@@ -26,7 +26,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "API key to access the service",
+            "description": "Sim API key to access the service",
             "required": true,
             "schema": {
               "type": "string"
@@ -46,7 +46,7 @@
           {
             "name": "chains",
             "in": "query",
-            "description": "Comma-separated list of chains to include",
+            "description": "Comma-separated list of chains to include. You can specify either solana or eclipse. For example, `?chains=solana,eclipse`.",
             "required": false,
             "schema": {
               "type": "string"
@@ -86,13 +86,48 @@
                   "processing_time_ms": 120,
                   "wallet_address": "DYw8jCTfwHNRJhhmFcbXvVDTqWMEVFBX6ZKUmG5CNSKK",
                   "next_offset": "eyJibG9ja190aW1lIjoxNjgwMDAwMDAwLCJpbmRleCI6MH0=",
-                  "balances_count": 2,
+                  "balances_count": 3,
                   "balances": [
+                    {
+                      "chain": "solana",
+                      "address": "GUACAwFcHeHgN6FWhcw5Uwt8r9YHF1x66NWkW8fLT2e6",
+                      "amount": "236604141098046680",
+                      "balance": "2366041410980.4668",
+                      "raw_balance": "2333343144265.50919",
+                      "value_usd": 0,
+                      "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+                      "decimals": 5,
+                      "total_supply": "17752032227785985186",
+                      "metadata_address": "GUACAwFcHeHgN6FWhcw5Uwt8r9YHF1x66NWkW8fLT2e6",
+                      "name": "Solana Power Boost",
+                      "symbol": "GUACA",
+                      "uri": "https://arweave.net/0-6vSvbN2VhWi0dpufHxkcvul2TSYGQn7F-xAt867iY",
+                      "price_usd": 0,
+                      "liquidity_usd": 0
+                    },
+                    {
+                      "chain": "solana",
+                      "address": "HV6ia6ptzKbMPQs3zGrj2S35BhxeFzpXeSS3jNtW7P9F",
+                      "amount": "913013423527",
+                      "balance": "913013.423527",
+                      "raw_balance": "912673",
+                      "value_usd": 0,
+                      "program_id": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+                      "decimals": 6,
+                      "total_supply": "1000000000000",
+                      "mint_authority": "4TM4eaLauigrqjDytC49K2iWKB4kAHsNRCJz48mdriHY",
+                      "name": "FIRE",
+                      "symbol": "FIRE",
+                      "uri": "https://bafkreic4fzgkgta5qmv2tk2fug7i6jnrcmd4pnrf6pxwvyfxlne3ewb67i.ipfs.nftstorage.link",
+                      "price_usd": 0,
+                      "liquidity_usd": 0
+                    },
                     {
                       "chain": "solana",
                       "address": "native",
                       "amount": "1000000000",
                       "balance": "1.0",
+                      "raw_balance": "1.0",
                       "value_usd": 20.5,
                       "program_id": null,
                       "decimals": 9,
@@ -144,11 +179,15 @@
           },
           "amount": {
             "type": "string",
-            "description": "Amount of token owned in smallest unit"
+            "description": "Amount of token owned in smallest unit. The amount field is based on uiAmountString from the account info to maintain backward compatibility."
           },
           "balance": {
             "type": "string",
             "description": "Formatted amount with decimals applied"
+          },
+          "raw_balance": {
+            "type": "string",
+            "description": "Raw balance that provides the raw amount divided by 10^decimals, which usually matches balance except when contract implements scaling logic."
           },
           "value_usd": {
             "type": "number",
