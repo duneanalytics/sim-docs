@@ -14,44 +14,8 @@ We currently support Solana and Eclipse.
 </Note>
 
 
-# Response Structure
-
-The API returns a JSON object with the following top-level fields:
-
-| Field                          | Description                                                   | Type          |
-|--------------------------------|---------------------------------------------------------------|---------------|
-| processing_time_ms             | Time taken to process the request in milliseconds             | number        |
-| wallet_address                 | The queried wallet address                                    | string        |
-| next_offset                    | Pagination token for the next page of results                 | string/null   |
-| balances_count                 | Total number of balances returned                             | number        |
-| balances                       | Array of token balance objects                                | array         |
-
-# Balance Object Fields
-
-Each item in the `balances` array contains the following fields:
-
-| Field                          | Description                                                   | Type          |
-|--------------------------------|---------------------------------------------------------------|---------------|
-| chain                          | Name of blockchain of token                                   | string        |
-| address                        | Token contract address or blockchain name for native token    | string        |
-| amount                         | Amount of token owned in smallest unit                        | string        |
-| balance                        | Formatted amount with decimals applied                        | string        |
-| raw_balance                    | Raw balance from account info divided by 10^decimals         | string        |
-| value_usd                      | Current value of token owned, if available                    | number        |
-| program_id                     | Program ID of the token (for SPL tokens)                      | string        |
-| decimals                       | Decimals of token                                             | number        |
-| total_supply                   | Total supply of the token                                     | string        |
-| name                           | Name of token                                                 | string        |
-| symbol                         | Symbol of token                                               | string        |
-| uri                            | URI to token metadata                                         | string        |
-| price_usd                      | Current price of token, if available                          | number        |
-| liquidity_usd                  | Liquidity in USD, if available                                | number/null   |
-| pool_type                      | Type of liquidity pool, if available                          | string/null   |
-| pool_address                   | Address of liquidity pool, if available                       | string/null   |
-| mint_authority                 | Mint authority address, if available                          | string/null   |
-
 <Note>
-The `amount` field is based on `uiAmountString` from the account info (not the raw `amount`) to maintain backward compatibility. The new `raw_balance` field provides the raw `amount` divided by 10^decimals, which usually matches `balance` except when contracts implement scaling logic.
+The `amount` field is based on `uiAmountString` from the account info (not the raw `amount`) to maintain backward compatibility. The `raw_balance` field provides the raw `amount` divided by 10^decimals, which usually matches `balance` except when contracts implement scaling logic.
 </Note>
 
 
