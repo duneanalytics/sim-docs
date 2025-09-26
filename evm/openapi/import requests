@@ -1,0 +1,9 @@
+import requests
+
+url = "https://api.sim.dune.com/v1/evm/collectibles/{address}"
+
+headers = {"X-Sim-Api-Key": "<x-sim-api-key>"}
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
