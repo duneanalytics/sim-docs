@@ -10,22 +10,22 @@ Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual 
 | --- | --- | --- |
 | EVM Balances | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
 | EVM Collectibles | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
-| EVM Activity | Fixed | 1 compute unit per request |
+| EVM Activity | Fixed | 3 compute units per request |
 | EVM Transactions | Fixed | 1 compute unit per request |
-| EVM Token Info | Fixed | 1 compute unit per request, even though `chain_ids` is required |
-| EVM Token Holders | Fixed | 1 compute unit per request |
-| SVM Balances | Chain-dependent | N compute units, where N is the number of chains in the `chains` parameter |
+| EVM Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required |
+| EVM Token Holders | Fixed | 2 compute units per request |
+| SVM Balances | Fixed | 1 compute unit per request |
 | SVM Transactions | Fixed | 1 compute unit per request |
 
 ## How CUs work
 
 For chain-dependent endpoints, CU equals the number of distinct chains the request processes. If you pass tags (like `default`, `mainnet`, or `testnet`) via `chain_ids`, we expand them to specific chains before computing CU. If you omit `chain_ids` in the EVM Collectibles or Balances endpoints, the endpoint uses its default chain set. The number of chains that are tagged by default is dependent on the number of chains and is subject to change as Sim APIs adds more chains. CU equals the size of that set at request time.
 
-For fixed endpoints, each request consumes exactly 1 compute unit regardless of how many chains you query or what parameters you provide.
+For fixed endpoints, each request consumes exactly specified number of compute units regardless of how many chains you query or what parameters you provide.
 
 ## Chain selection and tags
 
-Chain count is computed after we expand any tags you pass. To keep CU predictable over time, specify explicit `chain_ids` (EVM) or `chains` (SVM). If you use tags like `default` or `mainnet`, we expand them to specific chains at request time. Tags can grow as we add more networks. Pin chains explicitly to keep CU stable. See [Supported Chains](/evm/supported-chains#tags).
+Chain count is computed after we expand any tags you pass. To keep CU predictable over time, specify explicit `chain_ids` (EVM). If you use tags like `default` or `mainnet`, we expand them to specific chains at request time. Tags can grow as we add more networks. Pin chains explicitly to keep CU stable. See [Supported Chains](/evm/supported-chains#tags).
 
 ## Examples
 
@@ -72,5 +72,3 @@ Chain count is computed after we expand any tags you pass. To keep CU predictabl
     Visit your Sim Dashboard.
   </Accordion>
 </AccordionGroup>
-
-
