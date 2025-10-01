@@ -4,22 +4,20 @@ sidebarTitle: "Compute Units"
 description: "Understand how Sim bills API usage using Compute Units (CUs) and how they're calculated per endpoint."
 ---
 
-Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual computational work of each API call. For example, querying EVM Balances across 30 chains uses more CUs than querying just two chains.
+Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual computational work of each API call. For example, querying Balances across 30 chains uses more CUs than querying just two chains.
 
 | Endpoint | Type | Compute Units |
 | --- | --- | --- |
-| EVM Balances | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
-| EVM Collectibles | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
-| EVM Activity | Fixed | 3 compute units per request |
-| EVM Transactions | Fixed | 1 compute unit per request |
-| EVM Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required |
-| EVM Token Holders | Fixed | 2 compute units per request |
-| SVM Balances | Fixed | 1 compute unit per request |
-| SVM Transactions | Fixed | 1 compute unit per request |
+| Balances (EVM & SVM) | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
+| Collectibles | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
+| Activity | Fixed | 3 compute units per request |
+| Transactions (EVM & SVM) | Fixed | 1 compute unit per request |
+| Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required |
+| Token Holders | Fixed | 2 compute units per request |
 
 ## How CUs work
 
-For chain-dependent endpoints, CU equals the number of distinct chains the request processes. If you pass tags (like `default`, `mainnet`, or `testnet`) via `chain_ids`, we expand them to specific chains before computing CU. If you omit `chain_ids` in the EVM Collectibles or Balances endpoints, the endpoint uses its default chain set. The number of chains that are tagged by default is dependent on the number of chains and is subject to change as Sim APIs adds more chains. CU equals the size of that set at request time.
+For chain-dependent endpoints, CU equals the number of distinct chains the request processes. If you pass tags (like `default`, `mainnet`, or `testnet`) via `chain_ids`, we expand them to specific chains before computing CU. If you omit `chain_ids` in the Collectibles or Balances endpoints, the endpoint uses its default chain set. The number of chains that are tagged by default is dependent on the number of chains and is subject to change as Sim APIs adds more chains. CU equals the size of that set at request time.
 
 For fixed endpoints, each request consumes exactly specified number of compute units regardless of how many chains you query or what parameters you provide.
 
@@ -30,28 +28,28 @@ Chain count is computed after we expand any tags you pass. To keep CU predictabl
 ## Examples
 
 <Columns>
-  <Card title="EVM Balances: explicit chains">
+  <Card title="Balances: explicit chains">
     Use `?chain_ids=1,8453,137` to process three chains. This consumes three CUs.
   </Card>
-  <Card title="EVM Balances: default set">
-    Omitting `chain_ids` uses the endpoint’s chains tagged `default`. CU equals the size of that set at request time (approximately 25 and subject to change). See [Supported Chains](/evm/supported-chains#tags).
+  <Card title="Balances: default set">
+    Omitting `chain_ids` uses the endpoint's chains tagged `default`. CU equals the size of that set at request time (approximately 25 and subject to change). See [Supported Chains](/evm/supported-chains#tags).
   </Card>
 </Columns>
 
 <Columns>
-  <Card title="EVM Balances: mainnet tag">
+  <Card title="Balances: mainnet tag">
     Passing `?chain_ids=mainnet` expands to all supported mainnet chains for the endpoint. CU equals the expanded chain count.
   </Card>
-  <Card title="EVM Collectibles: chain-dependent">
+  <Card title="Collectibles: chain-dependent">
     Collectibles follows the same chain-dependent model as Balances. Count your chains after tag expansion to estimate CU.
   </Card>
 </Columns>
 
 <Columns>
-  <Card title="EVM Activity: fixed cost">
+  <Card title="Activity: fixed cost">
     Activity uses a fixed-cost model. Each request consumes the same CU regardless of chains queried.
   </Card>
-  <Card title="EVM Token Info: fixed cost">
+  <Card title="Token Info: fixed cost">
     Token Info is fixed-cost per request, even though `chain_ids` is required. CU does not scale with the number of chains.
   </Card>
 </Columns>
