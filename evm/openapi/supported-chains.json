@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/supported-chains/{uri}": {
+    "/v1/evm/supported-chains": {
       "get": {
         "tags": [
           "supported-chains"
@@ -27,15 +27,6 @@
             "name": "X-Sim-Api-Key",
             "in": "header",
             "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "uri",
-            "in": "path",
-            "description": "The endpoint to get supported chains for (e.g., 'balances', 'activity', 'token-info')",
             "required": true,
             "schema": {
               "type": "string"

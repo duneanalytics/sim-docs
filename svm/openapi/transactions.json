@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/beta/svm/transactions/{uri}": {
+    "/beta/svm/transactions/{address}": {
       "get": {
         "tags": [
           "svm-transactions"
@@ -33,9 +33,9 @@
             }
           },
           {
-            "name": "uri",
+            "name": "address",
             "in": "path",
-            "description": "SVM address",
+            "description": "SVM wallet address",
             "required": true,
             "schema": {
               "type": "string",

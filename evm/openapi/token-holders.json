@@ -101,7 +101,7 @@
     }
   },
   "paths": {
-    "/v1/evm/token-holders/{chain_id}/{token_address}": {
+    "/v1/evm/token-holders/{chain_id}/{address}": {
       "get": {
         "summary": "Get Token Holders",
         "description": "Retrieves a list of token holders for a given token contract address on a specified blockchain.",
@@ -132,10 +132,10 @@
             "example": 8453
           },
           {
-            "name": "token_address",
+            "name": "address",
             "in": "path",
             "required": true,
-            "description": "The address of the token contract.",
+            "description": "The token contract address.",
             "schema": {
               "type": "string",
               "format": "address",

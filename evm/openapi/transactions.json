@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/transactions/{wallet_address}": {
+    "/v1/evm/transactions/{address}": {
       "get": {
         "tags": [
           "evm-transactions"
@@ -33,7 +33,7 @@
             }
           },
           {
-            "name": "wallet_address",
+            "name": "address",
             "in": "path",
             "description": "EVM wallet address",
             "required": true,
