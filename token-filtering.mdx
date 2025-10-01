@@ -36,6 +36,10 @@ The presence of price data does not indicate that a token is safe to trade or th
   </Card>
 </Columns>
 
+<Note>
+Filtering tokens does not change chain selection and therefore does not change Compute Units. To reduce CU on chain-dependent endpoints, limit `chain_ids` (EVM) or `chains` (SVM) to only the networks you need. See [Supported Chains](/evm/supported-chains) and [Compute Units](/compute-units).
+</Note>
+
 For each token in our responses, we include comprehensive metadata that gives you the information needed to make informed filtering decisions:
 
 1. **Token basics**: `symbol`, `name`, and `decimals` properties

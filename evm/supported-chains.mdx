@@ -136,6 +136,12 @@ Untagged chains stay out of default requests to keep them fast, but you can stil
 
 Open the accordion above and scan the table to see which chains carry tags and which are untagged.
 
+## Compute Units
+
+Chain selection directly determines CU cost for chain-dependent endpoints (like Balances and Collectibles). CU equals the number of distinct chains included after expanding any tags you pass in `chain_ids`. If you omit `chain_ids`, we use the endpoint's default set. Your CU equals the size of that set at request time. To keep usage predictable over time, pin explicit chain IDs instead of tags.
+
+See [Compute Units](/compute-units) for the full rate card and guidance.
+
 ## Examples
 
 Here are two practical examples of how you might use this endpoint:
