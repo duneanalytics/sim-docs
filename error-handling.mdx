@@ -25,6 +25,7 @@ The error property can be either `"error"` or `"message"` depending on the type 
 | ----------- | ----------- | --------------- |
 | 401 | Invalid or missing API key | Check that you're including the correct API key in the `X-Sim-Api-Key` header |
 | 400 | Malformed request | Verify the address format and other parameters in your request |
+| 402 | Compute units quota exceeded | You are out of compute units. Please contact sales to upgrade your plan: sales@dune.com |
 | 404 | Resource not found | Verify the endpoint URL and resource identifiers |
 | 429 | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
 | 500 | Server-side error | Retry the request after a short delay; if persistent, contact support |

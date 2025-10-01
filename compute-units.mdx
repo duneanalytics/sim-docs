@@ -1,0 +1,74 @@
+---
+title: "Compute Units"
+sidebarTitle: "Compute Units"
+description: "Understand how Sim bills API usage using Compute Units (CUs) and how they're calculated per endpoint."
+---
+
+Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual computational work of each API call. For example, querying EVM Balances across 30 chains uses more CUs than querying just two chains.
+
+| Endpoint | Type | Compute Units |
+| --- | --- | --- |
+| EVM Balances | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
+| EVM Collectibles | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
+| EVM Activity | Fixed | 3 compute units per request |
+| EVM Transactions | Fixed | 1 compute unit per request |
+| EVM Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required |
+| EVM Token Holders | Fixed | 2 compute units per request |
+| SVM Balances | Fixed | 1 compute unit per request |
+| SVM Transactions | Fixed | 1 compute unit per request |
+
+## How CUs work
+
+For chain-dependent endpoints, CU equals the number of distinct chains the request processes. If you pass tags (like `default`, `mainnet`, or `testnet`) via `chain_ids`, we expand them to specific chains before computing CU. If you omit `chain_ids` in the EVM Collectibles or Balances endpoints, the endpoint uses its default chain set. The number of chains that are tagged by default is dependent on the number of chains and is subject to change as Sim APIs adds more chains. CU equals the size of that set at request time.
+
+For fixed endpoints, each request consumes exactly specified number of compute units regardless of how many chains you query or what parameters you provide.
+
+## Chain selection and tags
+
+Chain count is computed after we expand any tags you pass. To keep CU predictable over time, specify explicit `chain_ids` (EVM). If you use tags like `default` or `mainnet`, we expand them to specific chains at request time. Tags can grow as we add more networks. Pin chains explicitly to keep CU stable. See [Supported Chains](/evm/supported-chains#tags).
+
+## Examples
+
+<Columns>
+  <Card title="EVM Balances: explicit chains">
+    Use `?chain_ids=1,8453,137` to process three chains. This consumes three CUs.
+  </Card>
+  <Card title="EVM Balances: default set">
+    Omitting `chain_ids` uses the endpoint’s chains tagged `default`. CU equals the size of that set at request time (approximately 25 and subject to change). See [Supported Chains](/evm/supported-chains#tags).
+  </Card>
+</Columns>
+
+<Columns>
+  <Card title="EVM Balances: mainnet tag">
+    Passing `?chain_ids=mainnet` expands to all supported mainnet chains for the endpoint. CU equals the expanded chain count.
+  </Card>
+  <Card title="EVM Collectibles: chain-dependent">
+    Collectibles follows the same chain-dependent model as Balances. Count your chains after tag expansion to estimate CU.
+  </Card>
+</Columns>
+
+<Columns>
+  <Card title="EVM Activity: fixed cost">
+    Activity uses a fixed-cost model. Each request consumes the same CU regardless of chains queried.
+  </Card>
+  <Card title="EVM Token Info: fixed cost">
+    Token Info is fixed-cost per request, even though `chain_ids` is required. CU does not scale with the number of chains.
+  </Card>
+</Columns>
+
+## FAQs
+
+<AccordionGroup>
+  <Accordion title="How do I estimate CU before making a request?">
+    For chain-dependent endpoints, count the chains you include (after any tag expansion). For fixed-CU endpoints, see the table at the top of the page.
+  </Accordion>
+  <Accordion title="Does token filtering impact CU usage?">
+    No. CU is based on chain count or a fixed per-request cost, not on token filtering. See [Token Filtering](/token-filtering).
+  </Accordion>
+  <Accordion title="Why did my CU change when I didn't pass chain_ids?">
+    If you omit `chain_ids` for endpoints where it can be passed, we use the endpoint's `default` chain set, which may grow as new chains are added. Pin explicit chains to keep CU stable.
+  </Accordion>
+  <Accordion title="Where do I view my CU usage?">
+    Visit your Sim Dashboard.
+  </Accordion>
+</AccordionGroup>

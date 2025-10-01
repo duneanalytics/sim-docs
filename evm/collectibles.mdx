@@ -12,3 +12,13 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 The Collectibles API provides information about NFTs (ERC721 and ERC1155 tokens) owned by a specific address on supported EVM blockchains.
 
 <SupportedChains endpoint="collectibles" />
+
+## Compute Unit Cost
+
+The Collectibles endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter. If you omit `chain_ids`, we use the endpoint’s chains tagged `default`. See the [Supported Chains](/evm/supported-chains#tags) page to learn about chain tags.
+
+For example, `?chain_ids=1,8453,137` processes three chains and consumes three CUs. Omitting `chain_ids` uses the default set at request time and consumes a CU count equal to the size of that set.
+
+<Note>
+See the [Compute Units](/compute-units) page for detailed information.
+</Note>
