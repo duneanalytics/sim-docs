@@ -776,7 +776,7 @@ async function getWalletBalances(walletAddress) {
 This function creates the API request using Node's `fetch`.
 It includes your `SIM_API_KEY` in the headers and sends a GET request to the `/v1/evm/balances/{address}` endpoint.
 
-The Balances API gives you access to various [_URL query parameters_](/evm/balances#parameter-uri) that you can include to modify the response.
+The Balances API gives you access to various [_URL query parameters_](/evm/balances) that you can include to modify the response.
 We have included `metadata=url,logo` to include a token's URL and logo.
 
 Next, modify your `app.get('/')` route handler in `server.js` to call `getWalletBalances` and pass the fetched tokens to your template:

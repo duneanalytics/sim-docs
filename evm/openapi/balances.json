@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/balances/{uri}": {
+    "/v1/evm/balances/{address}": {
       "get": {
         "tags": [
           "balances"
@@ -33,9 +33,9 @@
             }
           },
           {
-            "name": "uri",
+            "name": "address",
             "in": "path",
-            "description": "Wallet to get balances for",
+            "description": "Wallet address to get balances for",
             "required": true,
             "schema": {
               "type": "string",

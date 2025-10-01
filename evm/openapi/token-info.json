@@ -14,7 +14,7 @@
     }
   ],
   "paths": {
-    "/v1/evm/token-info/{uri}": {
+    "/v1/evm/token-info/{address}": {
       "get": {
         "tags": [
           "token-info"
@@ -32,7 +32,7 @@
             }
           },
           {
-            "name": "uri",
+            "name": "address",
             "in": "path",
             "description": "The contract address of the token or 'native' for the native token of the chain",
             "required": true,
