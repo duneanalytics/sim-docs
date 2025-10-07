@@ -11,18 +11,24 @@ import { SupportedChains } from "/snippets/supported-chains.mdx";
 
 The Token Balances API provides accurate and fast real time balances of the native and ERC20 tokens of accounts on supported EVM blockchains.
 
+<SupportedChains endpoint="balances" />
+
 <Note>
   The Balances API only returns balances for certain low latency chains by default.
   To learn more see the tags section of the [Supported Chains](/evm/supported-chains#tags) page.
 </Note>
 
-<SupportedChains endpoint="balances" />
-
- 
-
 ## Token Prices
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a USD price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
+
+## Token Filtering
+
+We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
+
+<Tip>
+  Looking for the balance of a single token for a wallet? Use the <a href="/evm/single-balance">Single Balance</a> sub-endpoint instead.
+</Tip>
 
 ## Historical prices
 
@@ -55,10 +61,6 @@ When set, each balance includes a `historical_prices` array with one entry per o
 <Warning>
   The maximum number of historical price offsets is 3. If more than 3 are provided, the API returns an error.
 </Warning>
-
-## Token Filtering
-
-We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
 
 ## Pagination
 

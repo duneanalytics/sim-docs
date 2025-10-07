@@ -189,6 +189,106 @@
           }
         }
       }
+    },
+    "/v1/evm/balances/{address}/token/{token_address}": {
+      "get": {
+        "tags": ["balances"],
+        "summary": "Get a single token balance for a given address",
+        "description": "Returns the balance for a specific token (or native asset) for a wallet on a single specified chain. This sub-endpoint reuses the Balances response format.",
+        "operationId": "getEvmSingleTokenBalance",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Wallet address to get the token balance for",
+            "required": true,
+            "schema": { "type": "string", "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }
+          },
+          {
+            "name": "token_address",
+            "in": "path",
+            "description": "Token contract address or `native` for the chain's native asset",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "required": true,
+            "description": "Specify exactly one numeric chain ID (e.g., `?chain_ids=1`). Comma-separated lists, chain names, and tags are not accepted for this sub-endpoint.",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "historical_prices",
+            "in": "query",
+            "description": "Historical price selection. Accepts integer | integer[]. Provide whole numbers representing hours in the past, up to 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
+            "required": false,
+            "style": "form",
+            "explode": false,
+            "schema": {
+              "oneOf": [
+                { "type": "integer", "format": "int32", "minimum": 1 },
+                { "type": "array", "items": { "type": "integer", "format": "int32", "minimum": 1 }, "maxItems": 3 }
+              ]
+            },
+            "examples": {
+              "single_offset": { "summary": "Single offset (1 week ago)", "value": "168" },
+              "three_offsets": { "summary": "Three offsets (1 month, 1 week, 1 day ago)", "value": "720,168,24" }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SingleBalanceResponse" },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "request_time": "2025-10-07T13:18:14.789152386+00:00",
+                      "response_time": "2025-10-07T13:18:14.850098525+00:00",
+                      "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "balances": [
+                        {
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "address": "0x146523e8db6337291243a63a5555f446fa6c279f",
+                          "amount": "7156868995423049840501842481",
+                          "symbol": "AiMeme",
+                          "name": "Ai Meme",
+                          "decimals": 18,
+                          "price_usd": 129086.448055109,
+                          "value_usd": 923854797814899,
+                          "pool_size": 9.09741149400001,
+                          "low_liquidity": true
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad Request. The request could not be understood by the server due to malformed data" },
+          "404": { "description": "Not Found" },
+          "500": { "description": "Internal Server Error. A generic error occurred on the server." }
+        }
+      }
     }
   },
   "components": {
@@ -348,6 +448,22 @@
             "type": "string",
             "example": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
           }
+        }
+      },
+      "SingleBalanceResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "balances"
+        ],
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/BalanceData" }
+          },
+          "request_time": { "type": "string", "format": "date-time" },
+          "response_time": { "type": "string", "format": "date-time" },
+          "wallet_address": { "type": "string", "example": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045" }
         }
       }
     }
