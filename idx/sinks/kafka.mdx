@@ -8,10 +8,10 @@ Sim IDX can stream the data from your listener's events in real-time to an exter
 This feature currently supports [Apache Kafka](https://kafka.apache.org/) as a sink type, enabling you to send your data to managed services like Confluent Cloud and Redpanda Cloud, or to your own self-hosted Kafka cluster.
 
 <Note>
-    Currently, configuring a sink sends data to your Kafka topic **in addition to** the [default Neon Postgres database](/idx/db) provided by Sim IDX. It does not replace it.
+    Configuring a sink sends data to your Kafka topic **instead of** the default [Postgres database](/idx/db). 
 </Note>
 
-## Configure Your Sink in `sim.toml`
+## `sim.toml` Configuration
 
 To enable streaming to an external sink, you must define it within your `sim.toml` file under a new `[[env.<name>.sinks]]` table. You can define multiple sinks for different environments. For example, you might have one sink for `dev` and another for `prod`.
 
@@ -43,9 +43,29 @@ event_to_topic = { "PoolCreated" = "uniswap_pool_created_dev" }
 | `brokers` | Yes | An array of broker addresses for your Kafka cluster. |
 | `username` | Yes | The username for authenticating with your Kafka cluster. |
 | `password` | Yes | The password for authenticating with your Kafka cluster. |
-| `sasl_mechanism` | Yes | The SASL mechanism to use. Supported values are `"PLAIN"`, `"SCRAM-SHA-256"`, and `"SCRAM-SHA-512"`. |
+| `sasl_mechanism` | Yes | The SASL mechanism to use. Supported values are `"PLAIN"`, `"SCRAM_SHA_256"`, and `"SCRAM_SHA_512"`. |
 | `event_to_topic` | Yes | A map where the key is the name of the event emitted by your listener and the value is the destination Kafka topic name. For example, `"PoolCreated"` might map to `"uniswap_pool_created_dev"`. |
 | `compression_type`| No | The compression codec to use for compressing messages. Supported values are `"GZIP"`, `"SNAPPY"`, `"LZ4"`, and `"ZSTD"`. |
+
+## Store Credentials in `.env`
+
+To avoid commiting your `username` and `password`, you can reference environment variables in your `sim.toml` file.
+Place credentials in a `.env` file and use `${VAR_NAME}` placeholders in `sim.toml`.
+
+```bash .env
+KAFKA_PROD_PASSWORD=MyPassword
+KAFKA_PROD_USERNAME=MyUsername
+```
+
+```toml sim.toml
+[[env.prod.sinks]]
+type = "kafka"
+name = "prod"
+password = "${KAFKA_PROD_PASSWORD}" # Read from .env file
+username = "${KAFKA_PROD_USERNAME}"
+```
+
+During deployment, Sim IDX loads these variables from your environment and substitutes them into `sim.toml`.
 
 ## Deploy with a Sink Environment
 
