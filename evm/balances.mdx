@@ -13,10 +13,9 @@ The Token Balances API provides accurate and fast real time balances of the nati
 
 <SupportedChains endpoint="balances" />
 
-<Note>
-  The Balances API only returns balances for certain low latency chains by default.
-  To learn more see the tags section of the [Supported Chains](/evm/supported-chains#tags) page.
-</Note>
+<Tip>
+  Looking for the balance of a single token for a wallet? See <a href="#single-token-balance">Single token balance</a>.
+  </Tip>
 
 ## Token Prices
 
@@ -26,9 +25,14 @@ Sim looks up prices onchain. We use the most liquid onchain pair to determine a 
 
 We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
 
-<Tip>
-  Looking for the balance of a single token for a wallet? Use the <a href="/evm/single-balance">Single Balance</a> sub-endpoint instead.
-</Tip>
+## Compute Unit Cost
+
+The Balances endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter.
+For example, `?chain_ids=1,8453,137` processes three chains and consumes three CUs.
+
+<Note>
+  If you omit `chain_ids`, the endpoint uses its `default` chain set (low-latency networks). CU equals the size of that set at request time and may change as defaults evolve. See the tags section of the <a href="/evm/supported-chains#tags">Supported Chains</a> page and the <a href="/compute-units">Compute Units</a> page for details.
+</Note>
 
 ## Historical prices
 
@@ -72,12 +76,74 @@ The `next_offset` value is passed back by the initial response and can be used t
   You can only use the value from `next_offset` to set the `offset` query parameter of the next page of results.
 </Warning>
 
-## Compute Unit Cost
+## Single token balance
 
-The Balances endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter. If you omit `chain_ids`, we use the endpoint’s chains tagged `default`. See the [Supported Chains](/evm/supported-chains#tags) page to learn about chain tags.
+Use the token sub-path of the Balances endpoint to fetch a wallet’s balance for one token on one chain.
 
-For example, `?chain_ids=1,8453,137` processes three chains and consumes three CUs. Omitting `chain_ids` uses the default set at request time and consumes a CU count equal to the size of that set.
+This sub-path accepts exactly one chain via the `chain_ids` query parameter.
 
-<Note>
-See the [Compute Units](/compute-units) page for detailed information.
-</Note>
+<Tabs>
+<Tab title="ERC-20 token">
+Use the ERC-20 contract address in `{token_address}`.
+
+```bash
+curl -s -X GET 'https://api.sim.dev.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/token/0x146523e8db6337291243a63a5555f446fa6c279f?chain_ids=1' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+```json
+{
+  "request_time": "2025-10-11T03:47:29.364380268+00:00",
+  "response_time": "2025-10-11T03:47:29.380032150+00:00",
+  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+  "balances": [
+    {
+      "chain": "ethereum",
+      "chain_id": 1,
+      "address": "0x146523e8db6337291243a63a5555f446fa6c279f",
+      "amount": "7156868995423049840501842481",
+      "symbol": "AiMeme",
+      "name": "Ai Meme",
+      "decimals": 18,
+      "price_usd": 102826.739324412,
+      "value_usd": 735917502571333,
+      "pool_size": 9.09741149400001,
+      "low_liquidity": true
+    }
+  ]
+}
+```
+</Tab>
+<Tab title="Native asset">
+Set `{token_address}` to `native`.
+
+```bash
+curl -s -X GET 'https://api.sim.dev.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/token/native?chain_ids=1' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+```json
+{
+  "request_time": "2025-10-11T03:48:00.471500727+00:00",
+  "response_time": "2025-10-11T03:48:00.485194141+00:00",
+  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+  "balances": [
+    {
+      "chain": "ethereum",
+      "chain_id": 1,
+      "address": "native",
+      "amount": "783060447601684229",
+      "symbol": "ETH",
+      "decimals": 18,
+      "price_usd": 3779.154092,
+      "value_usd": 2959.30609483726
+    }
+  ]
+}
+```
+</Tab>
+</Tabs>
+
+### Compute Unit Cost
+
+This sub-path has a fixed CU cost of **1** per request.

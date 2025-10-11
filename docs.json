@@ -41,7 +41,6 @@
               },
               "evm/supported-chains",
               "evm/balances",
-              "evm/single-balance",
               "evm/activity",
               "evm/collectibles",
               "evm/transactions",
