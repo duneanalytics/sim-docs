@@ -9,6 +9,7 @@ Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual 
 | Endpoint | Type | Compute Units |
 | --- | --- | --- |
 | Balances (EVM & SVM) | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
+| Balances (single token sub-path) | Fixed | 1 compute unit per request. Accepts exactly one `chain_ids` value (single chain only) |
 | Collectibles | Chain-dependent | N compute units, where N is the number of chains processed in the `chain_ids` query parameter after tag expansion |
 | Activity | Fixed | 3 compute units per request |
 | Transactions (EVM & SVM) | Fixed | 1 compute unit per request |
@@ -39,6 +40,9 @@ Chain count is computed after we expand any tags you pass. To keep CU predictabl
 <Columns>
   <Card title="Balances: mainnet tag">
     Passing `?chain_ids=mainnet` expands to all supported mainnet chains for the endpoint. CU equals the expanded chain count.
+  </Card>
+  <Card title="Balances (single token sub-path): fixed cost">
+    Each request consumes 1 CU and must specify exactly one chain via `chain_ids`.
   </Card>
   <Card title="Collectibles: chain-dependent">
     Collectibles follows the same chain-dependent model as Balances. Count your chains after tag expansion to estimate CU.
