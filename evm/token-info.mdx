@@ -23,6 +23,63 @@ The Tokens API provides metadata and realtime pricing information for native and
 
 <SupportedChains endpoint="token_info" />
 
+## Native vs. ERC20 tokens
+
+The `address` path parameter can be set to `native` for chain-native assets or to an ERC20 contract address. Include the required `?chain_ids` query parameter to select the chain. The response shape differs slightly for native assets vs ERC20 tokens.
+
+**Native asset**
+
+Use `native` as the `address` path parameter.
+
+```http Native Request Example
+GET /v1/evm/token-info/native?chain_ids=1
+```
+
+```json Native Response Example [expandable]
+{
+  "contract_address": "native",
+  "tokens": [
+    {
+      "chain_id": 1,
+      "chain": "ethereum",
+      "price_usd": 3900.777068,
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "decimals": 18,
+      "logo": "https://api.sim.dune.com/beta/token/logo/1"
+    }
+  ]
+}
+```
+
+**ERC20 token**
+
+Use the token's contract address as the `address` path parameter. Additional fields like `pool_size`, `total_supply`, and `fully_diluted_value` may be present.
+
+```http ERC20 Request Example
+GET /v1/evm/token-info/0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca?chain_ids=8453
+```
+
+```json ERC20 Response Example [expandable]
+{
+  "contract_address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+  "tokens": [
+    {
+      "chain_id": 8453,
+      "chain": "base",
+      "price_usd": 0.998997309877106,
+      "pool_size": 456370.679451466,
+      "total_supply": "8980896607582",
+      "fully_diluted_value": 8971891.55125885,
+      "symbol": "USDbC",
+      "name": "USD Base Coin",
+      "decimals": 6,
+      "logo": "https://api.sim.dune.com/beta/token/logo/8453/0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
+    }
+  ]
+}
+```
+
 ## Token Prices
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a usd price. We return the available liquidity in `pool_size` as part of the response.
