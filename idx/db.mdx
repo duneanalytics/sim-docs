@@ -24,12 +24,28 @@ For example, using `psql`:
 
 ```bash
 # Connect using the full connection string
-psql "your_connection_string_here"
+psql 'your_connection_string_here'
 ```
 
 <Info>
 You can also use clients like DBeaver, Postico, or Beekeeper Studio for a more visual way to explore your data and schema.
 </Info>
+
+## Query the Views, not the Tables
+
+When exploring your database, always query the views (lowercase `snake_case`), not the auto-generated tables with random suffixes.
+
+To list your available views:
+
+```bash
+\dv+
+```
+
+Then run queries against a view:
+
+```sql
+SELECT * FROM 'view_name' LIMIT 10;
+```
 
 ## Understand the Schema
 
@@ -56,7 +72,7 @@ To see the indexes for a specific table, use the `\d "view_name"` command. This 
 \di
 
 # Describe the view and see its specific indexes
-\d "position_owner_changes"
+\d 'position_owner_changes'
 ```
 
 ## Common Database Operations
@@ -66,10 +82,10 @@ Here are some common `psql` commands you can use to inspect your database:
 | Operation            | `psql` Command                        | Description                                                     |
 | -------------------- | ------------------------------------- | --------------------------------------------------------------- |
 | **List Views**       | `\dv`                                 | Shows all queryable views in the public schema.                 |
-| **Describe View**    | `\d "view_name"`                      | Displays the columns, types, and structure for a specific view, including indexes on the underlying table. |
+| **Describe View**    | `\d 'view_name'`                      | Displays the columns, types, and structure for a specific view, including indexes on the underlying table. |
 | **List Indexes**     | `\di`                                 | Shows all indexes in the database.                              |
-| **View Sample Data** | `SELECT * FROM "view_name" LIMIT 10;` | Retrieves the first 10 rows from a view.                        |
-| **Count Rows**       | `SELECT COUNT(*) FROM "view_name";`   | Counts the total number of records indexed in a view.           |
+| **View Sample Data** | `SELECT * FROM 'view_name' LIMIT 10;` | Retrieves the first 10 rows from a view.                        |
+| **Count Rows**       | `SELECT COUNT(*) FROM 'view_name';`   | Counts the total number of records indexed in a view.           |
 
 ## Limitations
 
