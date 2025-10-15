@@ -73,7 +73,7 @@ contract MyBlockListener is Raw$OnBlock {
     event BlockProcessed(uint256 blockNumber, uint256 timestamp);
 
     function onBlock(RawBlockContext memory /*ctx*/) external override {
-        emit BlockProcessed(block.number, block.timestamp);
+        emit BlockProcessed(blockNumber(), block.timestamp);
     }
 }
 ```
