@@ -17,4 +17,4 @@ The `next_offset` value is passed back by the initial response and can be used t
 
 ## Compute Unit Cost
 
-The SVM Balances endpoint costs **1 CU per chain requested**. If no chains are specified, it defaults to Solana only (1 CU). See the [Compute Units](/compute-units) page for detailed information.
+The SVM Balances endpoint’s CU cost equals the number of chains you include via the `chains` query parameter. If you omit `chains`, the endpoint uses its default chain set, which is currently Solana only (**1 CU**). We currently support two SVM chains (Solana and Eclipse). See the [Compute Units](/compute-units) page for detailed information.
