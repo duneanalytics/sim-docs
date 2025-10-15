@@ -1,0 +1,48 @@
+export const DefaultChainCount = ({ endpoint }) => {
+  const dataState = useState(null);
+  const data = dataState[0];
+  const setData = dataState[1];
+
+  useEffect(function() {
+    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
+      method: "GET",
+    })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(responseData) {
+        setData(responseData);
+      });
+  }, []);
+
+  if (data === null) {
+    return <>N</>;
+  }
+
+  if (!data.chains || !Array.isArray(data.chains)) {
+    return <>N</>;
+  }
+
+  var uniqueDefaultChains = new Set();
+
+  for (var i = 0; i < data.chains.length; i++) {
+    var chain = data.chains[i];
+    var hasDefaultTag = Array.isArray(chain.tags) && chain.tags.indexOf("default") !== -1;
+    if (!hasDefaultTag) {
+      continue;
+    }
+
+    if (endpoint !== undefined) {
+      if (chain[endpoint] && chain[endpoint].supported === true) {
+        uniqueDefaultChains.add(chain.name);
+      }
+    } else {
+      uniqueDefaultChains.add(chain.name);
+    }
+  }
+
+  var count = uniqueDefaultChains.size;
+  return <>{count}</>;
+};
+
+

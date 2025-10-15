@@ -5,6 +5,7 @@ openapi: "/evm/openapi/balances.json GET /v1/evm/balances/{address}"
 sidebarTitle: "Balances"
 ---
 
+import { DefaultChainCount } from "/snippets/default-chain-count.mdx";
 import { SupportedChains } from "/snippets/supported-chains.mdx";
 
 ![Balance Sv](/images/balance.svg)
@@ -31,7 +32,7 @@ The Balances endpoint’s CU cost equals the number of chains you include via th
 For example, `?chain_ids=1,8453,137` processes three chains and consumes three CUs.
 
 <Note>
-  If you omit `chain_ids`, the endpoint uses its `default` chain set (low-latency networks). CU equals the size of that set at request time and may change as defaults evolve. See the tags section of the <a href="/evm/supported-chains#tags">Supported Chains</a> page and the <a href="/compute-units">Compute Units</a> page for details.
+  If you omit `chain_ids`, the endpoint uses its `default` chain set (low-latency networks), which equals {<DefaultChainCount endpoint="balances" />} chains at request time (subject to change). See the tags section of the <a href="/evm/supported-chains#tags">Supported Chains</a> page and the <a href="/compute-units">Compute Units</a> page for details.
 </Note>
 
 ## Historical prices

@@ -5,6 +5,7 @@ description: "Retrieve EVM compatiable NFTs (ERC721 and ERC1155) that include to
 openapi: "/evm/openapi/collectibles.json GET /v1/evm/collectibles/{address}"
 ---
 
+import { DefaultChainCount } from '/snippets/default-chain-count.mdx';
 import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Type=collectibles Web](/images/type=collectibles.webp)
@@ -15,9 +16,9 @@ The Collectibles API provides information about NFTs (ERC721 and ERC1155 tokens)
 
 ## Compute Unit Cost
 
-The Collectibles endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter. If you omit `chain_ids`, we use the endpoint’s chains tagged `default`. See the [Supported Chains](/evm/supported-chains#tags) page to learn about chain tags.
+The Collectibles endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter. If you omit `chain_ids`, we use the endpoint’s chains tagged `default` (currently {<DefaultChainCount endpoint="collectibles" />} chains, subject to change). See the [Supported Chains](/evm/supported-chains#tags) page to learn about chain tags.
 
-For example, `?chain_ids=1,8453,137` processes three chains and consumes three CUs. Omitting `chain_ids` uses the default set at request time and consumes a CU count equal to the size of that set.
+For example, `?chain_ids=1,8453,137` processes three chains and currently consumes three CUs. Omitting `chain_ids` uses the default set at request time and consumes {<DefaultChainCount endpoint="collectibles" />} CUs (equal to the size of that set).
 
 <Note>
 See the [Compute Units](/compute-units) page for detailed information.

@@ -5,6 +5,7 @@ description: "Explore chains supported by Sim's EVM API endpoints."
 openapi: "/evm/openapi/supported-chains.json"
 ---
 
+import { DefaultChainCount } from '/snippets/default-chain-count.mdx';
 import { SupportedChainsAccordion } from '/snippets/supported-chains-accordion.mdx';
 
 <img src="/images/evm/Chains.svg" alt="Sim APIs Supported Chains" className="w-full mx-auto" />
@@ -13,14 +14,6 @@ The Supported Chains endpoint provides realtime information about which blockcha
 Chain support varies by API endpoint. Use the dropdown below to check which chains are available for each API:
 
 <SupportedChainsAccordion />
-
-## Using the API Endpoint
-
-You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
-
-The response includes an array of supported chains.
-Each item in the array includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
-Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
 
 <RequestExample>
 
@@ -138,7 +131,9 @@ Open the accordion above and scan the table to see which chains carry tags and w
 
 ## Compute Units
 
-Chain selection directly determines CU cost for chain-dependent endpoints (like Balances and Collectibles). CU equals the number of distinct chains included after expanding any tags you pass in `chain_ids`. If you omit `chain_ids`, we use the endpoint's default set. Your CU equals the size of that set at request time. To keep usage predictable over time, pin explicit chain IDs instead of tags.
+Chain selection directly determines CU cost for chain-dependent endpoints (like Balances and Collectibles). CU equals the number of distinct chains included after expanding any tags you pass in `chain_ids`.
+
+If you omit `chain_ids`, the endpoint uses its `default` chain set. That is currently {<DefaultChainCount endpoint="balances" />} chains for Balances and {<DefaultChainCount endpoint="collectibles" />} chains for Collectibles (these values can change over time).
 
 See [Compute Units](/compute-units) for the full rate card and guidance.
 
@@ -218,3 +213,11 @@ async function validateChainSupport(chainId, endpointName) {
 const result = await validateChainSupport(1, 'balances');
 console.log(result.message); // "Chain ethereum supports balances"
 ```
+
+## Using the API Endpoint
+
+You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
+
+The response includes an array of supported chains.
+Each item in the array includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
+Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
