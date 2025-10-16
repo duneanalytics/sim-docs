@@ -46,7 +46,7 @@
           {
             "name": "chains",
             "in": "query",
-            "description": "Comma-separated list of chains to include. You can specify either solana or eclipse. For example, `?chains=solana,eclipse`.",
+            "description": "Comma-separated list of chains to include. You can specify either solana or eclipse. For example, `?chains=solana,eclipse`. If omitted, the endpoint will default to solana only.",
             "required": false,
             "schema": {
               "type": "string"

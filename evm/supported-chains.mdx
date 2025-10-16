@@ -120,7 +120,8 @@ Any endpoint that supports the `chain_ids` query parameter accepts a tag in plac
 When using `chain_ids`, you can request chains in several ways:
 
 - **By tags**: `?chain_ids=mainnet` returns all chains tagged with `mainnet`. Using `?chain_ids=mainnet,testnet` returns all chains that are tagged with `mainnet` _or_ `testnet`.
-- **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum)
+- **Specific chain IDs**: `?chain_ids=1,137,42161` (Ethereum, Polygon, Arbitrum).
+- **Mix tags and numeric IDs**: `?chain_ids=1,8543,testnet`
 - **Default behavior**: Omitting `chain_ids` returns only chains tagged `default`.
 
 Some supported chains have **no tag assigned**.
@@ -137,9 +138,17 @@ If you omit `chain_ids`, the endpoint uses its `default` chain set. That is curr
 
 See [Compute Units](/compute-units) for the full rate card and guidance.
 
+## Using the API Endpoint
+
+You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
+
+The response includes an array of supported chains.
+Each item in the array includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
+Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
+
 ## Examples
 
-Here are two practical examples of how you might use this endpoint:
+Here are two practical examples of how you might use the API endpoint:
 
 ### 1. Building a Dynamic Chain Selector
 
@@ -213,11 +222,3 @@ async function validateChainSupport(chainId, endpointName) {
 const result = await validateChainSupport(1, 'balances');
 console.log(result.message); // "Chain ethereum supports balances"
 ```
-
-## Using the API Endpoint
-
-You can programmatically retrieve the list of supported chains to adapt to newly supported networks.
-
-The response includes an array of supported chains.
-Each item in the array includes the chain's `name`, `chain_id`, an array of `tags`, and support for each endpoint.
-Each endpoint (balances, transactions, activity, etc.) has a `supported` boolean value
