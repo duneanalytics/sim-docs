@@ -123,7 +123,7 @@
             "name": "chain_id",
             "in": "path",
             "required": true,
-            "description": "The identifier of the blockchain (e.g., 8453 for Base). For a full list see Supported Chains.",
+            "description": "The chain id of the blockchain (e.g., 8453 for Base). For a full list see [Supported Chains](/evm/supported-chains).",
             "schema": {
               "type": "integer",
               "format": "int32",

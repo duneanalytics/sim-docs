@@ -45,7 +45,7 @@
           {
             "name": "chain_ids",
             "in": "query",
-            "description": "Either 'all' or a comma separated list of chain ids to get token info for",
+            "description": "Specify exactly one chain. Accepts a single numeric chain ID (e.g. `?chain_ids=1`). Chain names are not accepted. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
             "required": true,
             "schema": {
               "type": "string",

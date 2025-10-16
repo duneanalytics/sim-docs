@@ -47,7 +47,7 @@
             "name": "chain_ids",
             "in": "query",
             "required": false,
-            "description": "Filter by chain(s). Accepts a single numeric chain ID (e.g. `?chain_ids=1`), a single chain name (e.g. `?chain_ids=ethereum`), or a comma separated list of either (e.g. `?chain_ids=1,137` or `?chain_ids=ethereum,polygon`). If omitted, results include activity from chains with the \"default\" tag for the address. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8543,testnet`). Chain names are not accepted. If this query parameter is omitted, results include activity from chains with the `default` tag. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
             "schema": {
               "type": "string"
             }
