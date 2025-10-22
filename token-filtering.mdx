@@ -64,6 +64,17 @@ When `pool_size` is very small and `low_liquidity` is true, you should disregard
 Let's explore practical implementations for different filtering scenarios.
 The following examples demonstrate how to use this data to create robust filtering logic that meets your app's needs.
 
+### Exclude tokens with less than 100 USD liquidity
+
+Use the optional `exclude_spam_tokens` query parameter on the EVM Balances API to automatically filter out tokens with less than 100 USD of liquidity. Include `exclude_spam_tokens=true` to have those tokens excluded from the response entirely.
+
+```bash
+curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?exclude_spam_tokens=true' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+This is distinct from the `low_liquidity` field in responses, which is `true` when liquidity is below 10,000.
+
 ### Liquidity Threshold Filtering
 
 Filter tokens based on minimum liquidity requirements using the `pool_size` field. This is one of the most effective ways to filter out low-quality tokens.

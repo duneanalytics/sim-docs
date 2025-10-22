@@ -71,6 +71,16 @@
             }
           },
           {
+            "name": "exclude_spam_tokens",
+            "in": "query",
+            "description": "When true, excludes tokens with less than 100 USD liquidity from the response. This differs from the `low_liquidity` field in the response.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "historical_prices",
             "in": "query",
             "description": "Historical price selection. Accepts integer | integer[]. Provide whole numbers representing hours in the past, up to 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
