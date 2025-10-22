@@ -26,6 +26,10 @@ Sim looks up prices onchain. We use the most liquid onchain pair to determine a 
 
 We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
 
+### Exclude tokens with less than 100 USD liquidity
+
+Use the optional `exclude_spam_tokens` query parameter to automatically filter out tokens with less than 100 USD of liquidity. Include the query parameter `exclude_spam_tokens=true` so that those tokens are excluded from the response entirely. This is distinct from the `low_liquidity` field in the response, which is `true` when liquidity is below 10,000. To learn more about how Sim calculates liquidity data, visit the [Token Filtering](/token-filtering) guide.
+
 ## Compute Unit Cost
 
 The Balances endpoint’s CU cost equals the number of chains you include via the `chain_ids` query parameter.
