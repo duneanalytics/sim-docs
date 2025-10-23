@@ -88,6 +88,7 @@
                 "pages": [
                   "idx/listener",
                   "idx/listener/features",
+                  "idx/listener/contexts",
                   "idx/listener/errors"
                 ]
               },
