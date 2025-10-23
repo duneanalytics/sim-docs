@@ -122,6 +122,29 @@ The sample app uses the descriptive name `UniswapV3FactoryListener`.
 You should use descriptive names for your contracts.
 For larger projects, you can even split logic into multiple listener contracts, each in its own `.sol` file within the `src/` directory.
 
+### Access Transaction Data with Handler Contexts
+
+In the example above, you'll notice the `onCreatePoolFunction` handler receives a `FunctionContext memory ctx` parameter. Every handler in Sim IDX receives a **context object**, which provides rich metadata about the top-level transaction and the specific call that triggered your code. For example, you can get the address of the contract that was called (`callee`) and pass it to your event:
+
+```solidity
+function onCreatePoolFunction(
+    FunctionContext memory ctx,
+    // ...
+) external override {
+    emit PoolCreated(
+        uint64(block.chainid),
+        ctx.txn.call.callee(), // Get the contract address from the context
+        // ...
+    );
+}
+```
+
+The context object is your primary tool for accessing details like the transaction hash, the immediate caller of a function, chain ID, and other execution details.
+
+<Card title="Handler Contexts Reference" href="/idx/listener/contexts">
+  For a complete guide to all available properties and common usage patterns, see the full Handler Contexts reference.
+</Card>
+
 ## Define and Emit Events
 
 Events are the bridge between your listener's logic and your database. When your listener emits an event, Sim IDX creates a database record.

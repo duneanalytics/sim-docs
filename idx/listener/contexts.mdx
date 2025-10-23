@@ -1,0 +1,130 @@
+---
+title: Handler Contexts
+description: "Learn how to access onchain metadata with FunctionContext, EventContext, and other context objects in your Listeners."
+sidebarTitle: Contexts
+---
+
+Every handler in a Sim IDX listener receives a `context` object (`ctx`) that provides critical metadata about the on-chain transaction and the specific call that triggered your code. Understanding how to use this object is fundamental to building powerful indexers.
+
+This guide covers the structure of all available context objects, the most common properties you'll use, and a detailed reference for all available data.
+
+## `FunctionContext` vs. `EventContext`
+
+While structurally identical, the context you receive depends on the type of trigger you are handling. The primary difference is visible in the handler's function signature, which includes other typed parameters alongside the context.
+
+<CodeGroup>
+```solidity Function Trigger theme={null}
+function UniswapV3Pool$onSwapFunction(
+    // For function triggers
+    FunctionContext memory ctx,
+    // Typed function arguments
+    UniswapV3Pool$SwapFunctionInputs memory inputs,
+    // Typed function return values
+    UniswapV3Pool$SwapFunctionOutputs memory outputs
+) external;
+```
+
+```solidity Event Trigger theme={null}
+function UniswapV2Pair$onSwapEvent(
+    // For event triggers
+    EventContext memory ctx,
+    // Typed event parameters
+    UniswapV2Pair$SwapEventParams memory params
+ ) external;
+```
+</CodeGroup>
+
+Both handlers use `ctx.txn` in the same way to access transaction and call metadata. The framework provides the additional `inputs`/`outputs` or `params` structs to give you typed access to the specific data from that function or event.
+
+<Note>
+For more details on the underlying definitions, you can inspect the core `Context.sol` file directly in the `listeners/lib/sim-idx-sol/src/Context.sol` path of your project.
+</Note>
+
+## Core Execution Metadata
+
+Nearly every context object exposes `txn: TransactionContext`, which represents metadata for the top-level transaction under which your handler runs. Inside `txn`, the `call: CallFrame` describes the current execution frame (who is executing, who called, calldata, value, and call semantics). These two types power most real-world usage such as correlating by transaction hash, identifying the executing pool/contract, and attributing actions to the effective caller.
+
+### `TransactionContext`
+
+Represents the top-level transaction metadata available to handlers. It is accessed as `ctx.txn` from both `FunctionContext` and `EventContext`, and from other contexts covered below. See also: [CallFrame](#callframe).
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `hash()` | `bytes32` | The unique hash of the top-level transaction. |
+| `isSuccessful()` | `bool` | Returns `true` if the top-level transaction succeeded without reverting. |
+| `chainId` | `uint256` | The chain ID where the transaction was executed. Equivalent to `block.chainid`. |
+| `call` | [CallFrame](#callframe) | Detailed metadata about the current execution frame. |
+
+### `CallFrame`
+
+Describes the current execution frame within the transaction. This is accessed via `ctx.txn.call` from all context types that expose a [TransactionContext](#transactioncontext).
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `callee()` | `address` | The address of the contract whose code is currently executing. |
+| `caller()` | `address` | The address that invoked the current call (EOA or another contract). |
+| `value()` | `uint256` | The amount of wei sent with the current call. |
+| `callData()` | `bytes` | The raw calldata for the current call frame. |
+| `callDepth()` | `uint256` | The depth of the current call in the execution stack. |
+| `callType()` | `CallType` | The opcode used for the call: `CALL`, `DELEGATECALL`, `STATICCALL`, `CREATE`, etc. |
+| `delegator()`| `address` | In a `DELEGATECALL`, the proxy contract address. |
+| `delegatee()`| `address` | In a `DELEGATECALL`, the implementation contract address. |
+| `verificationSource`| `ContractVerificationSource` | How the contract was verified: `Unspecified`, `ABI`, or `Bytecode`. |
+
+## `FunctionContext`
+
+Passed to post-execution [function triggers](/idx/listener#function-triggers), `FunctionContext` provides metadata about the transaction and the specific function call that was just executed.
+
+It contains a single property, `txn`, which is a [TransactionContext](#transactioncontext).
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+
+## `EventContext`
+
+Passed to [event triggers](/idx/listener#trigger-onchain-activity), `EventContext` provides metadata about the transaction and the call that emitted the event.
+
+Its structure is identical to `FunctionContext` and provides access to the same [TransactionContext](#transactioncontext) and [CallFrame](#callframe) properties detailed above.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+
+## `PreFunctionContext`
+
+Passed to pre-execution [function triggers](/idx/listener#function-triggers), `PreFunctionContext` provides metadata *before* the target function is executed.
+
+Its structure is identical to `FunctionContext` and provides access to the same [TransactionContext](#transactioncontext) and [CallFrame](#callframe) properties.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+
+## `RawCallContext`
+
+Used by `Raw$OnCall` [global triggers](/idx/listener/features#trigger-globally), this context provides metadata for every function call on a chain.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction. |
+| `callData()` | `bytes` | The raw calldata for the current call. |
+| `returnData()` | `bytes` | The raw return data from the call. |
+
+## `RawLogContext`
+
+Used by `Raw$OnLog` [global triggers](/idx/listener/features#trigger-globally), this context provides data for every event log emitted on a chain.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction. |
+| `topics()` | `bytes32[]` | The indexed topics of the event log. |
+| `data()` | `bytes` | The un-indexed data of the event log. |
+
+## `RawBlockContext`
+
+Used by `Raw$OnBlock` [global triggers](/idx/listener/features#trigger-globally), this context provides a hook that runs once for every new block.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `blockNumber` | `uint256` | The number of the current block. |
