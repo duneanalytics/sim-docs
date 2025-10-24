@@ -4,8 +4,7 @@ description: "Learn how to access onchain metadata with FunctionContext, EventCo
 sidebarTitle: Contexts
 ---
 
-Every handler in a Sim IDX listener receives a `context` object (`ctx`) that provides critical metadata about the on-chain transaction and the specific call that triggered your code. Understanding how to use this object is fundamental to building powerful indexers.
-
+Every handler in a Sim IDX listener receives a `context` object (`ctx`) that provides metadata about the onchain transaction and the specific call that triggered your code.
 This guide covers the structure of all available context objects, the most common properties you'll use, and a detailed reference for all available data.
 
 ## `FunctionContext` vs. `EventContext`
@@ -40,19 +39,20 @@ Both handlers use `ctx.txn` in the same way to access transaction and call metad
 For more details on the underlying definitions, you can inspect the core `Context.sol` file directly in the `listeners/lib/sim-idx-sol/src/Context.sol` path of your project.
 </Note>
 
-## Core Execution Metadata
+## Core Metadata
 
 Nearly every context object exposes `txn: TransactionContext`, which represents metadata for the top-level transaction under which your handler runs. Inside `txn`, the `call: CallFrame` describes the current execution frame (who is executing, who called, calldata, value, and call semantics). These two types power most real-world usage such as correlating by transaction hash, identifying the executing pool/contract, and attributing actions to the effective caller.
 
 ### `TransactionContext`
 
-Represents the top-level transaction metadata available to handlers. It is accessed as `ctx.txn` from both `FunctionContext` and `EventContext`, and from other contexts covered below. See also: [CallFrame](#callframe).
+Represents the top-level transaction metadata available to handlers. It is accessed as `ctx.txn` from both `FunctionContext` and `EventContext`, and from other contexts covered below.
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `hash()` | `bytes32` | The unique hash of the top-level transaction. |
 | `isSuccessful()` | `bool` | Returns `true` if the top-level transaction succeeded without reverting. |
 | `chainId` | `uint256` | The chain ID where the transaction was executed. Equivalent to `block.chainid`. |
+| `transactionIndex()` | `uint64` | Index of the top-level transaction within its block. Useful for deterministic ordering with `logIndex()`. |
 | `call` | [CallFrame](#callframe) | Detailed metadata about the current execution frame. |
 
 ### `CallFrame`
@@ -80,6 +80,10 @@ It contains a single property, `txn`, which is a [TransactionContext](#transacti
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index that totally orders execution; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
+| `isInputDecodingSuccessful` | `bool` | True if function inputs decoded into typed `inputs`. |
+| `isOutputDecodingSuccessful` | `bool` | True if function return data decoded into typed `outputs`. |
 
 ## `EventContext`
 
@@ -90,6 +94,10 @@ Its structure is identical to `FunctionContext` and provides access to the same 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index that totally orders execution; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `isDecodingSuccessful` | `bool` | Whether the event log decoded successfully into typed `params`. |
+| `logIndex()` | `uint64` | Index of the current log within the block. Combine with `transactionIndex()` for canonical ordering. |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
 
 ## `PreFunctionContext`
 
@@ -100,6 +108,9 @@ Its structure is identical to `FunctionContext` and provides access to the same 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction and current call frame. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index for pre-exec ordering; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `isInputDecodingSuccessful` | `bool` | Whether the target function’s inputs decoded at pre-exec time. |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
 
 ## `RawCallContext`
 
@@ -110,6 +121,18 @@ Used by `Raw$OnCall` [global triggers](/idx/listener/features#trigger-globally),
 | `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction. |
 | `callData()` | `bytes` | The raw calldata for the current call. |
 | `returnData()` | `bytes` | The raw return data from the call. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index for the current call; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
+
+## `RawPreCallContext`
+
+Used by `Raw$OnPreCall` [global triggers](/idx/listener/features#trigger-globally), this context provides metadata for every upcoming function call on a chain before it executes.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `callData()` | `bytes` | The raw calldata for the upcoming call. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index for the upcoming call; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
 
 ## `RawLogContext`
 
@@ -120,6 +143,9 @@ Used by `Raw$OnLog` [global triggers](/idx/listener/features#trigger-globally), 
 | `txn` | [TransactionContext](#transactioncontext) | Metadata about the top-level transaction. |
 | `topics()` | `bytes32[]` | The indexed topics of the event log. |
 | `data()` | `bytes` | The un-indexed data of the event log. |
+| `globalIndex()` | `uint120` | Globally monotonic 120-bit index for the current log; encodes blockNumber, reorgIncarnation, txnIndex, shadowPc (see GlobalIndexLib helpers). |
+| `logIndex()` | `uint64` | Index of the current log within the block. |
+| `sim` | [SimFunctions](#simfunctions) | Helper utilities (e.g., `getDeployer(address)`), available as `ctx.sim`. |
 
 ## `RawBlockContext`
 
@@ -128,3 +154,12 @@ Used by `Raw$OnBlock` [global triggers](/idx/listener/features#trigger-globally)
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `blockNumber` | `uint256` | The number of the current block. |
+
+## `SimFunctions`
+
+The [SimFunctions](#simfunctions) object is available via `ctx.sim` on `FunctionContext`, `EventContext`, `PreFunctionContext`, `RawCallContext`, `RawPreCallContext`, and `RawLogContext`.
+
+| Function | Signature | Returns | Description |
+| :--- | :--- | :--- | :--- |
+| `getDeployer` | `function(address target)` | `address` | Returns the deployer of the given contract `target`. Useful for attribution, filtering, and safety heuristics on newly deployed tokens. |
+
