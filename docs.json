@@ -12,6 +12,9 @@
     "light": "/logo/sim-logo-new-light.svg",
     "dark": "/logo/sim-logo-new-dark.svg"
   },
+  "fonts": {
+    "family": "Geist"
+  },
   "navigation": {
     "tabs": [
       {
