@@ -112,6 +112,61 @@
             "type": "string",
             "format": "date-time",
             "description": "Timestamp of when this token ID was last acquired by the address."
+          },
+          "is_spam": {
+            "type": "boolean",
+            "description": "Whether the collection is classified as spam."
+          },
+          "spam_score": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "0–100 confidence score that the collection is spam. Included only when `show_spam_scores=true`. May be omitted when scores are unavailable. See the [Spam Filtering](#spam-filtering) section for more details."
+          },
+          "explanations": {
+            "type": "array",
+            "description": "Signals contributing to the spam score. Included only when `show_spam_scores=true`. May be omitted when scores are unavailable.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "feature": {
+                  "type": "string",
+                  "description": "Signal used in scoring.",
+                  "enum": [
+                    "trade_volume",
+                    "unique_buyers",
+                    "unique_sellers",
+                    "is_alchemy_flagged",
+                    "ipfs_uri_present",
+                    "suspicious_words",
+                    "url_shortener_in_uri"
+                  ]
+                },
+                "value": {
+                  "description": "Observed value for the feature (type varies by feature).",
+                  "oneOf": [
+                    { "type": "integer", "format": "int32" },
+                    { "type": "boolean" }
+                  ]
+                },
+                "feature_score": {
+                  "type": "integer",
+                  "format": "int32",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "0–100 contribution of this feature to the spam score."
+                },
+                "feature_weight": {
+                  "type": "number",
+                  "format": "float",
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Weight applied to this feature in the weighted average."
+                }
+              },
+              "required": ["feature"]
+            }
           }
         },
         "required": [
@@ -121,7 +176,8 @@
           "chain",
           "chain_id",
           "balance",
-          "last_acquired"
+          "last_acquired",
+          "is_spam"
         ]
       },
       "CollectiblesResponse": {
@@ -225,6 +281,26 @@
               "maximum": 2500,
               "default": 250
             }
+          },
+          {
+            "name": "filter_spam",
+            "in": "query",
+            "required": false,
+            "description": "When true, hide collectibles identified as spam. Set to false to return all collectibles, including potential spam. See the [Spam Filtering](##spam-filtering) section for more details.",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "show_spam_scores",
+            "in": "query",
+            "required": false,
+            "description": "When true, include spam scoring details including contributing signals to explain filtering decisions.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -258,6 +334,14 @@
                               { "key": "Stance", "value": "Greased" }
                             ]
                           },
+                        "is_spam": false,
+                        "spam_score": 0,
+                        "explanations": [
+                          { "feature": "trade_volume", "value": 518, "feature_score": 0, "feature_weight": 0.25 },
+                          { "feature": "unique_buyers", "value": 145, "feature_score": 0, "feature_weight": 0.25 },
+                          { "feature": "unique_sellers", "value": 167, "feature_score": 0, "feature_weight": 0.25 },
+                          { "feature": "is_alchemy_flagged", "value": false, "feature_score": 0, "feature_weight": 0.25 }
+                        ],
                           "balance": "8",
                           "last_acquired": "2025-08-10T03:58:59Z"
                         },
