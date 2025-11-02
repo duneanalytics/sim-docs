@@ -43,6 +43,7 @@
               "evm/balances",
               "evm/activity",
               "evm/collectibles",
+              "evm/defi-positions",
               "evm/transactions",
               "evm/token-info",
               "evm/token-holders"
@@ -168,6 +169,10 @@
     {
       "name": "EVM Token Holders",
       "file": "evm/openapi/token-holders.json"
+    },
+    {
+      "name": "EVM DeFi Positions",
+      "file": "evm/openapi/defi-positions.json"
     },
     {
       "name": "EVM Supported Chains",
