@@ -64,7 +64,7 @@
           {
             "name": "metadata",
             "in": "query",
-            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`",
+            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`, `pools`",
             "required": false,
             "schema": {
               "type": "string"
@@ -238,7 +238,7 @@
           {
             "name": "metadata",
             "in": "query",
-            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`",
+            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`, `pools`",
             "required": false,
             "schema": { "type": "string" }
           },
@@ -321,6 +321,33 @@
           }
         }
       },
+      "PoolMetadata": {
+        "type": "object",
+        "required": [
+          "pool_type",
+          "address",
+          "token0",
+          "token1"
+        ],
+        "properties": {
+          "pool_type": {
+            "type": "string",
+            "description": "The type of liquidity pool used for pricing (e.g., aerodrome_stable, uniswap_v2, uniswap_v3)"
+          },
+          "address": {
+            "type": "string",
+            "description": "The contract address of the liquidity pool"
+          },
+          "token0": {
+            "type": "string",
+            "description": "The contract address of the first token in the pool pair"
+          },
+          "token1": {
+            "type": "string",
+            "description": "The contract address of the second token in the pool pair"
+          }
+        }
+      },
       "BalanceData": {
         "type": "object",
         "required": [
@@ -380,6 +407,14 @@
                 "type": "string"
               }
             }
+          },
+          "pool": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PoolMetadata"
+              }
+            ],
+            "description": "Liquidity pool information used for token pricing. Only present when metadata=pools is specified."
           },
           "value_usd": {
             "type": "number",
