@@ -1,0 +1,132 @@
+---
+title: "DeFi Positions"
+description: "Access a wallet's DeFi positions along with USD values and metadata across supported EVM chains."
+openapi: "/evm/openapi/defi-positions.json GET /beta/evm/defi/positions/{address}"
+sidebarTitle: "DeFi Positions"
+---
+
+The DeFi Positions endpoint consolidates lending, borrowing, liquidity, yield, and staking exposures for a wallet. Use it to power portfolio dashboards, risk monitoring, and customer reporting without stitching together protocol-specific datasets.
+
+> **Preview:** This endpoint is currently available at the beta path (`/beta/evm/defi/positions`). Schemas are stable, but response fields may expand as we onboard new protocols.
+
+## Supported Coverage
+
+- **Liquidity:** Uniswap V2/V3/V4, Algebra v3 forks, iZUMi Swap, and additional AMMs rolling out regularly
+- **Lending:** Aave v2/v3 (supply, variable debt), Compound v2/v3, and Moonwell markets
+- **Yield:** Pendle v2, ERC-4626 vaults (Yearn v3, Pendle Yield PTs, and compatible vaults)
+- **Tokenized positions:** Protocol share tokens such as aTokens, cTokens, ERC-4626 vault receipts
+- **NFT-based liquidity:** Concentrated liquidity NFTs (Uniswap v3 and compatible implementations)
+
+### Supported Chains
+
+We currently cover DeFi Positions on the following networks, with more chains on the roadmap:
+
+- Arbitrum
+- Base
+- Base Sepolia
+- BOB
+- Ethereum
+- Ink
+- Mode
+- Optimism
+- Shape
+- Soneium
+- Unichain
+- World
+- Zora
+
+## Request Parameters
+
+- `chain_ids` — Optional chain filter accepting numeric IDs or supported tags. When omitted, we return all chains tagged as `default`.
+- `protocol` — Filter to a specific protocol or category (`aave-v3`, `uniswap-v3`, `erc4626`, etc.).
+
+All requests require the `X-Sim-Api-Key` header with a Sim API key.
+
+## Response Structure
+
+Each response includes the queried wallet, timestamps, an array of positions, and aggregation totals.
+
+- `positions[]` items surface consistent metadata across protocols:
+  - **Protocol identifiers:** `protocol_name`, `protocol_id`, and protocol-defined `label`
+  - **Location:** `chain_id` and `contract_address`
+  - **Valuation:** `amount`, `usd_value`, and `unclaimed_usd_value`
+  - **details:** Protocol-specific fields such as token breakdowns, APYs, collateral flags, NFT ticks, or reward inventories. The shape of this object varies by integration and expands over time.
+
+- `aggregations.total_usd_value` sums the USD value of all returned positions.
+- `aggregations.total_by_chain` breaks down USD value per chain ID.
+
+### Sample Response
+
+```json
+{
+  "wallet_address": "0xcB1CBA32a4f9986B7981D6948e8fE2dF5B0c9905",
+  "request_time": "2025-03-06T18:12:29Z",
+  "response_time": "2025-03-06T18:12:29Z",
+  "positions": [
+    {
+      "protocol_name": "Compound v2",
+      "protocol_id": "compound-v2",
+      "label": "lend",
+      "chain_id": 1,
+      "name": "Compound DAI Lending",
+      "contract_address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+      "amount": 250,
+      "usd_value": 250.0,
+      "unclaimed_usd_value": 5.12,
+      "details": {
+        "underlying_token": {
+          "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+          "symbol": "DAI",
+          "decimals": 18
+        },
+        "supply_apy": 2.1,
+        "collateral_enabled": true
+      }
+    },
+    {
+      "protocol_name": "Uniswap v3",
+      "protocol_id": "uniswap-v3",
+      "label": "liquidity",
+      "chain_id": 1,
+      "name": "Uniswap V3 Position (WETH, USDC)",
+      "contract_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+      "amount": 1.2345,
+      "usd_value": 1234.5,
+      "unclaimed_usd_value": 10.45,
+      "details": {
+        "token0": {
+          "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          "symbol": "WETH",
+          "amount": 0.52
+        },
+        "token1": {
+          "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+          "symbol": "USDC",
+          "amount": 820.12
+        },
+        "token_id": 123456,
+        "tick_lower": -887220,
+        "tick_upper": -276330,
+        "share_of_pool": 0.0000125
+      }
+    }
+  ],
+  "aggregations": {
+    "total_usd_value": 1484.5,
+    "total_by_chain": {
+      "1": 1484.5
+    }
+  }
+}
+```
+
+### Compute Units
+
+Each request consumes two Compute Units per processed chain ID. Filtering to fewer chains lowers usage. Aggregations are calculated server-side and included in the same response.
+
+### Errors
+
+- `400 Bad Request` — Invalid address, malformed cursor, or unsupported parameter value
+- `404 Not Found` — No positions found for the wallet on the requested chains
+- `500 Internal Server Error` — Retryable server-side failure
+

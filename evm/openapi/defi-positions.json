@@ -1,0 +1,276 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sim API - DeFi Positions Endpoint",
+    "description": "Retrieve DeFi positions along with pricing and metadata for an address across supported EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/beta/evm/defi/positions/{address}": {
+      "get": {
+        "tags": [
+          "defi-positions"
+        ],
+        "summary": "Get DeFi positions for an address",
+        "description": "Returns a wallet's DeFi positions including protocol metadata, USD values, pending rewards, and aggregation summaries.",
+        "operationId": "getEvmDefiPositions",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Wallet address to inspect for DeFi positions.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$"
+            },
+            "example": "0x9512044bc14267a6c588296a20bd7c00e0de7da3"
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8453`). If omitted, positions are returned for chains with the `default` tag. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "protocol",
+            "in": "query",
+            "required": false,
+            "description": "Filter to a specific protocol or category (for example, `aave-v3`, `uniswap-v3`, or `erc4626`).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefiPositionsResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "wallet_address": "0x9512044bc14267a6c588296a20bd7c00e0de7da3",
+                      "request_time": "2025-03-06T18:12:29.000Z",
+                      "response_time": "2025-03-06T18:12:29.000Z",
+                      "positions": [
+                        {
+                          "protocol_name": "Compound v2",
+                          "protocol_id": "compound-v2",
+                          "label": "lend",
+                          "chain_id": 1,
+                          "name": "Compound DAI Lending",
+                          "contract_address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+                          "amount": 250,
+                          "usd_value": 250.0,
+                          "unclaimed_usd_value": 5.12,
+                          "details": {
+                            "underlying_token": {
+                              "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                              "symbol": "DAI",
+                              "decimals": 18
+                            },
+                            "supply_apy": 2.1,
+                            "collateral_enabled": true
+                          }
+                        },
+                        {
+                          "protocol_name": "Uniswap v3",
+                          "protocol_id": "uniswap-v3",
+                          "label": "liquidity",
+                          "chain_id": 1,
+                          "name": "Uniswap V3 Position (WETH, USDC)",
+                          "contract_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+                          "amount": 1.2345,
+                          "usd_value": 1234.5,
+                          "unclaimed_usd_value": 10.45,
+                          "details": {
+                            "token0": {
+                              "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                              "symbol": "WETH",
+                              "amount": 0.52
+                            },
+                            "token1": {
+                              "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                              "symbol": "USDC",
+                              "amount": 820.12
+                            },
+                            "token_id": 123456,
+                            "tick_lower": -887220,
+                            "tick_upper": -276330,
+                            "share_of_pool": 0.0000125
+                          }
+                        }
+                      ],
+                      "aggregations": {
+                        "total_usd_value": 1484.5,
+                        "total_by_chain": {
+                          "1": 1484.5
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request"
+          },
+          "404": {
+            "description": "Address not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DefiPosition": {
+        "type": "object",
+        "required": [
+          "protocol_name",
+          "protocol_id",
+          "chain_id",
+          "name",
+          "usd_value"
+        ],
+        "properties": {
+          "protocol_name": {
+            "type": "string",
+            "description": "Display name of the protocol (e.g. Uniswap v3, Aave v3)."
+          },
+          "protocol_id": {
+            "type": "string",
+            "description": "Slugified protocol identifier that remains stable across releases."
+          },
+          "label": {
+            "type": "string",
+            "description": "Protocol-specific label for the position (for example, lend, borrow, liquidity, vault)."
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric chain identifier."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name for the position."
+          },
+          "contract_address": {
+            "type": "string",
+            "description": "Primary contract address associated with the position, such as the market, vault, or pool contract."
+          },
+          "amount": {
+            "type": "number",
+            "format": "double",
+            "description": "Quantity of the position, adjusted for token decimals."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "USD value of the position."
+          },
+          "unclaimed_usd_value": {
+            "type": "number",
+            "format": "double",
+            "nullable": true,
+            "description": "USD value of unclaimed rewards or accrued yield for the position, when applicable."
+          },
+          "details": {
+            "type": "object",
+            "description": "Protocol-specific metadata. Field presence varies by protocol and position type.",
+            "additionalProperties": true
+          }
+        }
+      },
+      "DefiAggregations": {
+        "type": "object",
+        "properties": {
+          "total_usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "Sum of the USD value across all returned positions."
+          },
+          "total_by_chain": {
+            "type": "object",
+            "description": "Breakdown of USD value by chain, keyed by chain ID as a string.",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      },
+      "DefiPositionsResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "positions"
+        ],
+        "properties": {
+          "wallet_address": {
+            "type": "string",
+            "description": "The wallet address that was queried."
+          },
+          "request_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the request was received."
+          },
+          "response_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the response was generated."
+          },
+          "positions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DefiPosition"
+            }
+          },
+          "aggregations": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DefiAggregations"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "defi-positions",
+      "description": "DeFi Positions API"
+    }
+  ]
+}
+
