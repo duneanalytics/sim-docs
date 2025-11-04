@@ -22,44 +22,7 @@ The Token Balances API provides accurate and fast real time balances of the nati
 
 Sim looks up prices onchain. We use the most liquid onchain pair to determine a USD price. We return the available liquidity in `pool_size` as part of the response, and show a warning `low_liquidity:	true` if this value is less than \$10k.
 
-### Pool Metadata
-
-To see which liquidity pool was used for pricing a token, include `metadata=pools` in your request. This adds a `pool` object to each token balance containing:
-
-- `pool_type`: The type of liquidity pool (e.g., `aerodrome_stable`, `uniswap_v2`, `uniswap_v3`)
-- `address`: The contract address of the liquidity pool
-- `token0`: The contract address of the first token in the pool pair
-- `token1`: The contract address of the second token in the pool pair
-
-```bash Example Request
-curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0x7501bc8Bb51616F79bfA524E464fb7B41f0B10fB?chain_ids=8453&metadata=pools&exclude_spam_tokens=true' \
-  -H 'X-Sim-Api-Key: YOUR_API_KEY'
-```
-
-```json Example Response
-{
-  "balances": [
-    {
-      "chain": "base",
-      "chain_id": 8453,
-      "address": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-      "amount": "2028796151426847258637334",
-      "symbol": "msUSD",
-      "name": "Metronome Synth USD",
-      "decimals": 18,
-      "price_usd": 0.9998836675185956,
-      "value_usd": 2028560.136536288,
-      "pool_size": 3350482.9498481047,
-      "pool": {
-        "pool_type": "aerodrome_stable",
-        "address": "0xcefc8b799a8ee5d9b312aeca73262645d664aaf7",
-        "token0": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-        "token1": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
-      }
-    }
-  ]
-}
-```
+You can include `metadata=pools` in your request to see which liquidity pool was used for pricing each token.
 
 ## Token Filtering
 
