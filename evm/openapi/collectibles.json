@@ -137,7 +137,7 @@
                     "trade_volume",
                     "unique_buyers",
                     "unique_sellers",
-                    "is_alchemy_flagged",
+                    "externally_flagged",
                     "ipfs_uri_present",
                     "suspicious_words",
                     "url_shortener_in_uri"
@@ -340,7 +340,7 @@
                           { "feature": "trade_volume", "value": 518, "feature_score": 0, "feature_weight": 0.25 },
                           { "feature": "unique_buyers", "value": 145, "feature_score": 0, "feature_weight": 0.25 },
                           { "feature": "unique_sellers", "value": 167, "feature_score": 0, "feature_weight": 0.25 },
-                          { "feature": "is_alchemy_flagged", "value": false, "feature_score": 0, "feature_weight": 0.25 }
+                          { "feature": "externally_flagged", "value": false, "feature_score": 0, "feature_weight": 0.25 }
                         ],
                           "balance": "8",
                           "last_acquired": "2025-08-10T03:58:59Z"

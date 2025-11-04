@@ -31,7 +31,7 @@ By default, spam filtering for collectibles is enabled. Use `filter_spam=false` 
 We provide spam scores to explain how a collectible is classified as spam or not.
 Spam scores are _off_ by default. Enable them with `show_spam_scores=true`.
 Scores are computed as a weighted average across signals.
-These include whether Alchemy has flagged the collection, trade volume since launch, and the number of unique buyers and sellers.
+These include whether the collection has been flagged by external providers, trade volume since launch, and the number of unique buyers and sellers.
 See the table below for the full list.
 
 <Accordion title="Spam Scoring Signals" icon="shield">
@@ -41,7 +41,7 @@ See the table below for the full list.
 | `trade_volume` | This is the total number of trades since collection launch. Very low activity can indicate spam. Collections launched in the last 7 days are excluded from this signal. |
 | `unique_buyers` | This is the count of distinct buyers. Low buyer diversity can indicate inorganic activity. |
 | `unique_sellers` | This is the count of distinct sellers. Low seller diversity can indicate inorganic activity. |
-| `is_alchemy_flagged` | Whether the collection is flagged as spam by Alchemy. `true` increases the spam likelihood. |
+| `externally_flagged` | Whether the collection has been flagged as spam by third-party providers. `true` increases the spam likelihood. |
 | `ipfs_uri_present` | This indicates whether token metadata URIs use IPFS. Certain patterns can correlate with spam when combined with other signals. |
 | `suspicious_words` | Whether names, symbols, or URIs include suspicious terms commonly associated with scams. |
 | `url_shortener_in_uri` | This indicates whether metadata URIs use link shorteners. For example, Bitly links can obscure destinations. |
