@@ -2,11 +2,18 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Sim by Dune",
-  "favicon": "/dune.png",
+  "favicon": "/Dune_Favicon.svg",
   "colors": {
-    "primary": "#000000",
-    "light": "#FFFFFF",
-    "dark": "#000000"
+    "primary": "#0f0f15",
+    "light": "#ffffff",
+    "dark": "#0f0f15"
+  },
+  "logo": {
+    "light": "/logo/sim-logo-new-light.svg",
+    "dark": "/logo/sim-logo-new-dark.svg"
+  },
+  "fonts": {
+    "family": "Geist"
   },
   "navigation": {
     "tabs": [
@@ -191,10 +198,6 @@
       "file": "svm/openapi/transactions.json"
     }
   ],
-  "logo": {
-    "light": "/logo/sim-logo-light.svg",
-    "dark": "/logo/sim-logo-dark.svg"
-  },
   "navbar": {
     "links": [],
       "primary": {
