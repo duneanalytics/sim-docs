@@ -5,6 +5,8 @@ openapi: "/evm/openapi/defi-positions.json GET /beta/evm/defi/positions/{address
 sidebarTitle: "DeFi Positions"
 ---
 
+import { SupportedChains } from '/snippets/supported-chains.mdx';
+
 The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets.
 Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
 
@@ -15,6 +17,8 @@ This endpoint is currently available at the beta path (`/beta/evm/defi/positions
 Schemas are stable, but response fields may expand as we onboard new protocols.
 </Note>
 
+<SupportedChains endpoint="defi_positions" />
+
 ## Supported Coverage
 
 - **Liquidity:** Uniswap V2/V3/V4, Algebra v3 forks, iZUMi Swap, and additional AMMs rolling out regularly
@@ -22,24 +26,6 @@ Schemas are stable, but response fields may expand as we onboard new protocols.
 - **Yield:** Pendle v2, ERC-4626 vaults (Yearn v3, Pendle Yield PTs, and compatible vaults)
 - **Tokenized positions:** Protocol share tokens such as aTokens, cTokens, ERC-4626 vault receipts
 - **NFT-based liquidity:** Concentrated liquidity NFTs (Uniswap v3 and compatible implementations)
-
-### Supported Chains
-
-We currently cover DeFi Positions on the following networks, with more chains on the roadmap:
-
-- Arbitrum
-- Base
-- Base Sepolia
-- BOB
-- Ethereum
-- Ink
-- Mode
-- Optimism
-- Shape
-- Soneium
-- Unichain
-- World
-- Zora
 
 ## Request Parameters
 
