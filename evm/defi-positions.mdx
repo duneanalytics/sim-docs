@@ -5,9 +5,15 @@ openapi: "/evm/openapi/defi-positions.json GET /beta/evm/defi/positions/{address
 sidebarTitle: "DeFi Positions"
 ---
 
-The DeFi Positions endpoint consolidates lending, borrowing, liquidity, yield, and staking exposures for a wallet. Use it to power portfolio dashboards, risk monitoring, and customer reporting without stitching together protocol-specific datasets.
+The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets.
+Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
 
-> **Preview:** This endpoint is currently available at the beta path (`/beta/evm/defi/positions`). Schemas are stable, but response fields may expand as we onboard new protocols.
+Use this endpoint to build portfolio dashboards, risk analytics, or unified position views without querying individual protocol contracts.
+
+<Note>
+This endpoint is currently available at the beta path (`/beta/evm/defi/positions`).
+Schemas are stable, but response fields may expand as we onboard new protocols.
+</Note>
 
 ## Supported Coverage
 
