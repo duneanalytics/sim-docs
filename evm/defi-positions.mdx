@@ -19,28 +19,30 @@ Schemas are stable, but response fields may expand as we onboard new protocols.
 
 <SupportedChains endpoint="defi_positions" />
 
+<Note>Arbitrum support is not currently available but is coming soon.</Note>
+
 ## Supported Protocols
 
 Protocol coverage is organized by position type. Each protocol specifies its supported chains and the API response type under which it appears.
 
 <Accordion title="Chain Coverage Table" icon="table">
 
-| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | Optimism (10) | Unichain (130) | Zora (7777777) | World Chain (480) | Ink (57073) | Soneium (1868) | Mode (34443) | BOB (60808) | Shape (360) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Algebra V3 |  |  | ✓ |  |  |  |  |  |  |  |  |  |
-| iZumi Swap |  | ✓ |  |  |  |  |  |  |  |  |  |  |
-| Aave v2 | ✓ |  |  |  |  |  |  |  |  |  |  |  |
-| Aave v3 | ✓ | ✓ | ✓ | ✓ |  |  |  |  | ✓ |  |  |  |
-| Compound v2 | ✓ |  |  |  |  |  |  |  |  |  |  |  |
-| Compound v3 (Comet) | ✓ | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
-| Moonwell |  | ✓ |  | ✓ |  |  |  |  |  |  |  |  |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Pendle v3 | ✓ | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
-| EigenLayer | ✓ |  |  |  |  |  |  |  |  |  |  |  |
+| Protocol / Standard | Ethereum (1) | Base (8453) | Optimism (10) | Unichain (130) | Zora (7777777) | World Chain (480) | Ink (57073) | Soneium (1868) | Mode (34443) | BOB (60808) | Shape (360) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Algebra V3 |  |  |  |  |  |  |  |  |  |  |  |
+| iZumi Swap |  | ✓ |  |  |  |  |  |  |  |  |  |
+| Aave v2 | ✓ |  |  |  |  |  |  |  |  |  |  |
+| Aave v3 | ✓ | ✓ | ✓ |  |  |  |  | ✓ |  |  |  |
+| Compound v2 | ✓ |  |  |  |  |  |  |  |  |  |  |
+| Compound v3 (Comet) | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| Moonwell |  | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Pendle v3 | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| EigenLayer | ✓ |  |  |  |  |  |  |  |  |  |  |
 
 </Accordion>
 
@@ -51,7 +53,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 <AccordionGroup>
   <Accordion title="Uniswap V2" icon="droplet">
   **Type:** `UniswapV2`  
-  **Chains:** Ethereum (1), Base (8453), Ink (57073), World Chain (480), Soneium (1868), Unichain (130), Zora (7777777), Arbitrum (42161), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Ink (57073), World Chain (480), Soneium (1868), Unichain (130), Zora (7777777), Optimism (10)  
   **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value.
   </Accordion>
 
@@ -65,21 +67,21 @@ Liquidity pool positions represent token pairs deposited into automated market m
   <Accordion title="Uniswap V3" icon="layer-group">
   **Type:** `Nft`  
   **Protocol Field:** `"UniswapV3"`  
-  **Chains:** Ethereum (1), Base (8453), Ink (57073), Unichain (130), Zora (7777777), World Chain (480), Soneium (1868), Arbitrum (42161), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Ink (57073), Unichain (130), Zora (7777777), World Chain (480), Soneium (1868), Optimism (10)  
   **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations.
   </Accordion>
 
   <Accordion title="Uniswap V4" icon="layer-group">
   **Type:** `Nft`  
   **Protocol Field:** `"UniswapV4"`  
-  **Chains:** Ethereum (1), Unichain (130), Optimism (10), Base (8453), Arbitrum (42161), Zora (7777777), World Chain (480), Ink (57073), Soneium (1868)  
+  **Chains:** Ethereum (1), Unichain (130), Optimism (10), Base (8453), Zora (7777777), World Chain (480), Ink (57073), Soneium (1868)  
   **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
   </Accordion>
 
   <Accordion title="Algebra V3" icon="chart-line">
   **Type:** `Nft`  
   **Protocol Field:** `"AlgebraV3"` (or similar)  
-  **Chains:** Arbitrum (42161)  
+  **Chains:**  
   **Description:** Concentrated liquidity positions compatible with the Algebra V3 architecture. Includes tick ranges and liquidity metadata.
   </Accordion>
 
@@ -106,7 +108,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   <Accordion title="Aave v3" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
-  **Chains:** Ethereum (1), Arbitrum (42161), Base (8453), Soneium (1868), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Soneium (1868), Optimism (10)  
   **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
   </Accordion>
 
@@ -119,7 +121,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
 
   <Accordion title="Compound v3 (Comet)" icon="building-columns">
   **Type:** `CompoundV3`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Optimism (10)  
   **Description:** Base asset supply and borrow positions in Compound v3. Also includes collateral positions for each supported asset in Comet markets.
   </Accordion>
 
@@ -138,14 +140,14 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 <AccordionGroup>
   <Accordion title="ERC-4626 Vaults" icon="vault">
   **Type:** `Erc4626`  
-  **Chains:** Ethereum (1), Base (8453), World Chain (480), Mode (34443), Ink (57073), Unichain (130), Zora (7777777), BOB (60808), Soneium (1868), Shape (360), Arbitrum (42161), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), World Chain (480), Mode (34443), Ink (57073), Unichain (130), Zora (7777777), BOB (60808), Soneium (1868), Shape (360), Optimism (10)  
   **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
   </Accordion>
 
   <Accordion title="Pendle v3" icon="chart-area">
   **Type:** `Pendle`  
   **Token Types:** `Principal`, `Yield`, `LP` (in `token_type` field)  
-  **Chains:** Ethereum (1), Arbitrum (42161), Optimism (10), Base (8453)  
+  **Chains:** Ethereum (1), Optimism (10), Base (8453)  
   **Description:** Principal Tokens (PT), Yield Tokens (YT), and LP positions in Pendle v3 markets. Each position includes the underlying asset, market address, and USD value based on the asset price.
   </Accordion>
 </AccordionGroup>
