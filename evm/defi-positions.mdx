@@ -19,13 +19,144 @@ Schemas are stable, but response fields may expand as we onboard new protocols.
 
 <SupportedChains endpoint="defi_positions" />
 
-## Supported Coverage
+## Supported Protocols
 
-- **Liquidity:** Uniswap V2/V3/V4, Algebra v3 forks, iZUMi Swap, and additional AMMs rolling out regularly
-- **Lending:** Aave v2/v3 (supply, variable debt), Compound v2/v3, and Moonwell markets
-- **Yield:** Pendle v2, ERC-4626 vaults (Yearn v3, Pendle Yield PTs, and compatible vaults)
-- **Tokenized positions:** Protocol share tokens such as aTokens, cTokens, ERC-4626 vault receipts
-- **NFT-based liquidity:** Concentrated liquidity NFTs (Uniswap v3 and compatible implementations)
+Protocol coverage is organized by position type. Each protocol specifies its supported chains and the API response type under which it appears.
+
+<Accordion title="Chain Coverage Table" icon="table">
+
+| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | Optimism (10) | Unichain (130) | Zora (7777777) | World Chain (480) | Ink (57073) | Soneium (1868) | Mode (34443) | BOB (60808) | Shape (360) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
+| Algebra V3 |  |  | ✓ |  |  |  |  |  |  |  |  |  |
+| iZumi Swap |  | ✓ |  |  |  |  |  |  |  |  |  |  |
+| Aave v2 | ✓ |  |  |  |  |  |  |  |  |  |  |  |
+| Aave v3 | ✓ | ✓ | ✓ | ✓ |  |  |  |  | ✓ |  |  |  |
+| Compound v2 | ✓ |  |  |  |  |  |  |  |  |  |  |  |
+| Compound v3 (Comet) | ✓ | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| Moonwell |  | ✓ |  | ✓ |  |  |  |  |  |  |  |  |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Pendle v3 | ✓ | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| EigenLayer | ✓ |  |  |  |  |  |  |  |  |  |  |  |
+
+</Accordion>
+
+### Liquidity Pool Positions
+
+Liquidity pool positions represent token pairs deposited into automated market makers (AMMs). These positions may be fungible ERC-20 LP tokens or non-fungible NFT-based positions for concentrated liquidity.
+
+<AccordionGroup>
+  <Accordion title="Uniswap V2" icon="droplet">
+  **Type:** `UniswapV2`  
+  **Chains:** Ethereum (1), Base (8453), Ink (57073), World Chain (480), Soneium (1868), Unichain (130), Zora (7777777), Arbitrum (42161), Optimism (10)  
+  **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value.
+  </Accordion>
+
+  <Accordion title="Uniswap V2 Forks" icon="code-fork">
+  **Type:** `UniswapV2`  
+  **Chains:** Same as Uniswap V2  
+  **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
+  **Description:** Forks are detected by factory address and returned under the same `UniswapV2` type. The `protocol` field in the response indicates the specific fork (e.g., `"protocol": "UniswapV2"` or `"protocol": "SushiSwapV2"`).
+  </Accordion>
+
+  <Accordion title="Uniswap V3" icon="layer-group">
+  **Type:** `Nft`  
+  **Protocol Field:** `"UniswapV3"`  
+  **Chains:** Ethereum (1), Base (8453), Ink (57073), Unichain (130), Zora (7777777), World Chain (480), Soneium (1868), Arbitrum (42161), Optimism (10)  
+  **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations.
+  </Accordion>
+
+  <Accordion title="Uniswap V4" icon="layer-group">
+  **Type:** `Nft`  
+  **Protocol Field:** `"UniswapV4"`  
+  **Chains:** Ethereum (1), Unichain (130), Optimism (10), Base (8453), Arbitrum (42161), Zora (7777777), World Chain (480), Ink (57073), Soneium (1868)  
+  **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
+  </Accordion>
+
+  <Accordion title="Algebra V3" icon="chart-line">
+  **Type:** `Nft`  
+  **Protocol Field:** `"AlgebraV3"` (or similar)  
+  **Chains:** Arbitrum (42161)  
+  **Description:** Concentrated liquidity positions compatible with the Algebra V3 architecture. Includes tick ranges and liquidity metadata.
+  </Accordion>
+
+  <Accordion title="iZumi Swap" icon="water">
+  **Type:** `Nft`  
+  **Protocol Field:** `"IzumiSwap"` (or similar)  
+  **Chains:** Base (8453)  
+  **Description:** Concentrated liquidity positions on the iZumi Swap protocol. Returns NFT-based position data with tick ranges and holdings.
+  </Accordion>
+</AccordionGroup>
+
+### Lending Positions
+
+Lending positions include supplied collateral (e.g., aTokens, cTokens) and outstanding debt across major lending protocols.
+
+<AccordionGroup>
+  <Accordion title="Aave v2" icon="coins">
+  **Type:** `Tokenized`  
+  **Token Types:** `AtokenV2`, `AaveV2VariableDebt`  
+  **Chains:** Ethereum (1)  
+  **Description:** Supply positions (aTokens) and variable debt positions on Aave v2. Each position includes the underlying asset, calculated balance, and USD value.
+  </Accordion>
+
+  <Accordion title="Aave v3" icon="coins">
+  **Type:** `Tokenized`  
+  **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
+  **Chains:** Ethereum (1), Arbitrum (42161), Base (8453), Soneium (1868), Optimism (10)  
+  **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
+  </Accordion>
+
+  <Accordion title="Compound v2" icon="building-columns">
+  **Type:** `CompoundV2` (combined in API response)  
+  **Token Types:** `CTOKEN`, `CTOKEN_BORROW`  
+  **Chains:** Ethereum (1)  
+  **Description:** Supply and borrow positions across Compound v2 markets. Responses include separate supply and debt quotes with USD values.
+  </Accordion>
+
+  <Accordion title="Compound v3 (Comet)" icon="building-columns">
+  **Type:** `CompoundV3`  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Optimism (10)  
+  **Description:** Base asset supply and borrow positions in Compound v3. Also includes collateral positions for each supported asset in Comet markets.
+  </Accordion>
+
+  <Accordion title="Moonwell" icon="moon">
+  **Type:** `Moonwell` (combined in API response)  
+  **Token Types:** `MTOKEN`, `MTOKEN_BORROW`  
+  **Chains:** Base (8453), Optimism (10)  
+  **Description:** Supply and borrow positions on Moonwell (a Compound v2 fork). Includes separate supply and debt quotes.
+  </Accordion>
+</AccordionGroup>
+
+### Yield Positions
+
+Yield positions represent deposits into vaults, structured products, or yield-generating strategies.
+
+<AccordionGroup>
+  <Accordion title="ERC-4626 Vaults" icon="vault">
+  **Type:** `Erc4626`  
+  **Chains:** Ethereum (1), Base (8453), World Chain (480), Mode (34443), Ink (57073), Unichain (130), Zora (7777777), BOB (60808), Soneium (1868), Shape (360), Arbitrum (42161), Optimism (10)  
+  **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
+  </Accordion>
+
+  <Accordion title="Pendle v3" icon="chart-area">
+  **Type:** `Pendle`  
+  **Token Types:** `Principal`, `Yield`, `LP` (in `token_type` field)  
+  **Chains:** Ethereum (1), Arbitrum (42161), Optimism (10), Base (8453)  
+  **Description:** Principal Tokens (PT), Yield Tokens (YT), and LP positions in Pendle v3 markets. Each position includes the underlying asset, market address, and USD value based on the asset price.
+  </Accordion>
+</AccordionGroup>
+
+### Restaking Positions
+
+<Accordion title="EigenLayer" icon="layer-group">
+**Type:** `EigenStrategy` (or similar in API response)  
+**Chains:** Ethereum (1)  
+**Description:** Share balances in EigenLayer restaking strategies. Includes the strategy contract, underlying token, and USD-denominated position value.
+</Accordion>
 
 ## Request Parameters
 
