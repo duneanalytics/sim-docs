@@ -51,15 +51,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "protocol",
-            "in": "query",
-            "required": false,
-            "description": "Filter to a specific protocol or category (for example, `aave-v3`, `uniswap-v3`, or `erc4626`).",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -78,57 +69,118 @@
                       "response_time": "2025-03-06T18:12:29.000Z",
                       "positions": [
                         {
-                          "protocol_name": "Compound v2",
-                          "protocol_id": "compound-v2",
-                          "label": "lend",
+                          "type": "Erc4626",
                           "chain_id": 1,
-                          "name": "Compound DAI Lending",
-                          "contract_address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
-                          "amount": 250,
-                          "usd_value": 250.0,
-                          "unclaimed_usd_value": 5.12,
-                          "details": {
-                            "underlying_token": {
-                              "address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-                              "symbol": "DAI",
-                              "decimals": 18
-                            },
-                            "supply_apy": 2.1,
-                            "collateral_enabled": true
-                          }
+                          "token": "0xdcd0f5ab30856f28385f641580bbd85f88349124",
+                          "token_name": "Autonomous Liquidity USD",
+                          "token_symbol": "alUSD",
+                          "underlying_token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                          "underlying_token_name": "USD Coin",
+                          "underlying_token_symbol": "USDC",
+                          "underlying_token_decimals": 6,
+                          "calculated_balance": 0.0673736869415349,
+                          "price_in_usd": 0,
+                          "usd_value": 0,
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
                         },
                         {
-                          "protocol_name": "Uniswap v3",
-                          "protocol_id": "uniswap-v3",
-                          "label": "liquidity",
+                          "type": "Tokenized",
                           "chain_id": 1,
-                          "name": "Uniswap V3 Position (WETH, USDC)",
-                          "contract_address": "0xc36442b4a4522e871399cd717abdd847ab11fe88",
-                          "amount": 1.2345,
-                          "usd_value": 1234.5,
-                          "unclaimed_usd_value": 10.45,
-                          "details": {
-                            "token0": {
-                              "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                              "symbol": "WETH",
-                              "amount": 0.52
-                            },
-                            "token1": {
-                              "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-                              "symbol": "USDC",
-                              "amount": 820.12
-                            },
-                            "token_id": 123456,
-                            "tick_lower": -887220,
-                            "tick_upper": -276330,
-                            "share_of_pool": 0.0000125
-                          }
+                          "token_type": "AtokenV2",
+                          "token": "0x030ba81f1c18d280636f32af80b9aad02cf0854e",
+                          "token_name": "Aave interest bearing WETH",
+                          "token_symbol": "aWETH",
+                          "calculated_balance": 0.0496171604159423,
+                          "price_in_usd": 1.0391133398126,
+                          "usd_value": 0.0515578532718273,
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x09c29277d081a1b347f41277ff53116a30d4ddff",
+                          "token0": "0x4206975c6d7135ad73129476ebe2b06e42f41f50",
+                          "token0_name": "FWOG",
+                          "token0_symbol": "FWOG",
+                          "token0_decimals": 18,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0xca7455529bd53680000",
+                          "token0_price": 4.0139603276079e-11,
+                          "token1_price": 3581.9074863662,
+                          "calculated_balance": 59754,
+                          "price_in_usd": 0.000809180892677551,
+                          "usd_value": 48.3517950610544,
+                          "logo": null
+                        },
+                        {
+                          "type": "Nft",
+                          "chain_id": 1,
+                          "protocol": "UniswapV3",
+                          "pool": "0x7625d7f67e4e44341ddfb1e698801fd5a1574b48",
+                          "token0": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token0_name": "Wrapped Ether",
+                          "token0_symbol": "WETH",
+                          "token0_decimals": 18,
+                          "token1": "0xd78959df1ff28b45e6b4ea234bdcf9d6609d16e1",
+                          "token1_name": "Moneda de Caca",
+                          "token1_symbol": "Mierda",
+                          "token1_decimals": 18,
+                          "positions": [
+                            {
+                              "tick_lower": 0,
+                              "tick_upper": 184200,
+                              "token_id": "0xe8ac0",
+                              "token0_price": 3581.9074863662,
+                              "token0_holdings": 0,
+                              "token0_rewards": 0.000201014351146556,
+                              "token1_price": 0,
+                              "token1_holdings": 100000000,
+                              "token1_rewards": 19678.323702556
+                            }
+                          ],
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "usd_value": 0.720014809238893
+                        },
+                        {
+                          "type": "NftV4",
+                          "chain_id": 1,
+                          "protocol": "UniswapV4",
+                          "pool_id": [33, 251, 41, 59, 157, 197, 59, 66, 250, 110, 99, 250, 36, 225, 33, 45, 231, 108, 136, 235, 122, 21, 185, 76, 210, 32, 252, 102, 39, 72, 81, 191],
+                          "pool_manager": "0x000000000004444c5dc75cb358380d2e3de08a90",
+                          "salt": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 33, 24],
+                          "token0": "0x0000000000000000000000000000000000000000",
+                          "token0_name": "Ether",
+                          "token0_symbol": "ETH",
+                          "token0_decimals": 18,
+                          "token1": "0xf9c8631fba291bac14ed549a2dde7c7f2ddff1a8",
+                          "token1_name": "Mighty Morphin Power Rangers",
+                          "token1_symbol": "GoGo",
+                          "token1_decimals": 18,
+                          "positions": [
+                            {
+                              "tick_lower": -184220,
+                              "tick_upper": 207220,
+                              "token_id": "0x2118",
+                              "token0_price": 3581.9074863662,
+                              "token0_holdings": 0.000047749999999999,
+                              "token0_rewards": 0.000008749999999999,
+                              "token1_price": 0.00000361073454658,
+                              "token1_holdings": 479952364.515627,
+                              "token1_rewards": 8399.79998597393
+                            }
+                          ],
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "usd_value": 1733.21329049076
                         }
                       ],
                       "aggregations": {
-                        "total_usd_value": 1484.5,
+                        "total_usd_value": 1782.336658214105,
                         "total_by_chain": {
-                          "1": 1484.5
+                          "1": 1782.336658214105
                         }
                       }
                     }
