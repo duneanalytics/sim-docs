@@ -190,13 +190,45 @@
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message"
+                },
+                "examples": {
+                  "invalid_address": {
+                    "summary": "Invalid address format",
+                    "value": "Invalid URL: invalid length 39, expected a (both 0x-prefixed or not) hex string or byte array containing 20 bytes"
+                  }
+                }
+              }
+            }
           },
-          "404": {
-            "description": "Address not found"
-          },
-          "500": {
-            "description": "Internal server error"
+          "401": {
+            "description": "Unauthorized - missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "invalid API Key"
+                    }
+                  },
+                  "required": ["error"]
+                },
+                "examples": {
+                  "invalid_api_key": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
