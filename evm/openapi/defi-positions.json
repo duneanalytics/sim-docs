@@ -20,13 +20,13 @@
           "defi-positions"
         ],
         "summary": "Get DeFi positions for an address",
-        "description": "Returns a wallet's DeFi positions including protocol metadata, USD values, pending rewards, and aggregation summaries.",
+        "description": "Returns a wallet's DeFi positions including USD values, position-specific metadata, and aggregation summaries across supported protocols.",
         "operationId": "getEvmDefiPositions",
         "parameters": [
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
             "required": true,
             "schema": {
               "type": "string"
@@ -47,7 +47,7 @@
             "name": "chain_ids",
             "in": "query",
             "required": false,
-            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8453`). If omitted, positions are returned for chains with the `default` tag. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8453,testnet`). Chain names are not accepted. If this query parameter is omitted, results include positions from chains with the `default` tag. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
             "schema": {
               "type": "string"
             }
@@ -64,9 +64,6 @@
                 "examples": {
                   "success": {
                     "value": {
-                      "wallet_address": "0x9512044bc14267a6c588296a20bd7c00e0de7da3",
-                      "request_time": "2025-03-06T18:12:29.000Z",
-                      "response_time": "2025-03-06T18:12:29.000Z",
                       "positions": [
                         {
                           "type": "Erc4626",
@@ -91,8 +88,20 @@
                           "token_name": "Aave interest bearing WETH",
                           "token_symbol": "aWETH",
                           "calculated_balance": 0.0496171604159423,
-                          "price_in_usd": 1.0391133398126,
-                          "usd_value": 0.0515578532718273,
+                          "price_in_usd": 1.03911373514321,
+                          "usd_value": 0.0515578728870095,
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+                        },
+                        {
+                          "type": "Tokenized",
+                          "chain_id": 1,
+                          "token_type": "AtokenV2",
+                          "token": "0x9ff58f4ffb29fa2266ab25e75e2a8b3503311656",
+                          "token_name": "Aave interest bearing WBTC",
+                          "token_symbol": "aWBTC",
+                          "calculated_balance": 0.00007234,
+                          "price_in_usd": 29.6320132187639,
+                          "usd_value": 0.00214357983624538,
                           "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
                         },
                         {
@@ -109,12 +118,230 @@
                           "token1_symbol": "WETH",
                           "token1_decimals": 18,
                           "lp_balance": "0xca7455529bd53680000",
-                          "token0_price": 4.0139603276079e-11,
-                          "token1_price": 3581.9074863662,
+                          "token0_price": 3.981792910653e-11,
+                          "token1_price": 3553.20946160682,
                           "calculated_balance": 59754,
-                          "price_in_usd": 0.000809180892677551,
-                          "usd_value": 48.3517950610544,
+                          "price_in_usd": 0.000802696996635525,
+                          "usd_value": 47.9643563369592,
                           "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x2c793e52d3180ce2f97ed050428d6ed8473285ee",
+                          "token0": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token0_name": "Wrapped Ether",
+                          "token0_symbol": "WETH",
+                          "token0_decimals": 18,
+                          "token1": "0xeb1d4fa4ec26392a1da1344ed1a0b6f8476265b3",
+                          "token1_name": "Thailand",
+                          "token1_symbol": "THAILAND",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x141c5f09864c3968",
+                          "token0_price": 3553.20946160682,
+                          "token1_price": 6.93033022151853e-7,
+                          "calculated_balance": 1.44913767461894,
+                          "price_in_usd": 0.0993233873678346,
+                          "usd_value": 0.1439332626055,
+                          "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x3b0ad93e52a232d8d41e13289976895c295e5b97",
+                          "token0": "0x56c18a87b4ee72317e059bd568005a6355b66b01",
+                          "token0_name": "Ethereum Army",
+                          "token0_symbol": "EthereumArmy",
+                          "token0_decimals": 9,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0xf7436a7c1ea8ae82",
+                          "token0_price": 6.71694037048083e-9,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 17.8172016321307,
+                          "price_in_usd": 310.047164921547,
+                          "usd_value": 5524.17285287768,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x3d1cb7638d73657f7e554eda1d97703bc29d3c15",
+                          "token0": "0xa585cb4e6e833d6fa55a992e75b9ee0743b23d69",
+                          "token0_name": "Tokenswim",
+                          "token0_symbol": "TKS",
+                          "token0_decimals": 8,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x425eb51b908b",
+                          "token0_price": 1.20461416147608,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 0.000072974532841611,
+                          "price_in_usd": 13300248.4891253,
+                          "usd_value": 970.579420171264,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x3d22ea9eb7d7be6d9c6da7542ae17e24a56c9948",
+                          "token0": "0x44ac993fcd34a55bcce736ee709a0b1f590327f1",
+                          "token0_name": "Made In United States of America",
+                          "token0_symbol": "MIUSA",
+                          "token0_decimals": 18,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x9b6e64a8ec60000",
+                          "token0_price": 0.000170221012856972,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 0.7,
+                          "price_in_usd": 1.55542454856754,
+                          "usd_value": 1.08879718399728,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x4fa956284f1214e7f619a05054ea3b8d4370d225",
+                          "token0": "0xb005aac185a963c9ad52ecede60ddaea83417b37",
+                          "token0_name": "Edoge",
+                          "token0_symbol": "EDOGE",
+                          "token0_decimals": 9,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x1bc16d674ec80000",
+                          "token0_price": 7.73273307706922e-9,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 2,
+                          "price_in_usd": 337.500909089399,
+                          "usd_value": 675.001818178797,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x60da3e999b92ad9ac0749bdb7f7bc4a84b7654b0",
+                          "token0": "0x7e9e98e12e6aa8a2b457b78613f075bd4cbbd4b1",
+                          "token0_name": "Pepe Vitalik",
+                          "token0_symbol": "PITALIK",
+                          "token0_decimals": 9,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x2386f26fc100000",
+                          "token0_price": 0.00005223622125649,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 0.16,
+                          "price_in_usd": 27834.7019989285,
+                          "usd_value": 4453.55231982856,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x85e25bc853a5cf2265dc9d04e2fbbfd32a95a7e5",
+                          "token0": "0x31448ab1bd9679f8c8029defee824763018566bd",
+                          "token0_name": "MEOW",
+                          "token0_symbol": "Vitalik Learn to Meow",
+                          "token0_decimals": 18,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x66845b21facdd560fe31a",
+                          "token0_price": 5.36553654627e-12,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 7745966.69241483,
+                          "price_in_usd": 0.000276152558547498,
+                          "usd_value": 2139.06852053406,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0x87ffcda0c507117683f0bc0defb683eebe9c223b",
+                          "token0": "0x693391144d1e079e20cc64f795e9450c94966171",
+                          "token0_name": "Layer 2 Index",
+                          "token0_symbol": "LTI",
+                          "token0_decimals": 18,
+                          "token1": "0x6b175474e89094c44da98b954eedeac495271d0f",
+                          "token1_name": "Dai Stablecoin",
+                          "token1_symbol": "DAI",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x8ac7230489e80000",
+                          "token0_price": 0.362412002420127,
+                          "token1_price": 0.998865563776363,
+                          "calculated_balance": 10,
+                          "price_in_usd": 1.2092122125549,
+                          "usd_value": 12.092122125549,
+                          "logo": null
+                        },
+                        {
+                          "type": "UniswapV2",
+                          "chain_id": 1,
+                          "protocol": "UniswapV2",
+                          "pool": "0xa7f8de1f0e6964201d412fd172e5740663b35567",
+                          "token0": "0x8df994371e3cfe3d218d2b8f42b5bf414651fcd8",
+                          "token0_name": "FLOKI SANTA",
+                          "token0_symbol": "FLOKIS",
+                          "token0_decimals": 18,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "lp_balance": "0x3eb908bfa9242f200000",
+                          "token0_price": 5.410934490399e-10,
+                          "token1_price": 3553.20946160682,
+                          "calculated_balance": 296200,
+                          "price_in_usd": 0.0027889628548969,
+                          "usd_value": 826.090797620462,
+                          "logo": null
+                        },
+                        {
+                          "type": "Nft",
+                          "chain_id": 8453,
+                          "protocol": "UniswapV3",
+                          "pool": "0x7a0640ca0c8b07789edaaefda82bf5790109aa44",
+                          "token0": "0x07449b62ec61f12d6110c36db240436222b02530",
+                          "token0_name": "DOGE",
+                          "token0_symbol": "DOGE",
+                          "token0_decimals": 18,
+                          "token1": "0x4200000000000000000000000000000000000006",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "positions": [
+                            {
+                              "tick_lower": -887272,
+                              "tick_upper": 887272,
+                              "token_id": "0x132c81",
+                              "token0_price": 9.48452516697798e-7,
+                              "token0_holdings": 613763253.0586,
+                              "token0_rewards": 21676.3984019538,
+                              "token1_price": 3570.25944039075,
+                              "token1_holdings": 0.162913339628563,
+                              "token1_rewards": 0.000010452682406464
+                            }
+                          ],
+                          "logo": null,
+                          "usd_value": 1163.82606861717
                         },
                         {
                           "type": "Nft",
@@ -134,7 +361,7 @@
                               "tick_lower": 0,
                               "tick_upper": 184200,
                               "token_id": "0xe8ac0",
-                              "token0_price": 3581.9074863662,
+                              "token0_price": 3553.20946160682,
                               "token0_holdings": 0,
                               "token0_rewards": 0.000201014351146556,
                               "token1_price": 0,
@@ -143,7 +370,65 @@
                             }
                           ],
                           "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                          "usd_value": 0.720014809238893
+                          "usd_value": 0.714246094412699
+                        },
+                        {
+                          "type": "Nft",
+                          "chain_id": 8453,
+                          "protocol": "UniswapV3",
+                          "pool": "0xf3b058e81ac53c475cf6e9d12724e3493fd8ffe7",
+                          "token0": "0x2ef9f33ae8f8e7f7858ed24965b04ec8fc4e5841",
+                          "token0_name": "Numbers",
+                          "token0_symbol": "NMB404",
+                          "token0_decimals": 18,
+                          "token1": "0x4200000000000000000000000000000000000006",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "positions": [
+                            {
+                              "tick_lower": -39000,
+                              "tick_upper": 887200,
+                              "token_id": "0xb3e4",
+                              "token0_price": 93.9873376113841,
+                              "token0_holdings": 38.7920703525764,
+                              "token0_rewards": 0.808474625304572,
+                              "token1_price": 3570.25944039075,
+                              "token1_holdings": 0.145798328127171,
+                              "token1_rewards": 0.171277142433281
+                            }
+                          ],
+                          "logo": null,
+                          "usd_value": 4853.9914825157
+                        },
+                        {
+                          "type": "Nft",
+                          "chain_id": 1,
+                          "protocol": "UniswapV3",
+                          "pool": "0x24a3ab2a20f5e903b5bb3efc3b4a60fcda17b496",
+                          "token0": "0x6793655c396eaee311fb4d3596b88fd7d195c79e",
+                          "token0_name": "degeneratorv2",
+                          "token0_symbol": "DGENV2",
+                          "token0_decimals": 8,
+                          "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+                          "token1_name": "Wrapped Ether",
+                          "token1_symbol": "WETH",
+                          "token1_decimals": 18,
+                          "positions": [
+                            {
+                              "tick_lower": -887270,
+                              "tick_upper": 230270,
+                              "token_id": "0x1b621",
+                              "token0_price": 0.0719515070037307,
+                              "token0_holdings": 3047.05602573,
+                              "token0_rewards": 5.63917856,
+                              "token1_price": 3553.20946160682,
+                              "token1_holdings": 0.0616595719741519,
+                              "token1_rewards": 0.0319835526435363
+                            }
+                          ],
+                          "logo": null,
+                          "usd_value": 552.379656777724
                         },
                         {
                           "type": "NftV4",
@@ -165,22 +450,23 @@
                               "tick_lower": -184220,
                               "tick_upper": 207220,
                               "token_id": "0x2118",
-                              "token0_price": 3581.9074863662,
+                              "token0_price": 3553.20946160682,
                               "token0_holdings": 0.000047749999999999,
                               "token0_rewards": 0.000008749999999999,
-                              "token1_price": 0.00000361073454658,
+                              "token1_price": 0.000003581798534713,
                               "token1_holdings": 479952364.515627,
                               "token1_rewards": 8399.79998597393
                             }
                           ],
                           "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                          "usd_value": 1733.21329049076
+                          "usd_value": 1719.32351868043
                         }
                       ],
                       "aggregations": {
-                        "total_usd_value": 1782.336658214105,
+                        "total_usd_value": 22940.0436122581,
                         "total_by_chain": {
-                          "1": 1782.336658214105
+                          "1": 16922.2260611252,
+                          "8453": 6017.81755113287
                         }
                       }
                     }
@@ -238,59 +524,564 @@
     "schemas": {
       "DefiPosition": {
         "type": "object",
-        "required": [
-          "protocol_name",
-          "protocol_id",
-          "chain_id",
-          "name",
-          "usd_value"
-        ],
+        "required": ["type", "chain_id", "usd_value"],
+        "description": "Position entry for a wallet. The shape varies by `type`. Fields are included only when relevant to the position type.",
         "properties": {
-          "protocol_name": {
+          "type": {
             "type": "string",
-            "description": "Display name of the protocol (e.g. Uniswap v3, Aave v3)."
-          },
-          "protocol_id": {
-            "type": "string",
-            "description": "Slugified protocol identifier that remains stable across releases."
-          },
-          "label": {
-            "type": "string",
-            "description": "Protocol-specific label for the position (for example, lend, borrow, liquidity, vault)."
+            "enum": ["Erc4626", "Tokenized", "UniswapV2", "Nft", "NftV4"],
+            "description": "Position type discriminator. Values: `Erc4626` (ERC-4626 vaults), `Tokenized` (tokenized lending e.g., aTokens), `UniswapV2` (AMM LP), `Nft` (Uniswap V3 NFT), `NftV4` (Uniswap V4 NFT)."
           },
           "chain_id": {
             "type": "integer",
             "format": "int64",
-            "description": "Numeric chain identifier."
-          },
-          "name": {
-            "type": "string",
-            "description": "Human-readable name for the position."
-          },
-          "contract_address": {
-            "type": "string",
-            "description": "Primary contract address associated with the position, such as the market, vault, or pool contract."
-          },
-          "amount": {
-            "type": "number",
-            "format": "double",
-            "description": "Quantity of the position, adjusted for token decimals."
+            "description": "Numeric EVM chain ID."
           },
           "usd_value": {
             "type": "number",
             "format": "double",
-            "description": "USD value of the position."
+            "description": "Total USD value of this position."
           },
-          "unclaimed_usd_value": {
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Tokenized position variant (e.g., Aave aToken version). Present only when `type=Tokenized`."
+          },
+          "token": {
+            "type": "string",
+            "description": "ERC20 or vault token contract address. Present for `Erc4626` and `Tokenized`."
+          },
+          "token_name": {
+            "type": "string",
+            "description": "Token name. Present for `Erc4626` and `Tokenized`."
+          },
+          "token_symbol": {
+            "type": "string",
+            "description": "Token symbol. Present for `Erc4626` and `Tokenized`."
+          },
+          "underlying_token": {
+            "type": "string",
+            "description": "Underlying ERC20 token contract address. Present only when `type=Erc4626`."
+          },
+          "underlying_token_name": {
+            "type": "string",
+            "description": "Underlying token name. Present only when `type=Erc4626`."
+          },
+          "underlying_token_symbol": {
+            "type": "string",
+            "description": "Underlying token symbol. Present only when `type=Erc4626`."
+          },
+          "underlying_token_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Underlying token decimals. Present only when `type=Erc4626`."
+          },
+          "calculated_balance": {
             "type": "number",
             "format": "double",
-            "nullable": true,
-            "description": "USD value of unclaimed rewards or accrued yield for the position, when applicable."
+            "description": "Balance adjusted for decimals. Present for `Erc4626`, `Tokenized`, and `UniswapV2`."
           },
-          "details": {
-            "type": "object",
-            "description": "Protocol-specific metadata. Field presence varies by protocol and position type.",
-            "additionalProperties": true
+          "price_in_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "USD unit price for the position's quantity (e.g., per token or derived for LP). May be 0 when unavailable. Present for `Erc4626`, `Tokenized`, and `UniswapV2`."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol identifier (e.g., UniswapV2, UniswapV3, UniswapV4). Present only for AMM/NFT types: `UniswapV2`, `Nft`, and `NftV4`."
+          },
+          "pool": {
+            "type": "string",
+            "description": "Pool contract address. Present for `UniswapV2` and `Nft` (Uniswap V3)."
+          },
+          "pool_id": {
+            "type": "array",
+            "description": "Byte-encoded pool identifier as an array of integers (0–255). Present only when `type=NftV4`.",
+            "items": { "type": "integer", "format": "int32" }
+          },
+          "pool_manager": {
+            "type": "string",
+            "description": "Uniswap V4 pool manager contract address. Present only when `type=NftV4`."
+          },
+          "salt": {
+            "type": "array",
+            "description": "Salt used in Uniswap V4 pool address derivation as an array of integers (0–255). Present only when `type=NftV4`.",
+            "items": { "type": "integer", "format": "int32" }
+          },
+          "token0": {
+            "type": "string",
+            "description": "Token0 contract address. Present for AMM/NFT types."
+          },
+          "token0_name": {
+            "type": "string",
+            "description": "Token0 name. Present for AMM/NFT types."
+          },
+          "token0_symbol": {
+            "type": "string",
+            "description": "Token0 symbol. Present for AMM/NFT types."
+          },
+          "token0_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token0 decimals. Present for AMM/NFT types."
+          },
+          "token1": {
+            "type": "string",
+            "description": "Token1 contract address. Present for AMM/NFT types."
+          },
+          "token1_name": {
+            "type": "string",
+            "description": "Token1 name. Present for AMM/NFT types."
+          },
+          "token1_symbol": {
+            "type": "string",
+            "description": "Token1 symbol. Present for AMM/NFT types."
+          },
+          "token1_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token1 decimals. Present for AMM/NFT types."
+          },
+          "lp_balance": {
+            "type": "string",
+            "description": "Raw LP token balance as a 0x-prefixed hex string. Present only when `type=UniswapV2`."
+          },
+          "token0_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token0. Present for AMM/NFT types."
+          },
+          "token1_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token1. Present for AMM/NFT types."
+          },
+          "positions": {
+            "type": "array",
+            "description": "Concentrated liquidity NFT positions for Uniswap V3/V4. Present only when `type` is `Nft` or `NftV4`.",
+            "items": { "$ref": "#/components/schemas/NftPositionDetails" }
+          }
+        }
+      },
+      "Erc4626Position": {
+        "type": "object",
+        "required": ["type", "chain_id", "token", "token_symbol", "calculated_balance", "usd_value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Erc4626"],
+            "description": "Position type discriminator."
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric EVM chain ID."
+          },
+          "token": {
+            "type": "string",
+            "description": "ERC-4626 vault token contract address."
+          },
+          "token_name": {
+            "type": "string",
+            "description": "Vault token name."
+          },
+          "token_symbol": {
+            "type": "string",
+            "description": "Vault token symbol."
+          },
+          "underlying_token": {
+            "type": "string",
+            "description": "Underlying ERC20 token contract address."
+          },
+          "underlying_token_name": {
+            "type": "string",
+            "description": "Underlying token name."
+          },
+          "underlying_token_symbol": {
+            "type": "string",
+            "description": "Underlying token symbol."
+          },
+          "underlying_token_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Underlying token decimals."
+          },
+          "calculated_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Vault balance adjusted for decimals."
+          },
+          "price_in_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per vault token. May be 0 when unavailable."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "USD value of this position."
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          }
+        }
+      },
+      "TokenizedPosition": {
+        "type": "object",
+        "required": ["type", "chain_id", "token", "token_symbol", "calculated_balance", "usd_value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Tokenized"],
+            "description": "Position type discriminator."
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric EVM chain ID."
+          },
+          "token_type": {
+            "type": "string",
+            "description": "Tokenized position variant (e.g., Aave aToken version)."
+          },
+          "token": {
+            "type": "string",
+            "description": "Token contract address representing the position."
+          },
+          "token_name": {
+            "type": "string",
+            "description": "Token name."
+          },
+          "token_symbol": {
+            "type": "string",
+            "description": "Token symbol."
+          },
+          "calculated_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Token balance adjusted for decimals."
+          },
+          "price_in_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "USD value of this position."
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          }
+        }
+      },
+      "UniswapV2Position": {
+        "type": "object",
+        "required": ["type", "protocol", "chain_id", "pool", "token0", "token1", "calculated_balance", "usd_value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["UniswapV2"],
+            "description": "Position type discriminator."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol identifier. Present for AMM positions such as Uniswap V2; not included for `Erc4626` and `Tokenized` types.",
+            "example": "UniswapV2"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric EVM chain ID."
+          },
+          "pool": {
+            "type": "string",
+            "description": "Uniswap V2 pair contract address."
+          },
+          "token0": {
+            "type": "string",
+            "description": "Token0 contract address."
+          },
+          "token0_name": {
+            "type": "string",
+            "description": "Token0 name."
+          },
+          "token0_symbol": {
+            "type": "string",
+            "description": "Token0 symbol."
+          },
+          "token0_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token0 decimals."
+          },
+          "token1": {
+            "type": "string",
+            "description": "Token1 contract address."
+          },
+          "token1_name": {
+            "type": "string",
+            "description": "Token1 name."
+          },
+          "token1_symbol": {
+            "type": "string",
+            "description": "Token1 symbol."
+          },
+          "token1_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token1 decimals."
+          },
+          "lp_balance": {
+            "type": "string",
+            "description": "Raw LP token balance as a 0x-prefixed hex string."
+          },
+          "token0_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token0."
+          },
+          "token1_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token1."
+          },
+          "calculated_balance": {
+            "type": "number",
+            "format": "double",
+            "description": "Derived underlying token amount or pool share depending on the position."
+          },
+          "price_in_usd": {
+            "type": "number",
+            "format": "double",
+            "description": "USD unit price corresponding to the computed balance."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "Total USD value of this position."
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          }
+        }
+      },
+      "NftPositionDetails": {
+        "type": "object",
+        "required": ["tick_lower", "tick_upper", "token_id", "token0_price", "token1_price"],
+        "properties": {
+          "tick_lower": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Lower tick bound."
+          },
+          "tick_upper": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Upper tick bound."
+          },
+          "token_id": {
+            "type": "string",
+            "description": "NFT token ID represented as a 0x-prefixed hex string."
+          },
+          "token0_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token0 at evaluation."
+          },
+          "token0_holdings": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount of token0 represented by the position."
+          },
+          "token0_rewards": {
+            "type": "number",
+            "format": "double",
+            "description": "Unclaimed token0 rewards accrued by the position."
+          },
+          "token1_price": {
+            "type": "number",
+            "format": "double",
+            "description": "USD price per token1 at evaluation."
+          },
+          "token1_holdings": {
+            "type": "number",
+            "format": "double",
+            "description": "Amount of token1 represented by the position."
+          },
+          "token1_rewards": {
+            "type": "number",
+            "format": "double",
+            "description": "Unclaimed token1 rewards accrued by the position."
+          }
+        }
+      },
+      "UniswapV3NftPosition": {
+        "type": "object",
+        "required": ["type", "protocol", "chain_id", "pool", "token0", "token1", "positions", "usd_value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Nft"],
+            "description": "Position type discriminator."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol identifier. Present for AMM positions such as Uniswap V3; not included for `Erc4626` and `Tokenized` types.",
+            "example": "UniswapV3"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric EVM chain ID."
+          },
+          "pool": {
+            "type": "string",
+            "description": "Uniswap V3 pool contract address."
+          },
+          "token0": {
+            "type": "string",
+            "description": "Token0 contract address."
+          },
+          "token0_name": {
+            "type": "string",
+            "description": "Token0 name."
+          },
+          "token0_symbol": {
+            "type": "string",
+            "description": "Token0 symbol."
+          },
+          "token0_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token0 decimals."
+          },
+          "token1": {
+            "type": "string",
+            "description": "Token1 contract address."
+          },
+          "token1_name": {
+            "type": "string",
+            "description": "Token1 name."
+          },
+          "token1_symbol": {
+            "type": "string",
+            "description": "Token1 symbol."
+          },
+          "token1_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token1 decimals."
+          },
+          "positions": {
+            "type": "array",
+            "description": "One or more concentrated liquidity NFT positions in this pool.",
+            "items": { "$ref": "#/components/schemas/NftPositionDetails" }
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "USD value of this NFT position (including both tokens)."
+          }
+        }
+      },
+      "UniswapV4NftPosition": {
+        "type": "object",
+        "required": ["type", "protocol", "chain_id", "pool_id", "pool_manager", "salt", "token0", "token1", "positions", "usd_value"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["NftV4"],
+            "description": "Position type discriminator."
+          },
+          "protocol": {
+            "type": "string",
+            "description": "Protocol identifier. Present for AMM positions such as Uniswap V4; not included for `Erc4626` and `Tokenized` types.",
+            "example": "UniswapV4"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Numeric EVM chain ID."
+          },
+          "pool_id": {
+            "type": "array",
+            "description": "Byte-encoded pool identifier, represented as an array of integers (0–255).",
+            "items": { "type": "integer", "format": "int32" }
+          },
+          "pool_manager": {
+            "type": "string",
+            "description": "Uniswap V4 pool manager contract address."
+          },
+          "salt": {
+            "type": "array",
+            "description": "Salt used in pool address derivation, represented as an array of integers (0–255).",
+            "items": { "type": "integer", "format": "int32" }
+          },
+          "token0": {
+            "type": "string",
+            "description": "Token0 contract address. `0x000…000` denotes the chain's native asset."
+          },
+          "token0_name": {
+            "type": "string",
+            "description": "Token0 name."
+          },
+          "token0_symbol": {
+            "type": "string",
+            "description": "Token0 symbol."
+          },
+          "token0_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token0 decimals."
+          },
+          "token1": {
+            "type": "string",
+            "description": "Token1 contract address."
+          },
+          "token1_name": {
+            "type": "string",
+            "description": "Token1 name."
+          },
+          "token1_symbol": {
+            "type": "string",
+            "description": "Token1 symbol."
+          },
+          "token1_decimals": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Token1 decimals."
+          },
+          "positions": {
+            "type": "array",
+            "description": "One or more concentrated liquidity NFT positions in this pool.",
+            "items": { "$ref": "#/components/schemas/NftPositionDetails" }
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "URL to a token logo, when available."
+          },
+          "usd_value": {
+            "type": "number",
+            "format": "double",
+            "description": "USD value of this NFT position (including both tokens)."
           }
         }
       },
@@ -314,25 +1105,8 @@
       },
       "DefiPositionsResponse": {
         "type": "object",
-        "required": [
-          "wallet_address",
-          "positions"
-        ],
+        "required": ["positions"],
         "properties": {
-          "wallet_address": {
-            "type": "string",
-            "description": "The wallet address that was queried."
-          },
-          "request_time": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the request was received."
-          },
-          "response_time": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the response was generated."
-          },
           "positions": {
             "type": "array",
             "items": {
