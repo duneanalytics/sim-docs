@@ -553,15 +553,15 @@
           },
           "token": {
             "type": "string",
-            "description": "ERC20 or vault token contract address. Present for `Erc4626` and `Tokenized`."
+            "description": "ERC20 or vault token contract address. Present only when `type=Erc4626` or `type=Tokenized`."
           },
           "token_name": {
             "type": "string",
-            "description": "Token name. Present for `Erc4626` and `Tokenized`."
+            "description": "Token name. Present only when `type=Erc4626` or `type=Tokenized`."
           },
           "token_symbol": {
             "type": "string",
-            "description": "Token symbol. Present for `Erc4626` and `Tokenized`."
+            "description": "Token symbol. Present only when `type=Erc4626` or `type=Tokenized`."
           },
           "underlying_token": {
             "type": "string",
@@ -583,20 +583,20 @@
           "calculated_balance": {
             "type": "number",
             "format": "double",
-            "description": "Balance adjusted for decimals. Present for `Erc4626`, `Tokenized`, and `UniswapV2`."
+            "description": "Balance adjusted for decimals. Present only when `type=Erc4626`, `type=Tokenized`, or `type=UniswapV2`."
           },
           "price_in_usd": {
             "type": "number",
             "format": "double",
-            "description": "USD unit price for the position's quantity (e.g., per token or derived for LP). May be 0 when unavailable. Present for `Erc4626`, `Tokenized`, and `UniswapV2`."
+            "description": "USD unit price for the position's quantity (e.g., per token or derived for LP). May be 0 when unavailable. Present only when `type=Erc4626`, `type=Tokenized`, or `type=UniswapV2`."
           },
           "protocol": {
             "type": "string",
-            "description": "Protocol identifier (e.g., UniswapV2, UniswapV3, UniswapV4). Present only for AMM/NFT types: `UniswapV2`, `Nft`, and `NftV4`."
+            "description": "Protocol identifier (e.g., UniswapV2, UniswapV3, UniswapV4). Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "pool": {
             "type": "string",
-            "description": "Pool contract address. Present for `UniswapV2` and `Nft` (Uniswap V3)."
+            "description": "Pool contract address. Present only when `type=UniswapV2` or `type=Nft`."
           },
           "pool_id": {
             "type": "array",
@@ -614,37 +614,37 @@
           },
           "token0": {
             "type": "string",
-            "description": "Token0 contract address. Present for AMM/NFT types."
+            "description": "Token0 contract address. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token0_name": {
             "type": "string",
-            "description": "Token0 name. Present for AMM/NFT types."
+            "description": "Token0 name. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token0_symbol": {
             "type": "string",
-            "description": "Token0 symbol. Present for AMM/NFT types."
+            "description": "Token0 symbol. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token0_decimals": {
             "type": "integer",
             "format": "int32",
-            "description": "Token0 decimals. Present for AMM/NFT types."
+            "description": "Token0 decimals. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token1": {
             "type": "string",
-            "description": "Token1 contract address. Present for AMM/NFT types."
+            "description": "Token1 contract address. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token1_name": {
             "type": "string",
-            "description": "Token1 name. Present for AMM/NFT types."
+            "description": "Token1 name. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token1_symbol": {
             "type": "string",
-            "description": "Token1 symbol. Present for AMM/NFT types."
+            "description": "Token1 symbol. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token1_decimals": {
             "type": "integer",
             "format": "int32",
-            "description": "Token1 decimals. Present for AMM/NFT types."
+            "description": "Token1 decimals. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "lp_balance": {
             "type": "string",
@@ -653,16 +653,16 @@
           "token0_price": {
             "type": "number",
             "format": "double",
-            "description": "USD price per token0. Present for AMM/NFT types."
+            "description": "USD price per token0. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "token1_price": {
             "type": "number",
             "format": "double",
-            "description": "USD price per token1. Present for AMM/NFT types."
+            "description": "USD price per token1. Present only when `type=UniswapV2`, `type=Nft`, or `type=NftV4`."
           },
           "positions": {
             "type": "array",
-            "description": "Concentrated liquidity NFT positions for Uniswap V3/V4. Present only when `type` is `Nft` or `NftV4`.",
+            "description": "Concentrated liquidity NFT positions for Uniswap V3/V4. Present only when `type=Nft` or `type=NftV4`.",
             "items": { "$ref": "#/components/schemas/NftPositionDetails" }
           }
         }

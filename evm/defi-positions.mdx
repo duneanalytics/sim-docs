@@ -458,23 +458,8 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 
 ## Compute Units
 
-Each request consumes two Compute Units per processed chain ID. Filtering to fewer chains lowers usage. Aggregations are calculated server-side and included in the same response.
+Each request consumes **two Compute Units per processed chain ID**. Filtering to fewer chains lowers usage. Aggregations are calculated server-side and included in the same response.
 
-## Request Parameters
-
-- `chain_ids` — Optional chain filter accepting numeric IDs or supported tags. When omitted, we return all chains tagged as `default`.
-
-All requests require the `X-Sim-Api-Key` header with a Sim API key.
-
-## Response Structure
-
-Each response includes the queried wallet, timestamps, an array of positions, and aggregation totals.
-
-- `positions[]` items surface consistent metadata across protocols:
-  - **Protocol identifiers:** `protocol_name`, `protocol_id`, and protocol-defined `label`
-  - **Location:** `chain_id` and `contract_address`
-  - **Valuation:** `amount`, `usd_value`, and `unclaimed_usd_value`
-  - **details:** Protocol-specific fields such as token breakdowns, APYs, collateral flags, NFT ticks, or reward inventories. The shape of this object varies by integration and expands over time.
-
-- `aggregations.total_usd_value` sums the USD value of all returned positions.
-- `aggregations.total_by_chain` breaks down USD value per chain ID.
+<Note>
+To learn more specifics, please visit the [Compute Units](/compute-units) page.
+</Note>
