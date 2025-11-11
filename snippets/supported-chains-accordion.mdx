@@ -3,6 +3,10 @@ export const SupportedChainsAccordion = () => {
   const data = dataState[0];
   const setData = dataState[1];
 
+  const idxDataState = useState(null);
+  const idxData = idxDataState[0];
+  const setIdxData = idxDataState[1];
+
   const countsState = useState({});
   const counts = countsState[0];
   const setCounts = countsState[1];
@@ -47,20 +51,51 @@ export const SupportedChainsAccordion = () => {
           token_holders: tokenHoldersCount
         });
 
-        setIsLoading(false);
+        fetch("https://api.sim.dune.com/idx/supported-chains", {
+          method: "GET",
+        })
+          .then(function(idxResponse) {
+            return idxResponse.json();
+          })
+          .then(function(idxResponseData) {
+            setIdxData(idxResponseData);
+
+            var defiPositionsCount = 0;
+            if (idxResponseData && idxResponseData.chains) {
+              defiPositionsCount = idxResponseData.chains.length;
+            }
+
+            setCounts({
+              balances: balancesCount,
+              activity: activityCount,
+              collectibles: collectiblesCount,
+              transactions: transactionsCount,
+              token_info: tokenInfoCount,
+              token_holders: tokenHoldersCount,
+              defi_positions: defiPositionsCount
+            });
+
+            setIsLoading(false);
+          });
       });
   }, []);
 
   function renderChainsTable(endpoint) {
-    if (!data || !data.chains) {
-      return <p>No data available</p>;
-    }
-
     var supportedChains = [];
-    for (var i = 0; i < data.chains.length; i++) {
-      var chain = data.chains[i];
-      if (chain[endpoint] && chain[endpoint].supported) {
-        supportedChains.push(chain);
+    if (endpoint === "defi_positions") {
+      if (!idxData || !idxData.chains) {
+        return <p>No data available</p>;
+      }
+      supportedChains = idxData.chains;
+    } else {
+      if (!data || !data.chains) {
+        return <p>No data available</p>;
+      }
+      for (var i = 0; i < data.chains.length; i++) {
+        var chain = data.chains[i];
+        if (chain[endpoint] && chain[endpoint].supported) {
+          supportedChains.push(chain);
+        }
       }
     }
 
@@ -121,6 +156,10 @@ export const SupportedChainsAccordion = () => {
       <Accordion title={"Token Holders API (" + (counts.token_holders || 0) + ")"}>
         <p>The <a href="/evm/token-holders">Token Holders API</a> supports {counts.token_holders || 0} chains.</p>
         {renderChainsTable("token_holders")}
+      </Accordion>
+      <Accordion title={"DeFi Positions API (" + (counts.defi_positions || 0) + ")"}>
+        <p>The <a href="/evm/defi-positions">DeFi Positions API</a> supports {counts.defi_positions || 0} chains.</p>
+        {renderChainsTable("defi_positions")}
       </Accordion>
     </AccordionGroup>
   );

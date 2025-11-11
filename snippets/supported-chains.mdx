@@ -4,7 +4,12 @@ export const SupportedChains = ({ endpoint }) => {
   const setData = dataState[1];
   
   useEffect(function() {
-    fetch("https://api.sim.dune.com/v1/evm/supported-chains", {
+    var url = "https://api.sim.dune.com/v1/evm/supported-chains";
+    if (endpoint === 'defi_positions') {
+      url = "https://api.sim.dune.com/idx/supported-chains";
+    }
+
+    fetch(url, {
       method: "GET",
     })
       .then(function(response) {
@@ -13,7 +18,7 @@ export const SupportedChains = ({ endpoint }) => {
       .then(function(responseData) {
         setData(responseData);
       });
-  }, []);
+  }, [endpoint]);
 
   if (data === null) {
     return <div>Loading chain information...</div>;
@@ -26,7 +31,7 @@ export const SupportedChains = ({ endpoint }) => {
   var supportedChains = [];
   var totalChains = data.chains.length;
 
-  if (endpoint !== undefined) {
+  if (endpoint !== undefined && endpoint !== 'defi_positions') {
     for (var i = 0; i < data.chains.length; i++) {
       var chain = data.chains[i];
       if (chain[endpoint] && chain[endpoint].supported) {
