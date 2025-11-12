@@ -1,0 +1,54 @@
+---
+title: 'Sim APIs vs Dune Analytics API'
+sidebarTitle: 'Overview'
+description: 'Learn about the Dune Analytics API and how it compares to Sim APIs, helping you choose the right tool for data analysis versus realtime applications.'
+---
+
+While Sim APIs provide low-latency, realtime data for building apps, Dune also offers a separate suite of analytical APIs.
+Both are part of the Dune ecosystem, but they are designed for different use cases.
+
+<Card title="Explore the Full Dune Analytics API Docs" icon="book-open" href="https://docs.dune.com/api-reference/overview/introduction">
+  Dive into the official documentation for the Dune Analytics API to see all available endpoints, guides, and references.
+</Card>
+
+## When to Use Which API
+
+Choosing the right API depends entirely on your goal.
+
+### Use Sim APIs if...
+
+Choose Sim APIs when you are building a user-facing application that needs fast data rendering and low-latency responses.
+Sim APIs are ideal for realtime wallet balances, transaction history, and NFT collections through simple, ready-to-use REST endpoints so your app can react to onchain events quickly without writing SQL.
+
+### Use the Dune Analytics API if...
+
+Choose the [Dune Analytics API](https://docs.dune.com/api-reference/overview/introduction) when you need to answer complex, specific questions with custom SQL. 
+It's best for analytical dashboards, reports, research, and integrating blockchain data into data warehouses or BI tools.
+You can also export large historical datasets for offline analysis.
+
+## Core Differences
+
+| Aspect | Sim APIs | Dune Analytics API |
+| --- | --- | --- |
+| Data access & flexibility | REST endpoints for specific data types (e.g., balances, activity).<br />Data is pre-processed and optimized for immediate use in applications.<br /> | Execute any custom SQL query you have written on Dune.<br />Full flexibility to aggregate, join, and analyze data across Dune's entire dataset.<br />Access raw data directly through the Trino/Presto connector. |
+| Performance & latency | Optimized for very low latency (p99 < 500ms).<br />Designed for real-time, interactive user experiences. | Built for complex analytical workloads.<br />Query execution times can range from seconds to minutes, depending on complexity. |
+| Primary use cases | Wallets & portfolio trackers<br />Realtime activity feeds<br />DeFi dashboards & dApps<br />Onchain AI & autonomous agents | In-depth market research and analysis<br />Internal analytics dashboards<br />BI tool integration (Tableau, Metabase, etc.)<br />Programmatic export of large datasets (CSV) |
+
+## What You Get with the Dune Analytics API
+
+The [Dune Analytics API](https://docs.dune.com/api-reference/overview/introduction) offers a unique set of capabilities tailored for deep data analysis and custom queries. Here are some of the powerful features you can leverage that differ from Sim APIs.
+
+<CardGroup cols={2}>
+  <Card title="Execute Custom SQL Queries" icon="file-code">
+    Run any query you've written on Dune programmatically. This gives you unparalleled flexibility to fetch exactly the data you need, in the format you want.
+  </Card>
+  <Card title="BI & Data Tool Integration" icon="chart-bar">
+    Connect directly to Dune's data warehouse using the DuneSQL Trino Connector. This allows you to use your favorite BI and data science tools like Hex, Metabase, DBeaver, and Python notebooks.
+  </Card>
+  <Card title="Preset Analytical Endpoints" icon="wand-magic-sparkles">
+    Access curated datasets without writing SQL. Get data on trending contracts, DEX market share, Farcaster activity, and more through simple REST endpoints.
+  </Card>
+  <Card title="Upload Your Own Data" icon="upload">
+    Upload your own datasets to Dune and join them with onchain data in your SQL queries. This enables you to enrich blockchain data with your internal or off-chain information.
+  </Card>
+</CardGroup>
