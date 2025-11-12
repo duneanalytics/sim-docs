@@ -1,0 +1,45 @@
+---
+title: 'Sim APIs vs Dune Analytics API'
+sidebarTitle: 'Overview'
+description: 'Learn about the Dune Analytics API and how it compares to Sim APIs, helping you choose the right tool for data analysis vs. realtime apps.'
+---
+
+While Sim APIs provide low-latency, realtime data for building apps, Dune also offers a separate suite of analytical APIs.
+Both are part of the Dune ecosystem, but they are designed for different use cases.
+
+<Card title="Explore the Full Dune Analytics API Docs" icon="book-open" href="https://docs.dune.com/api-reference/overview/introduction">
+  Dive into the official documentation for the Dune Analytics API to see all available endpoints, guides, and references.
+</Card>
+
+## When to Use Which API
+
+Use Sim APIs if you need low-latency app data (balances, activity, NFTs) via simple REST endpoints so your UI can react to onchain events without writing SQL.
+
+Use the [Dune Analytics API](https://docs.dune.com/api-reference/overview/introduction) if you need custom SQL for analysis, dashboards, BI/warehousing, or exporting large historical datasets.
+
+## Core Differences
+
+| Aspect | Sim APIs | Dune Analytics API |
+| --- | --- | --- |
+| Data access & flexibility | Ready-made realtime REST endpoints optimized for apps. | Run custom SQL across Dune’s dataset.<br />Connect with the DuneSQL Trino connector. |
+| Performance & latency | Very low latency for realtime experiences. | Built for analytical workloads.<br />Queries may take seconds to minutes. |
+| Primary use cases | Wallets, activity feeds, DeFi dashboards, onchain agents. | Market research and internal dashboards.<br />BI integration such as PowerBI and Metabase, plus CSV exports. |
+
+## What You Get with the Dune Analytics API
+
+The [Dune Analytics API](https://docs.dune.com/api-reference/overview/introduction) offers a unique set of capabilities tailored for deep data analysis and custom queries. Here are some of the powerful features you can leverage that differ from Sim APIs.
+
+<CardGroup cols={2}>
+  <Card title="Execute Custom SQL Queries" icon="file-code">
+    Programmatically run your Dune queries. Fetch exactly the data you need in your preferred format.
+  </Card>
+  <Card title="BI & Data Tool Integration" icon="chart-bar">
+    Connect through the DuneSQL Trino connector. Use tools such as PowerBI, Metabase, DBeaver, and notebooks.
+  </Card>
+  <Card title="Webhooks" icon="bell">
+    Push query results to your endpoints on a custom schedule using webhooks.
+  </Card>
+  <Card title="Upload Your Own Data" icon="upload">
+    Upload your datasets to Dune and join them with onchain data in SQL. Enrich analyses with your internal or off-chain information.
+  </Card>
+</CardGroup>

@@ -65,6 +65,12 @@
             ]
           },
           {
+            "group": "Dune Analytics API",
+            "pages": [
+              "dune-analytics-api/overview"
+            ]
+          },
+          {
             "group": "Resources",
             "pages": [
               "build-with-ai",
