@@ -1,7 +1,7 @@
 ---
 title: "Token Holders"
 sidebarTitle: "Token Holders"
-description: "Discover token distribution across ERC20 or ERC721 holders, ranked by wallet value."
+description: "Discover token distribution across ERC20 token holders, ranked by balance descending."
 openapi: "/evm/openapi/token-holders.json GET /v1/evm/token-holders/{chain_id}/{address}"
 ---
 
@@ -9,7 +9,7 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Type=holders Sv](/images/type=holders.svg)
 
-The Token Holders API provides information about accounts holding a specific ERC20 or ERC721 token on supported EVM blockchains.
+The Token Holders API provides information about accounts holding a specific ERC20 token on supported EVM blockchains.
 
 <SupportedChains endpoint="token_holders" />
 
