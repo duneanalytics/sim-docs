@@ -1,0 +1,21 @@
+---
+title: "Get Webhook Addresses"
+sidebarTitle: "Get Addresses"
+description: "Retrieve the list of addresses currently subscribed to a webhook."
+openapi: "/evm/openapi/subscriptions/webhooks.json GET /beta/evm/subscriptions/webhooks/{webhookId}/addresses"
+---
+
+Returns a paginated list of all wallet addresses that are currently subscribed to the specified webhook. This is useful for:
+
+- Auditing which addresses are being monitored
+- Verifying address subscriptions
+- Exporting your subscription list
+
+## Pagination
+
+This endpoint uses cursor-based pagination. Use the `limit` parameter to control page size, and pass the `next_offset` value from the response as the `offset` parameter to retrieve the next page.
+
+<Tip>
+If you're managing a large number of addresses (hundreds or thousands), use pagination to efficiently retrieve the complete list.
+</Tip>
+

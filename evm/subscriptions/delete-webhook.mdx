@@ -1,0 +1,18 @@
+---
+title: "Delete Webhook"
+sidebarTitle: "Delete Webhook"
+description: "Permanently delete a webhook subscription."
+openapi: "/evm/openapi/subscriptions/webhooks.json DELETE /beta/evm/subscriptions/webhooks/{webhookId}"
+---
+
+Permanently deletes a webhook subscription. This action cannot be undone.
+
+<Warning>
+Deleting a webhook is permanent. If you only need to temporarily stop receiving events, consider using the [Update Webhook](/evm/subscriptions/update-webhook) endpoint to set `active: false` instead.
+</Warning>
+
+After deletion:
+- No new webhook deliveries will be sent
+- The webhook ID becomes invalid
+- All subscribed addresses are removed
+- Historical delivery logs may still be visible in your dev portal

@@ -1,0 +1,69 @@
+---
+title: "Create Webhook"
+sidebarTitle: "Create Webhook"
+description: "Create a new webhook subscription to receive realtime onchain data."
+openapi: "/evm/openapi/subscriptions/webhooks.json POST /beta/evm/subscriptions/webhooks"
+---
+
+Creates a new webhook subscription. When creating a webhook, you must specify:
+
+- **name**: A descriptive name for your webhook
+- **url**: The endpoint where webhook payloads will be sent
+- **type**: The type of events to subscribe to (`transactions`, `activities`, or `balances`)
+- **addresses**: An array of wallet addresses to monitor
+
+## Optional Filters
+
+You can narrow down the events you receive by adding optional filters:
+
+- **chain_ids**: Monitor only specific chains (e.g., `[1, 8453]` for Ethereum and Base)
+- **transaction_type**: For transaction webhooks, filter by `sender` or `receiver`
+- **counterparty**: Filter transactions by counterparty address
+- **activity_type**: For activity webhooks, filter by specific types (`send`, `receive`, `swap`, etc.)
+- **asset_type**: Filter by asset type (`native`, `erc20`, `erc721`, `erc1155`)
+- **token_address**: Monitor only a specific token contract
+
+<Tip>
+Start with broad filters and narrow them down based on your app's needs. This helps reduce unnecessary webhook deliveries.
+</Tip>
+
+## Example Use Cases
+
+### Monitor USDC Balance Changes
+
+```json
+{
+  "name": "USDC Balance Monitor",
+  "url": "https://example.com/webhooks/usdc",
+  "type": "balances",
+  "addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"],
+  "chain_ids": [1, 8453],
+  "asset_type": "erc20",
+  "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+}
+```
+
+### Track All Incoming Transactions
+
+```json
+{
+  "name": "Incoming Transactions",
+  "url": "https://example.com/webhooks/txns",
+  "type": "transactions",
+  "addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"],
+  "transaction_type": "receiver"
+}
+```
+
+### Monitor Swap Activities
+
+```json
+{
+  "name": "Swap Monitor",
+  "url": "https://example.com/webhooks/swaps",
+  "type": "activities",
+  "addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"],
+  "activity_type": "swap"
+}
+```
+

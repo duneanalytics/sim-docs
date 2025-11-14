@@ -1,4 +1,4 @@
-export const SupportedChains = ({ endpoint }) => {
+export const SupportedChains = ({ endpoint, title }) => {
   const dataState = useState(null);
   const data = dataState[0];
   const setData = dataState[1];
@@ -44,7 +44,7 @@ export const SupportedChains = ({ endpoint }) => {
 
   var count = supportedChains.length;
   var endpointName = endpoint ? (endpoint.charAt(0).toUpperCase() + endpoint.slice(1).replace(/_/g, " ")) : "All";
-  var accordionTitle = "Supported Chains (" + count + ")";
+  var accordionTitle = title ? (title + " (" + count + ")") : ("Supported Chains (" + count + ")");
 
   return (
     <Accordion title={accordionTitle}>

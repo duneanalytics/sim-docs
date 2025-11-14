@@ -1,0 +1,58 @@
+---
+title: "Update Webhook"
+sidebarTitle: "Update Webhook"
+description: "Modify an existing webhook subscription's configuration."
+openapi: "/evm/openapi/subscriptions/webhooks.json PATCH /beta/evm/subscriptions/webhooks/{webhookId}"
+---
+
+Partially updates a webhook subscription's configuration. You can modify any of the webhook's properties without having to resend the entire configuration.
+
+<Note>
+Only include the fields you want to update. All other properties will remain unchanged.
+</Note>
+
+<Tip>
+To manage subscribed addresses (add/remove), use the [Update Addresses](/evm/subscriptions/update-webhook-addresses) endpoint instead.
+</Tip>
+
+## Example Use Cases
+
+### Pause a Webhook
+
+To temporarily stop receiving webhook deliveries without deleting the webhook:
+
+```json
+{
+  "active": false
+}
+```
+
+### Update Destination URL
+
+```json
+{
+  "url": "https://new-endpoint.example.com/webhooks"
+}
+```
+
+### Change Chain Filter
+
+```json
+{
+  "chain_ids": [1, 10, 8453]
+}
+```
+
+### Update Multiple Properties
+
+You can update multiple properties in a single request:
+
+```json
+{
+  "name": "Updated USDC Monitor",
+  "active": true,
+  "chain_ids": [1, 8453]
+}
+```
+
+

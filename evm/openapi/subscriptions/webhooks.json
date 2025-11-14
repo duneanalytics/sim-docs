@@ -1,0 +1,863 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sim API - Subscriptions Endpoint",
+    "description": "API for creating, managing, and monitoring webhook subscriptions for onchain events.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/beta/evm/subscriptions/webhooks": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "List all webhooks",
+        "description": "Returns a list of all webhook subscriptions for the authenticated team.",
+        "operationId": "listWebhooks",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            },
+            "description": "Number of results to return. Defaults to 100."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The offset to paginate through result sets; this is a cursor being passed from the previous response."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of webhooks.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhooksList"
+                },
+                "example": {
+                  "webhooks": [
+                    {
+                      "id": "019a81c2-d84b-7141-85e8-86b072a59142",
+                      "team_id": "01K7RVMRT0BXQ9DRC8BK87MK39",
+                      "name": "Balance Changes Monitor",
+                      "type": "balances",
+                      "url": "https://example.com/webhooks/balances",
+                      "active": true,
+                      "created_at": "2025-11-14T09:47:01.580104Z",
+                      "updated_at": "2025-11-14T09:47:01.580104Z",
+                      "chain_ids": [1, 8453, 84532],
+                      "asset_type": "erc20",
+                      "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+                    },
+                    {
+                      "id": "019a81c2-e95c-7241-95f9-97c183b6a253",
+                      "team_id": "01K7RVMRT0BXQ9DRC8BK87MK39",
+                      "name": "Swap Activity Tracker",
+                      "type": "activities",
+                      "url": "https://example.com/webhooks/activities",
+                      "active": true,
+                      "created_at": "2025-11-14T10:15:22.123456Z",
+                      "updated_at": "2025-11-14T10:15:22.123456Z",
+                      "chain_ids": [1, 8453],
+                      "activity_type": "swap"
+                    },
+                    {
+                      "id": "019a81c2-f86d-7351-a6fa-a8d294c7b364",
+                      "team_id": "01K7RVMRT0BXQ9DRC8BK87MK39",
+                      "name": "Incoming Transactions Monitor",
+                      "type": "transactions",
+                      "url": "https://example.com/webhooks/transactions",
+                      "active": true,
+                      "created_at": "2025-11-14T10:30:45.789012Z",
+                      "updated_at": "2025-11-14T10:30:45.789012Z",
+                      "chain_ids": [1],
+                      "transaction_type": "receiver"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Create a webhook",
+        "description": "Creates a new webhook subscription.",
+        "operationId": "createWebhook",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhook"
+              },
+              "example": {
+                "name": "USDC Balance Monitor",
+                "url": "https://example.com/webhooks/usdc-balances",
+                "type": "balances",
+                "addresses": [
+                  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+                ],
+                "chain_ids": [1, 8453],
+                "asset_type": "erc20",
+                "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                },
+                "example": {
+                  "id": "019a81c2-d84b-7141-85e8-86b072a59142",
+                  "team_id": "01K7RVMRT0BXQ9DRC8BK87MK39",
+                  "name": "Balance Changes Tracker",
+                  "type": "balances",
+                  "url": "https://example.com/webhooks/balances",
+                  "active": true,
+                  "created_at": "2025-11-14T09:47:01.580104Z",
+                  "updated_at": "2025-11-14T09:47:01.580104Z",
+                  "chain_ids": [1, 8453, 84532]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error for request body.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Failed to deserialize the JSON body into the target type: missing field `name` at line 1 column 2"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/beta/evm/subscriptions/webhooks/{webhookId}": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Get a webhook",
+        "description": "Retrieves the details of a specific webhook subscription by its ID.",
+        "operationId": "getWebhook",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                },
+                "example": {
+                  "id": "019a81c2-d84b-7141-85e8-86b072a59142",
+                  "team_id": "01K7RVMRT0BXQ9DRC8BK87MK39",
+                  "name": "Balance Changes Tracker",
+                  "type": "balances",
+                  "url": "https://example.com/webhooks/balances",
+                  "active": true,
+                  "created_at": "2025-11-14T09:47:01.580104Z",
+                  "updated_at": "2025-11-14T09:47:01.580104Z",
+                  "chain_ids": [1, 8453, 84532]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Subscriptions"],
+        "summary": "Update a webhook",
+        "description": "Partially updates a webhook subscription's configuration (name, URL, status, chain filters, etc.). To manage addresses, use the PATCH /webhooks/{webhookId}/addresses endpoint instead.",
+        "operationId": "updateWebhook",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhook"
+              },
+              "examples": {
+                "pause_webhook": {
+                  "summary": "Pause a webhook",
+                  "value": {
+                    "active": false
+                  }
+                },
+                "update_url": {
+                  "summary": "Update destination URL",
+                  "value": {
+                    "url": "https://new-endpoint.example.com/webhooks"
+                  }
+                },
+                "update_chains": {
+                  "summary": "Change chain filter",
+                  "value": {
+                    "chain_ids": [1, 10, 8453]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook updated successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. This can occur when trying to set properties that are incompatible with the webhook type.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Webhook type balances cannot have activity_type"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Subscriptions"],
+        "summary": "Delete a webhook",
+        "description": "Deletes a specific webhook subscription.",
+        "operationId": "deleteWebhook",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook deleted successfully. No response body."
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/beta/evm/subscriptions/webhooks/{webhookId}/addresses": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Get webhook addresses",
+        "description": "Retrieves the list of subscribed addresses for a specific webhook.",
+        "operationId": "getWebhookAddresses",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100
+            },
+            "description": "Number of results to return. Defaults to 100."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The offset to paginate through result sets."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of addresses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressesList"
+                },
+                "example": {
+                  "addresses": [
+                    "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+                    "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Subscriptions"],
+        "summary": "Replace webhook addresses",
+        "description": "Replaces the entire list of subscribed addresses for a webhook with a new list.",
+        "operationId": "replaceWebhookAddresses",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceAddresses"
+              },
+              "example": {
+                "addresses": [
+                  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+                  "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Addresses replaced successfully. No response body."
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Subscriptions"],
+        "summary": "Update webhook addresses",
+        "description": "Add or remove individual addresses from a webhook subscription without replacing the entire list.",
+        "operationId": "updateWebhookAddresses",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAddresses"
+              },
+              "examples": {
+                "add_addresses": {
+                  "summary": "Add addresses",
+                  "value": {
+                    "add_addresses": [
+                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+                      "0x1234567890123456789012345678901234567890"
+                    ]
+                  }
+                },
+                "remove_addresses": {
+                  "summary": "Remove addresses",
+                  "value": {
+                    "remove_addresses": [
+                      "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                    ]
+                  }
+                },
+                "combined": {
+                  "summary": "Add and remove in one request",
+                  "value": {
+                    "add_addresses": [
+                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                    ],
+                    "remove_addresses": [
+                      "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Addresses updated successfully. No response body."
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WebhookType": {
+        "type": "string",
+        "enum": ["transactions", "activities", "balances"],
+        "description": "The type of onchain event to subscribe to."
+      },
+      "TransactionType": {
+        "type": "string",
+        "enum": ["sender", "receiver"],
+        "description": "ONLY for 'transactions' type webhooks. Filter by whether the subscribed address is the sender or receiver. Cannot be used with 'balances' or 'activities' webhook types."
+      },
+      "ActivityType": {
+        "type": "string",
+        "enum": ["approve", "mint", "burn", "receive", "send", "swap", "call"],
+        "description": "ONLY for 'activities' type webhooks. Filter by specific activity types. Cannot be used with 'balances' or 'transactions' webhook types."
+      },
+      "AssetType": {
+        "type": "string",
+        "enum": ["native", "erc20", "erc721", "erc1155"],
+        "description": "Filter by asset type."
+      },
+      "Webhook": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The unique identifier for the webhook."
+          },
+          "team_id": {
+            "type": "string",
+            "description": "The team ID that owns this webhook."
+          },
+          "name": {
+            "type": "string",
+            "description": "A descriptive name for the webhook."
+          },
+          "type": {
+            "$ref": "#/components/schemas/WebhookType"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL where webhook payloads will be sent."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "Whether the webhook is currently active."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the webhook was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the webhook was last updated."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true,
+            "description": "Filter events to specific chain IDs. If null, all supported chains are included."
+          },
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType",
+            "nullable": true,
+            "description": "For transaction webhooks, filter by sender or receiver."
+          },
+          "counterparty": {
+            "type": "string",
+            "nullable": true,
+            "description": "Filter transactions by counterparty address.",
+            "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+          },
+          "activity_type": {
+            "$ref": "#/components/schemas/ActivityType",
+            "nullable": true,
+            "description": "For activity webhooks, filter by specific activity type."
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/AssetType",
+            "nullable": true,
+            "description": "Filter by asset type."
+          },
+          "token_address": {
+            "type": "string",
+            "nullable": true,
+            "description": "Filter events to a specific token address.",
+            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          }
+        }
+      },
+      "WebhooksList": {
+        "type": "object",
+        "properties": {
+          "webhooks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Webhook"
+            }
+          },
+          "next_offset": {
+            "type": "string",
+            "description": "Cursor for pagination. Pass this value as the offset parameter to get the next page."
+          }
+        }
+      },
+      "CreateWebhook": {
+        "type": "object",
+        "required": ["name", "url", "type", "addresses"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A descriptive name for the webhook."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "The URL where webhook payloads will be sent."
+          },
+          "type": {
+            "$ref": "#/components/schemas/WebhookType"
+          },
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "EVM address."
+            },
+            "description": "List of addresses to monitor."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true,
+            "description": "Filter events to specific chain IDs. If omitted, all supported chains are included."
+          },
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType",
+            "nullable": true,
+            "description": "ONLY for 'transactions' type webhooks. Filter by sender or receiver. Cannot be used with other webhook types."
+          },
+          "counterparty": {
+            "type": "string",
+            "nullable": true,
+            "description": "ONLY for 'transactions' type webhooks. Filter transactions by counterparty address."
+          },
+          "activity_type": {
+            "$ref": "#/components/schemas/ActivityType",
+            "nullable": true,
+            "description": "ONLY for 'activities' type webhooks. Filter by specific activity type. Cannot be used with other webhook types."
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/AssetType",
+            "nullable": true,
+            "description": "Filter by asset type."
+          },
+          "token_address": {
+            "type": "string",
+            "nullable": true,
+            "description": "Filter events to a specific token address."
+          }
+        }
+      },
+      "UpdateWebhook": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Update the webhook name."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "Update the webhook URL."
+          },
+          "active": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Enable or disable the webhook."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true,
+            "description": "Update the chain filter."
+          },
+          "transaction_type": {
+            "$ref": "#/components/schemas/TransactionType",
+            "nullable": true,
+            "description": "ONLY for 'transactions' type webhooks. Update transaction type filter. Cannot be used with other webhook types."
+          },
+          "counterparty": {
+            "type": "string",
+            "nullable": true,
+            "description": "ONLY for 'transactions' type webhooks. Update counterparty filter."
+          },
+          "activity_type": {
+            "$ref": "#/components/schemas/ActivityType",
+            "nullable": true,
+            "description": "ONLY for 'activities' type webhooks. Update activity type filter. Cannot be used with other webhook types."
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/AssetType",
+            "nullable": true,
+            "description": "Update asset type filter."
+          },
+          "token_address": {
+            "type": "string",
+            "nullable": true,
+            "description": "Update token address filter."
+          }
+        }
+      },
+      "AddressesList": {
+        "type": "object",
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "EVM address."
+            }
+          },
+          "next_offset": {
+            "type": "string",
+            "description": "Cursor for pagination."
+          }
+        }
+      },
+      "ReplaceAddresses": {
+        "type": "object",
+        "required": ["addresses"],
+        "properties": {
+          "addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "EVM address."
+            },
+            "description": "New list of addresses to monitor. This replaces the existing list entirely."
+          }
+        }
+      },
+      "UpdateAddresses": {
+        "type": "object",
+        "properties": {
+          "add_addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "EVM address."
+            },
+            "description": "Addresses to add to the subscription list."
+          },
+          "remove_addresses": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "description": "EVM address."
+            },
+            "description": "Addresses to remove from the subscription list."
+          }
+        }
+      }
+    }
+  }
+}
+

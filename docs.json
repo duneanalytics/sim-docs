@@ -53,7 +53,21 @@
               "evm/defi-positions",
               "evm/transactions",
               "evm/token-info",
-              "evm/token-holders"
+              "evm/token-holders",
+              {
+                "group": "Subscriptions",
+                "pages": [
+                  "evm/subscriptions",
+                  "evm/subscriptions/list-webhooks",
+                  "evm/subscriptions/create-webhook",
+                  "evm/subscriptions/get-webhook",
+                  "evm/subscriptions/update-webhook",
+                  "evm/subscriptions/delete-webhook",
+                  "evm/subscriptions/get-webhook-addresses",
+                  "evm/subscriptions/update-webhook-addresses",
+                  "evm/subscriptions/replace-webhook-addresses"
+                ]
+              }
             ]
           },
           {
@@ -194,6 +208,10 @@
     {
       "name": "EVM Transactions",
       "file": "evm/openapi/transactions.json"
+    },
+    {
+      "name": "EVM Subscriptions",
+      "file": "evm/openapi/subscriptions/webhooks.json"
     },
     {
       "name": "SVM Balances",
