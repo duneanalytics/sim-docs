@@ -37,7 +37,7 @@
               "type": "integer",
               "default": 100
             },
-            "description": "Maximum number of results to return."
+            "description": "Number of results to return. Defaults to 100."
           },
           {
             "in": "query",
@@ -393,7 +393,7 @@
               "type": "integer",
               "default": 100
             },
-            "description": "Maximum number of results to return."
+            "description": "Number of results to return. Defaults to 100."
           },
           {
             "in": "query",
