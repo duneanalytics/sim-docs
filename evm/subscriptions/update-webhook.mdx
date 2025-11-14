@@ -1,15 +1,19 @@
 ---
 title: "Update Webhook"
 sidebarTitle: "Update Webhook"
-description: "Modify an existing webhook subscription's configuration or manage addresses."
+description: "Modify an existing webhook subscription's configuration."
 openapi: "/evm/openapi/subscriptions/webhooks.json PATCH /beta/evm/subscriptions/webhooks/{webhookId}"
 ---
 
-Partially updates a webhook subscription. You can modify any of the webhook's properties or manage the subscribed addresses without having to resend the entire configuration.
+Partially updates a webhook subscription's configuration. You can modify any of the webhook's properties without having to resend the entire configuration.
 
 <Note>
 Only include the fields you want to update. All other properties will remain unchanged.
 </Note>
+
+<Tip>
+To manage subscribed addresses (add/remove), use the [Update Webhook Addresses](/evm/subscriptions/update-webhook-addresses) endpoint instead.
+</Tip>
 
 ## Example Use Cases
 
@@ -39,63 +43,15 @@ To temporarily stop receiving webhook deliveries without deleting the webhook:
 }
 ```
 
-## Managing Addresses
+### Update Multiple Properties
 
-You can also use this endpoint to add or remove addresses from the webhook subscription.
-
-<Note>
-If you need to replace the entire address list at once, use the [Replace Webhook Addresses](/evm/subscriptions/replace-webhook-addresses) endpoint instead.
-</Note>
-
-### Add New Addresses
+You can update multiple properties in a single request:
 
 ```json
 {
-  "add_addresses": [
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
-    "0x1234567890123456789012345678901234567890"
-  ]
-}
-```
-
-### Remove Addresses
-
-```json
-{
-  "remove_addresses": [
-    "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
-  ]
-}
-```
-
-### Add and Remove in One Request
-
-<Tip>
-You can add and remove addresses in the same request. The removal happens first, followed by the additions.
-</Tip>
-
-```json
-{
-  "add_addresses": [
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-  ],
-  "remove_addresses": [
-    "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
-  ]
-}
-```
-
-### Combine Property and Address Updates
-
-You can update webhook properties and manage addresses in a single request:
-
-```json
-{
+  "name": "Updated USDC Monitor",
   "active": true,
-  "chain_ids": [1, 8453],
-  "add_addresses": [
-    "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-  ]
+  "chain_ids": [1, 8453]
 }
 ```
 

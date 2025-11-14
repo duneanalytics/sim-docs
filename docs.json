@@ -64,6 +64,7 @@
                   "evm/subscriptions/update-webhook",
                   "evm/subscriptions/delete-webhook",
                   "evm/subscriptions/get-webhook-addresses",
+                  "evm/subscriptions/update-webhook-addresses",
                   "evm/subscriptions/replace-webhook-addresses"
                 ]
               }

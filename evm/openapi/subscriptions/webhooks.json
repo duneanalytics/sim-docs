@@ -240,7 +240,7 @@
       "patch": {
         "tags": ["Subscriptions"],
         "summary": "Update a webhook",
-        "description": "Partially updates a webhook subscription's configuration (name, URL, status) or manages the subscribed addresses (add/remove).",
+        "description": "Partially updates a webhook subscription's configuration (name, URL, status, chain filters, etc.). To manage addresses, use the PATCH /webhooks/{webhookId}/addresses endpoint instead.",
         "operationId": "updateWebhook",
         "parameters": [
           {
@@ -270,32 +270,22 @@
                 "$ref": "#/components/schemas/UpdateWebhook"
               },
               "examples": {
-                "update_properties": {
-                  "summary": "Update webhook properties",
+                "pause_webhook": {
+                  "summary": "Pause a webhook",
                   "value": {
-                    "name": "Updated USDC Monitor",
                     "active": false
                   }
                 },
-                "add_addresses": {
-                  "summary": "Add addresses",
+                "update_url": {
+                  "summary": "Update destination URL",
                   "value": {
-                    "add_addresses": [
-                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-                    ]
+                    "url": "https://new-endpoint.example.com/webhooks"
                   }
                 },
-                "combined": {
-                  "summary": "Update properties and manage addresses",
+                "update_chains": {
+                  "summary": "Change chain filter",
                   "value": {
-                    "active": true,
-                    "chain_ids": [1, 8453],
-                    "add_addresses": [
-                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
-                    ],
-                    "remove_addresses": [
-                      "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
-                    ]
+                    "chain_ids": [1, 10, 8453]
                   }
                 }
               }
@@ -489,6 +479,89 @@
         "responses": {
           "200": {
             "description": "Addresses replaced successfully. No response body."
+          },
+          "400": {
+            "description": "Invalid webhook ID.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Subscriptions"],
+        "summary": "Update webhook addresses",
+        "description": "Add or remove individual addresses from a webhook subscription without replacing the entire list.",
+        "operationId": "updateWebhookAddresses",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "webhookId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the webhook."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAddresses"
+              },
+              "examples": {
+                "add_addresses": {
+                  "summary": "Add addresses",
+                  "value": {
+                    "add_addresses": [
+                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb",
+                      "0x1234567890123456789012345678901234567890"
+                    ]
+                  }
+                },
+                "remove_addresses": {
+                  "summary": "Remove addresses",
+                  "value": {
+                    "remove_addresses": [
+                      "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                    ]
+                  }
+                },
+                "combined": {
+                  "summary": "Add and remove in one request",
+                  "value": {
+                    "add_addresses": [
+                      "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                    ],
+                    "remove_addresses": [
+                      "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Addresses updated successfully. No response body."
           },
           "400": {
             "description": "Invalid webhook ID.",
@@ -730,24 +803,6 @@
             "type": "string",
             "nullable": true,
             "description": "Update token address filter."
-          },
-          "add_addresses": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "EVM address."
-            },
-            "nullable": true,
-            "description": "Addresses to add to the subscription list."
-          },
-          "remove_addresses": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "description": "EVM address."
-            },
-            "nullable": true,
-            "description": "Addresses to remove from the subscription list."
           }
         }
       },
