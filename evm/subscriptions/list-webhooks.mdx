@@ -1,0 +1,13 @@
+---
+title: "List Webhooks"
+sidebarTitle: "List Webhooks"
+description: "Retrieve a paginated list of all webhook subscriptions for your team."
+openapi: "/evm/openapi/subscriptions/webhooks.json GET /beta/evm/subscriptions/webhooks"
+---
+
+Returns a list of all webhook subscriptions associated with your authenticated team. Use this endpoint to view all your active and inactive webhooks, along with their configurations.
+
+## Pagination
+
+This endpoint uses cursor-based pagination. Use the `limit` parameter to control page size, and pass the `next_offset` value from the response as the `offset` parameter to retrieve the next page.
+

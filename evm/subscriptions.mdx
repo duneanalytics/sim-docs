@@ -1,0 +1,236 @@
+---
+title: "Subscriptions API"
+sidebarTitle: "Overview"
+description: "Get realtime onchain data pushed directly to your app with webhook subscriptions."
+---
+
+import { SupportedChains } from "/snippets/supported-chains.mdx";
+
+The Subscriptions API allows you to receive realtime onchain data through webhooks. Instead of repeatedly polling endpoints to check for new data, the Subscriptions API pushes data directly to your app as soon as events occur. This makes it a great way to build reactive apps that respond instantly to onchain activity.
+
+Essentially, the Subscriptions API provides a webhook-based version of our existing [Balances](/evm/balances), [Activity](/evm/activity), and [Transactions](/evm/transactions) endpoints. Supported chains vary by subscription type.
+
+<CardGroup cols={3}>
+  <Card title="Balances" icon="coins" href="#balances">
+    Get notified when a wallet's ERC20 token balance changes.
+  </Card>
+  <Card title="Activities" icon="bolt" href="#activities">
+    Receive updates when a wallet has new activity, such as token transfers or contract interactions.
+  </Card>
+  <Card title="Transactions" icon="arrow-right-arrow-left" href="#transactions">
+    Be alerted when a wallet sends or receives a transaction.
+  </Card>
+</CardGroup>
+
+## Setting Up Webhooks
+
+You can set up and manage your subscriptions in two ways:
+
+<CardGroup cols={2}>
+  <Card title="Programmatically via API" icon="code">
+    Use our set of endpoints to [create](/evm/subscriptions/create-webhook), [update](/evm/subscriptions/update-webhook), [list](/evm/subscriptions/list-webhooks), and [delete](/evm/subscriptions/delete-webhook) your webhook subscriptions. Ideal for apps that need to manage subscriptions dynamically.
+  </Card>
+  <Card title="Through the Sim Dashboard" icon="browser">
+    Log in to your [Sim account](https://sim.dune.com) and navigate to **Subscriptions** in the sidebar. Click **Create Webhook** to set up a new webhook subscription.
+  </Card>
+</CardGroup>
+
+## Compute Unit Cost
+
+The Subscriptions API costs **1 CU per event** sent to your webhook. Note that a single webhook call may include multiple events. For example, multiple balance changes or transactions.
+
+Creating and managing webhook subscriptions through the API does not consume compute units. However, your account must have an active plan to use the Subscriptions API.
+
+<Note>
+See the [Compute Units](/compute-units) page for detailed information.
+</Note>
+
+## Webhook Payloads
+
+When a subscribed event occurs, Sim APIs will send a `POST` request to your specified webhook URL. The request body will contain a JSON payload with the event data. Each subscription type returns different data structures and is available on different sets of supported chains.
+
+<AccordionGroup>
+<Accordion title="Webhook Headers">
+
+All webhook deliveries include a set of `dune-webhook-*` headers to provide metadata about the event and delivery attempt.
+
+| Header | Description |
+| --- | --- |
+| `dune-webhook-id` | The unique ID of the webhook subscription that triggered this event. |
+| `dune-webhook-type` | The type of subscription (`transactions`, `activities`, or `balances`). |
+| `dune-webhook-chain-id` | The ID of the chain where the event occurred. |
+| `dune-webhook-dispatch-timestamp` | The timestamp (ISO 8601) when the webhook was dispatched. |
+| `dune-webhook-retry-index` | The retry attempt number for this delivery (0 for the first attempt). |
+
+**Security**: To secure your webhook endpoint, validate that incoming requests are from Sim. We include a signature in the `dune-webhook-signature` header that you can use to verify the authenticity of webhook deliveries. Always validate webhook signatures in production.
+
+**Retry Logic**: If your webhook endpoint returns a non-2xx status code or is unreachable, Sim will automatically retry the delivery using an exponential backoff strategy with up to 5 retry attempts over a 24-hour period. Track the retry attempt number using the `dune-webhook-retry-index` header (0 for the first attempt).
+
+</Accordion>
+</AccordionGroup>
+
+Below are examples of the webhook payloads for each subscription type, along with the supported chains.
+
+## Balances
+
+Get notified when a wallet's ERC20 token balance changes. The payload contains details about the asset, the balance change, and the transaction that caused it. This data is similar to the response from our [Balances API](/evm/balances).
+
+<SupportedChains endpoint="balances" title="Balances Event Supported Chains" />
+
+<CodeGroup>
+```json [expandable] Balance Change Payload
+{
+  "balance_changes": [
+    {
+      "amount_after": "1279045098892",
+      "amount_before": "1279044706766",
+      "amount_delta": "392126",
+      "asset": {
+        "decimals": 6,
+        "low_liquidity": false,
+        "name": "USD Coin",
+        "pool_size_usd": 25220031.549589876,
+        "symbol": "USDC",
+        "token_address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "token_metadata": {
+          "logo": "https://api.sim.dev.dune.com/beta/token/logo/8453/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+        }
+      },
+      "counterparty_address": "0xf5042e6ffac5a625d4e7848e0b01373d8eb9e222",
+      "direction": "in",
+      "price_usd": 0.9991475029469292,
+      "subscribed_address": "0xf70da97812cb96acdf810712aa562db8dfa3dbef",
+      "transaction_hash": "0x51a97de72ba1fb37f74046706147eb9469e7e90f2ab3671c6cca99a8111e74f0",
+      "value_after_usd": 1277954.71671445,
+      "value_before_usd": 1277954.324922736,
+      "value_delta_usd": 0.3917917137405675
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Activities
+
+Receive a notification when a new activity is associated with a subscribed address. The payload contains an array of activity objects, which is similar to the response from our [Activity API](/evm/activity).
+
+<SupportedChains endpoint="activity" title="Activities Event Supported Chains" />
+
+<CodeGroup>
+```json [expandable] Activity Payload
+{
+  "activities": [
+    {
+      "chain_id": 84532,
+      "block_number": 33620321,
+      "block_time": "2025-11-13T04:42:10+00:00",
+      "tx_hash": "0x32c0fbe4af264b5298108cf923c2c6205765e49385fde23f07fe45e3f1fb6309",
+      "tx_from": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff",
+      "tx_to": "0x3f39c9b36b0129a561aae2820a47520891cc87a1",
+      "tx_value": "0",
+      "type": "send",
+      "asset_type": "erc20",
+      "token_address": "0x3f39c9b36b0129a561aae2820a47520891cc87a1",
+      "to": "0xb28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb",
+      "value": "1000000"
+    },
+    {
+      "chain_id": 84532,
+      "block_number": 33620321,
+      "block_time": "2025-11-13T04:42:10+00:00",
+      "tx_hash": "0x32c0fbe4af264b5298108cf923c2c6205765e49385fde23f07fe45e3f1fb6309",
+      "tx_from": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff",
+      "tx_to": "0x3f39c9b36b0129a561aae2820a47520891cc87a1",
+      "tx_value": "0",
+      "type": "call",
+      "call_type": "incoming",
+      "from": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff",
+      "value": "0",
+      "data": "0xa9059cbb000000000000000000000000b28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb00000000000000000000000000000000000000000000000000000000000f4240"
+    }
+  ]
+}
+```
+</CodeGroup>
+
+## Transactions
+
+Get notified when a subscribed address is the sender or receiver of a transaction. The payload contains an array of transaction objects, which is similar to the response from our [Transactions API](/evm/transactions).
+
+<SupportedChains endpoint="transactions" title="Transactions Event Supported Chains" />
+
+<CodeGroup>
+```json [expandable] Transaction Payload
+{
+  "transactions": [
+    {
+      "chain": "base_sepolia",
+      "chain_id": 84532,
+      "address": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff",
+      "block_time": "2025-11-13T04:42:10+00:00",
+      "block_number": 33620321,
+      "index": 28,
+      "hash": "0x32c0fbe4af264b5298108cf923c2c6205765e49385fde23f07fe45e3f1fb6309",
+      "block_hash": "0x6a172fbf201d3a3eb6473e80b42795c36184ff48b5aad135feebdd330eb8b843",
+      "value": "0x0",
+      "transaction_type": "Sender",
+      "from": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff",
+      "to": "0x3f39c9b36b0129a561aae2820a47520891cc87a1",
+      "nonce": "0x16",
+      "gas_price": "0xecd58",
+      "gas_used": "0xe84c",
+      "effective_gas_price": "0xecd58",
+      "success": true,
+      "data": "0xa9059cbb000000000000000000000000b28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb00000000000000000000000000000000000000000000000000000000000f4240",
+      "decoded": {
+        "name": "transfer",
+        "inputs": [
+          {
+            "name": "dst",
+            "type": "address",
+            "value": "0xb28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb"
+          },
+          {
+            "name": "wad",
+            "type": "uint256",
+            "value": "1000000"
+          }
+        ]
+      },
+      "logs": [
+        {
+          "address": "0x3f39c9b36b0129a561aae2820a47520891cc87a1",
+          "data": "0x00000000000000000000000000000000000000000000000000000000000f4240",
+          "topics": [
+            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+            "0x000000000000000000000000014bee8bd1d5438caa3a40abb424ff09a81645ff",
+            "0x000000000000000000000000b28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb"
+          ],
+          "decoded": {
+            "name": "Transfer",
+            "inputs": [
+              {
+                "name": "_from",
+                "type": "address",
+                "value": "0x014bee8bd1d5438caa3a40abb424ff09a81645ff"
+              },
+              {
+                "name": "_to",
+                "type": "address",
+                "value": "0xb28eb9fb315f8156e3aaaa6ac8a24b9c76d76cdb"
+              },
+              {
+                "name": "_tokenId",
+                "type": "uint256",
+                "value": "1000000"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+</CodeGroup>
+

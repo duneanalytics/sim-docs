@@ -1,0 +1,19 @@
+---
+title: "Replace Webhook Addresses"
+sidebarTitle: "Replace Addresses"
+description: "Replace the entire address list for a webhook subscription."
+openapi: "/evm/openapi/subscriptions/webhooks.json PUT /beta/evm/subscriptions/webhooks/{webhookId}/addresses"
+---
+
+Replaces the entire list of subscribed addresses for a webhook. The new list completely overwrites the existing addresses.
+
+Use this endpoint when you want to:
+- Replace the entire address list with a new set
+- Reset the subscription to monitor a different set of addresses
+- Perform a bulk update of all addresses at onc
+
+<Warning>
+This endpoint replaces ALL existing addresses.
+Any addresses not included in the new list will be removed from the subscription.
+If you only need to add or remove specific addresses without replacing the entire list, use the [Update Webhook](/evm/subscriptions/update-webhook) endpoint instead.
+</Warning>
