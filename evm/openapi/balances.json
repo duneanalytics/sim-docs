@@ -83,27 +83,10 @@
           {
             "name": "historical_prices",
             "in": "query",
-            "description": "Historical price selection. Accepts integer | integer[]. Provide whole numbers representing hours in the past, up to 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
+            "description": "Historical price selection. Provide a single integer or a comma-separated list of up to 3 integers representing hours in the past (e.g. `168` for 1 week ago or `720,168,24` for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
             "required": false,
-            "style": "form",
-            "explode": false,
             "schema": {
-              "oneOf": [
-                {
-                  "type": "integer",
-                  "format": "int32",
-                  "minimum": 1
-                },
-                {
-                  "type": "array",
-                  "items": {
-                    "type": "integer",
-                    "format": "int32",
-                    "minimum": 1
-                  },
-                  "maxItems": 3
-                }
-              ]
+              "type": "string"
             },
             "examples": {
               "single_offset": {
@@ -245,16 +228,9 @@
           {
             "name": "historical_prices",
             "in": "query",
-            "description": "Historical price selection. Accepts integer | integer[]. Provide whole numbers representing hours in the past, up to 3 time offsets (e.g. 8760 for 1 year ago or 720,168,24 for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
+            "description": "Historical price selection. Provide a single integer or a comma-separated list of up to 3 integers representing hours in the past (e.g. `168` for 1 week ago or `720,168,24` for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
             "required": false,
-            "style": "form",
-            "explode": false,
-            "schema": {
-              "oneOf": [
-                { "type": "integer", "format": "int32", "minimum": 1 },
-                { "type": "array", "items": { "type": "integer", "format": "int32", "minimum": 1 }, "maxItems": 3 }
-              ]
-            },
+            "schema": { "type": "string" },
             "examples": {
               "single_offset": { "summary": "Single offset (1 week ago)", "value": "168" },
               "three_offsets": { "summary": "Three offsets (1 month, 1 week, 1 day ago)", "value": "720,168,24" }
