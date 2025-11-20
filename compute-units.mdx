@@ -18,7 +18,7 @@ Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual 
 | Transactions (EVM & SVM) | Fixed | 1 compute unit per request | — |
 | Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required | — |
 | Token Holders | Fixed | 2 compute units per request | — |
-| Subscriptions | Event-based | 1 compute unit per event sent to your webhook. Note that a single webhook payload can contain multiple events. | — |
+| Subscriptions | Event-based | 1 compute unit per event sent to your webhook. Note that a single webhook payload can contain multiple events. | All supported EVM chains (varies by subscription type) when chain_ids is omitted |
 
 ## How CUs work
 
