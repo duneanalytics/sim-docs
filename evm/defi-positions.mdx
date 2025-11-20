@@ -188,6 +188,57 @@ Liquidity pool positions represent token pairs deposited into automated market m
   ```
   </Accordion>
 
+  <Accordion title="Uniswap V3 Forks" icon="code-fork">
+  **Type:** `Nft`  
+  **Chains:** Same as Uniswap V3  
+  **Description:** Concentrated liquidity forks of Uniswap V3. Forks are detected by factory address and returned under the same `Nft` type with the specific protocol name in the `protocol` field.
+  
+  **Example Response (PancakeSwap V3):**
+  
+  ```json [expandable]
+  {
+    "wallet_address": "0x5dd596c901987a2b28c38a9c1dfbf86fffc15d77",
+    "positions": [
+      {
+        "type": "Nft",
+        "chain_id": 56,
+        "protocol": "PancakeSwapV3",
+        "pool": "0x36696169c63e42cd08ce11f5deeabbceb5d86d25",
+        "token0": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+        "token0_name": "Wrapped BNB",
+        "token0_symbol": "WBNB",
+        "token0_decimals": 18,
+        "token1": "0x55d398326f99059ff775485246999027b3197955",
+        "token1_name": "Tether USD",
+        "token1_symbol": "USDT",
+        "token1_decimals": 18,
+        "positions": [
+          {
+            "tick_lower": -20450,
+            "tick_upper": -18450,
+            "token_id": "0x3ab0",
+            "token0_price": 580.20,
+            "token0_holdings": 1.25,
+            "token0_rewards": 0.002,
+            "token1_price": 1.00,
+            "token1_holdings": 450.50,
+            "token1_rewards": 1.50
+          }
+        ],
+        "logo": "https://api.sim.dune.com/beta/token/logo/56/0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+        "usd_value": 1175.75
+      }
+    ],
+    "aggregations": {
+      "total_usd_value": 1175.75,
+      "total_by_chain": {
+        "56": 1175.75
+      }
+    }
+  }
+  ```
+  </Accordion>
+
   <Accordion title="Uniswap V4" icon="layer-group">
   **Type:** `Nft`  
   **Chains:** Ethereum (1), Unichain (130), Optimism (10), Base (8453), Zora (7777777), World Chain (480), Ink (57073), Soneium (1868)  
@@ -407,11 +458,11 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
   ```
   </Accordion>
 
-  <Accordion title="Pendle v3" icon="chart-area">
+  <Accordion title="Pendle V2" icon="chart-area">
   **Type:** `Pendle`  
   **Token Types:** `Principal`, `Yield`, `LP` (in `token_type` field)  
   **Chains:** Ethereum (1), Optimism (10), Base (8453)  
-  **Description:** Principal Tokens (PT), Yield Tokens (YT), and LP positions in Pendle v3 markets. Each position includes the underlying asset, market address, and USD value based on the asset price.
+  **Description:** Principal Tokens (PT), Yield Tokens (YT), and LP positions in Pendle V2 markets. Each position includes the underlying asset, market address, and USD value based on the asset price.
   
   **Example Response (Yield Token):**
   
