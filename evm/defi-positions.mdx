@@ -40,7 +40,7 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 | Compound v3 (Comet) | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
 | Moonwell |  | ✓ | ✓ |  |  |  |  |  |  |  |  |
 | ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Pendle v3 | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
+| Pendle v2 | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
 | EigenLayer | ✓ |  |  |  |  |  |  |  |  |  |  |
 
 </Accordion>
@@ -50,12 +50,13 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 Liquidity pool positions represent token pairs deposited into automated market makers (AMMs). These positions may be fungible ERC-20 LP tokens or non-fungible NFT-based positions for concentrated liquidity.
 
 <AccordionGroup>
-  <Accordion title="Uniswap V2" icon="droplet">
+  <Accordion title="Uniswap V2 (and Forks)" icon="droplet">
   **Type:** `UniswapV2`  
   **Chains:** Ethereum (1), Base (8453), Ink (57073), World Chain (480), Soneium (1868), Unichain (130), Zora (7777777), Optimism (10)  
-  **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value.
+  **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
+  **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value. Both Uniswap V2 and its forks are detected by factory address and returned under the same `UniswapV2` type, with the specific protocol name indicated in the `protocol` field.
   
-  **Example Response:**
+  **Example Response (Uniswap V2):**
   
   ```json [expandable]
   {
@@ -91,15 +92,8 @@ Liquidity pool positions represent token pairs deposited into automated market m
     }
   }
   ```
-  </Accordion>
-
-  <Accordion title="Uniswap V2 Forks" icon="code-fork">
-  **Type:** `UniswapV2`  
-  **Chains:** Same as Uniswap V2  
-  **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
-  **Description:** Forks are detected by factory address and returned under the same `UniswapV2` type. 
   
-  **Example Response (SushiSwap):**
+  **Example Response (SushiSwap V2):**
   
   ```json [expandable]
   {
@@ -137,12 +131,12 @@ Liquidity pool positions represent token pairs deposited into automated market m
   ```
   </Accordion>
 
-  <Accordion title="Uniswap V3" icon="layer-group">
+  <Accordion title="Uniswap V3 (and Forks)" icon="layer-group">
   **Type:** `Nft`  
   **Chains:** Ethereum (1), Base (8453), Ink (57073), Unichain (130), Zora (7777777), World Chain (480), Soneium (1868), Optimism (10)  
-  **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations.
+  **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations. Both Uniswap V3 and its forks are detected by factory address and returned under the same `Nft` type, with the specific protocol name indicated in the `protocol` field.
   
-  **Example Response:**
+  **Example Response (Uniswap V3):**
   
   ```json [expandable]
   {
@@ -186,12 +180,6 @@ Liquidity pool positions represent token pairs deposited into automated market m
     }
   }
   ```
-  </Accordion>
-
-  <Accordion title="Uniswap V3 Forks" icon="code-fork">
-  **Type:** `Nft`  
-  **Chains:** Same as Uniswap V3  
-  **Description:** Concentrated liquidity forks of Uniswap V3. Forks are detected by factory address and returned under the same `Nft` type with the specific protocol name in the `protocol` field.
   
   **Example Response (PancakeSwap V3):**
   
