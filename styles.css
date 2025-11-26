@@ -73,3 +73,11 @@ a.link:not(.nav-tabs-item){
     border-top-right-radius: 9999px;
     border-bottom-right-radius: 9999px;
 }
+
+/* Hide the tab selector to prevent users from discovering IDX */
+.nav-tabs,
+[role="tablist"],
+.tabs-container,
+#navigation-tabs {
+    display: none !important;
+}
