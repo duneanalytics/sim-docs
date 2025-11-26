@@ -79,6 +79,10 @@ a.link:not(.nav-tabs-item){
 .nav-tabs,
 div:has(> .nav-tabs),
 #sidebar-content .sticky,
-#navigation-items button[type="button"] {
+#navigation-items button[type="button"] /* Hide it on mobile */ {
     display: none !important;
+}
+
+#table-of-contents {
+    padding-top: 0 !important;
 }
