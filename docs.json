@@ -15,88 +15,81 @@
   "fonts": {
     "family": "Geist"
   },
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Sim APIs",
-        "groups": [
-          {
-            "group": "Sim APIs",
-            "pages": [
-              "index",
-              "support",
-              "compute-units"
-            ]
-          },
-          {
-            "group": "EVM",
-            "pages": [
-              "evm/overview",
-              {
-                "group": "Guides",
-                "pages": [
-                  {
-                    "group": "Wallet",
-                    "pages": [
-                      "evm/build-a-realtime-wallet",
-                      "evm/add-account-activity",
-                      "evm/show-nfts-collectibles"
-                    ]
-                  },
-                  "evm/build-a-realtime-chat-agent"
-                ]
-              },
-              "evm/supported-chains",
-              "evm/balances",
-              "evm/activity",
-              "evm/collectibles",
-              "evm/defi-positions",
-              "evm/transactions",
-              "evm/token-info",
-              "evm/token-holders",
-              {
-                "group": "Subscriptions",
-                "pages": [
-                  "evm/subscriptions",
-                  "evm/subscriptions/list-webhooks",
-                  "evm/subscriptions/create-webhook",
-                  "evm/subscriptions/get-webhook",
-                  "evm/subscriptions/update-webhook",
-                  "evm/subscriptions/delete-webhook",
-                  "evm/subscriptions/get-webhook-addresses",
-                  "evm/subscriptions/update-webhook-addresses",
-                  "evm/subscriptions/replace-webhook-addresses"
-                ]
-              }
-            ]
-          },
-          {
-            "group": "SVM",
-            "pages": [
-              "svm/overview",
-              "svm/balances",
-              "svm/transactions"
-            ]
-          },
-          {
-            "group": "Dune Analytics API",
-            "pages": [
-              "dune-analytics-api/overview"
-            ]
-          },
-          {
-            "group": "Resources",
-            "pages": [
-              "build-with-ai",
-              "token-filtering",
-              "error-handling",
-              "proxy"
-            ]
-          }
-        ]
-      }
-    ]
-  },
+  "navigation": [
+    {
+      "group": "Sim APIs",
+      "pages": [
+        "index",
+        "support",
+        "compute-units"
+      ]
+    },
+    {
+      "group": "EVM",
+      "pages": [
+        "evm/overview",
+        {
+          "group": "Guides",
+          "pages": [
+            {
+              "group": "Wallet",
+              "pages": [
+                "evm/build-a-realtime-wallet",
+                "evm/add-account-activity",
+                "evm/show-nfts-collectibles"
+              ]
+            },
+            "evm/build-a-realtime-chat-agent"
+          ]
+        },
+        "evm/supported-chains",
+        "evm/balances",
+        "evm/activity",
+        "evm/collectibles",
+        "evm/defi-positions",
+        "evm/transactions",
+        "evm/token-info",
+        "evm/token-holders",
+        {
+          "group": "Subscriptions",
+          "pages": [
+            "evm/subscriptions",
+            "evm/subscriptions/list-webhooks",
+            "evm/subscriptions/create-webhook",
+            "evm/subscriptions/get-webhook",
+            "evm/subscriptions/update-webhook",
+            "evm/subscriptions/delete-webhook",
+            "evm/subscriptions/get-webhook-addresses",
+            "evm/subscriptions/update-webhook-addresses",
+            "evm/subscriptions/replace-webhook-addresses"
+          ]
+        }
+      ]
+    },
+    {
+      "group": "SVM",
+      "pages": [
+        "svm/overview",
+        "svm/balances",
+        "svm/transactions"
+      ]
+    },
+    {
+      "group": "Dune Analytics API",
+      "pages": [
+        "dune-analytics-api/overview"
+      ]
+    },
+    {
+      "group": "Resources",
+      "pages": [
+        "build-with-ai",
+        "token-filtering",
+        "error-handling",
+        "proxy"
+      ]
+    }
+  ],
   "contextual": {
     "options": [
       "copy",
