@@ -94,66 +94,6 @@
             ]
           }
         ]
-      },
-      {
-        "tab": "Sim IDX",
-        "groups": [
-          {
-            "group": "Sim IDX",
-            "pages": [
-              "idx",
-              "idx/changelog",
-              "idx/supported-chains"
-            ]
-          },
-          {
-            "group": "IDX Framework",
-            "pages": [
-              "idx/cli",
-              "idx/app-structure",
-              {
-                "group": "Listener",
-                "pages": [
-                  "idx/listener",
-                  "idx/listener/features",
-                  "idx/listener/contexts",
-                  "idx/listener/errors"
-                ]
-              },
-              "idx/apis"
-            ]
-          },
-          {
-            "group": "Data",
-            "pages": [
-              "idx/db",
-              "idx/sinks/kafka"
-            ]
-          },
-          {
-            "group": "Deployment",
-            "pages": [
-              "idx/deployment",
-              "idx/deployment-environments",
-              "idx/app-page"
-            ]
-          },
-          {
-            "group": "Guides",
-            "pages": [
-              "idx/guides/swap-sample-abi",
-              "idx/guides/decode-any-contract",
-              "idx/guides/uniswap-x-swaps"
-            ]
-          },
-          {
-            "group": "Resources",
-            "pages": [
-              "idx/resources/templates",
-              "idx/build-with-ai"
-            ]
-          }
-        ]
       }
     ]
   },
