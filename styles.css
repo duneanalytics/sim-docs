@@ -80,6 +80,23 @@ a.link:not(.nav-tabs-item){
 .tabs-container,
 #navigation-tabs,
 #sidebar > nav > div:first-child,
-nav[aria-label="Sidebar navigation"] > div:first-child {
+nav[aria-label="Sidebar navigation"] > div:first-child,
+#sidebar-content > div:first-child,
+.sidebar-tabs,
+nav > div[class*="tabs"],
+nav > div[class*="border"],
+#sidebar nav > div:has([role="tablist"]),
+nav div:has(.nav-tabs-item) {
     display: none !important;
+}
+
+/* Remove any padding/margin from the empty space */
+#sidebar > nav,
+nav[aria-label="Sidebar navigation"] {
+    padding-top: 0 !important;
+}
+
+#navigation-items {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
