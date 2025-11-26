@@ -78,6 +78,8 @@ a.link:not(.nav-tabs-item){
 .nav-tabs,
 [role="tablist"],
 .tabs-container,
-#navigation-tabs {
+#navigation-tabs,
+#sidebar > nav > div:first-child,
+nav[aria-label="Sidebar navigation"] > div:first-child {
     display: none !important;
 }
