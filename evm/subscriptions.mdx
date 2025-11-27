@@ -37,7 +37,7 @@ You can set up and manage your subscriptions in two ways:
 
 ## Compute Unit Cost
 
-The Subscriptions API costs **1 CU per event** sent to your webhook. Note that a single webhook call may include multiple events. For example, multiple balance changes or transactions.
+The Subscriptions API costs **2 CUs per event** sent to your webhook. Note that a single webhook call may include multiple events. For example, multiple balance changes or transactions.
 
 If you omit `chain_ids` when creating a webhook your subscription watches all supported EVM chains for matching events. You are only charged per event received regardless of how many chains are monitored.
 
