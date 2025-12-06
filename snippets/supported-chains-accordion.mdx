@@ -62,7 +62,12 @@ export const SupportedChainsAccordion = () => {
 
             var defiPositionsCount = 0;
             if (idxResponseData && idxResponseData.chains) {
-              defiPositionsCount = idxResponseData.chains.length;
+              // Count chains excluding Arbitrum (chain_id 42161)
+              for (var j = 0; j < idxResponseData.chains.length; j++) {
+                if (idxResponseData.chains[j].chain_id !== 42161) {
+                  defiPositionsCount++;
+                }
+              }
             }
 
             setCounts({
@@ -86,7 +91,13 @@ export const SupportedChainsAccordion = () => {
       if (!idxData || !idxData.chains) {
         return <p>No data available</p>;
       }
-      supportedChains = idxData.chains;
+      // Filter out Arbitrum (chain_id 42161) for defi_positions
+      for (var i = 0; i < idxData.chains.length; i++) {
+        var chain = idxData.chains[i];
+        if (chain.chain_id !== 42161) {
+          supportedChains.push(chain);
+        }
+      }
     } else {
       if (!data || !data.chains) {
         return <p>No data available</p>;
