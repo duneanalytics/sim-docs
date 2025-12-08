@@ -1,0 +1,685 @@
+---
+title: Build a Top Token Holders Tracker Bot
+sidebarTitle: Top Token Holders Tracker Bot
+description: Create a Telegram bot that monitors and alerts you when top token holders move funds using Sim's Subscriptions API
+---
+
+<Frame>
+  <img src="/images/top-token-holders-tracker-bot.png" alt="Top Token Holders Telegram Bot Interface" />
+</Frame>
+
+In this guide, you'll build a Telegram bot that tracks the top holders of popular ERC20 tokens and sends real-time alerts when they move funds.
+
+We'll use the [Token Holders API](/evm/token-holders) to identify the top holders for for each token, then set up the [Subscriptions API](/evm/subscriptions) to receive instant webhook notifications when those wallets move funds.
+
+<CardGroup cols={2}>
+  <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/telegram-whale-tracker">
+    Access the complete source code for this bot on GitHub
+  </Card>
+  <Card title="Try Live Demo" icon="telegram" href="https://t.me/SimWhaleTrackerBot">
+    Interact with the finished bot on Telegram
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** - v22 or later
+- **Sim API Key** - [Get your API key](https://sim.dune.com)
+- **Telegram Bot Token** - Create one via [@BotFather](https://t.me/botfather)
+
+## Features
+
+By the end of this guide, your top token holders tracker will:
+
+1. **Identify Top Token Holders** - Read a CSV of popular tokens exported from Dune and find their top holders
+2. **Monitor Balance Changes** - Set up subscription webhooks to receive real-time balance change notifications for those wallets
+3. **Send Telegram Alerts** - Deliver formatted Telegram messages with transaction details
+4. **Manage Subscriptions** - Pause, resume, and view your webhook subscriptions
+
+## Project Setup
+
+Let's initialize the project.
+
+<Steps>
+  <Step title="Create Project Directory">
+    ```bash
+    mkdir top-holders-tracker
+    cd top-holders-tracker
+    npm init -y
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    We need Express, SQLite, and a CSV parser to handle the Dune export.
+
+    ```bash
+    npm install express better-sqlite3 csv-parse
+    ```
+  </Step>
+
+  <Step title="Set Up Environment Variables">
+    Create a `.env` file in your project root:
+
+    ```env .env
+    SIM_API_KEY=your_sim_api_key_here
+    TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+    WEBHOOK_BASE_URL=https://your-deployed-url.com
+    ```
+
+    <Warning>
+      Never commit your `.env` file to version control. Add it to your `.gitignore`.
+    </Warning>
+  </Step>
+
+  <Step title="Create Configuration">
+    Update your `package.json` to enable ES Modules and add a start script. Note the usage of `--env-file` which is native to Node v20.6+.
+
+    ```json package.json
+    {
+      "type": "module",
+      "scripts": {
+        "dev": "node --watch --env-file=.env main.js",
+        "start": "node --env-file=.env main.js"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Initialize Server and Database">
+    Create the entry point `main.js`. We will initialize SQLite tables immediately on startup.
+
+    ```javascript main.js
+    import express from "express";
+    import Database from "better-sqlite3";
+    import { setTimeout } from "node:timers/promises";
+    import fs from "node:fs";
+    import { parse } from "csv-parse/sync";
+
+    // 1. Environment Setup
+    const SIM_API_KEY = process.env.SIM_API_KEY || "";
+    const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+    const WEBHOOK_BASE_URL = process.env.WEBHOOK_BASE_URL || "";
+    const PORT = process.env.PORT || 3000;
+
+    if (!SIM_API_KEY || !TELEGRAM_BOT_TOKEN) {
+      console.error("Missing required environment variables");
+      process.exit(1);
+    }
+
+    // 2. Database Setup (SQLite)
+    const db = new Database("top-holders-tracker.db");
+
+    // Initialize Tables
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS top_holders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        token_address TEXT,
+        chain_id INTEGER,
+        symbol TEXT,
+        blockchain TEXT,
+        holders_json TEXT, -- Storing holder list as JSON
+        UNIQUE(token_address, chain_id)
+      );
+
+      CREATE TABLE IF NOT EXISTS subscribers (
+        chat_id TEXT PRIMARY KEY,
+        subscribed_at TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS webhooks (
+        id TEXT PRIMARY KEY,
+        token_address TEXT,
+        chain_id INTEGER,
+        active INTEGER DEFAULT 1
+      );
+    `);
+
+    // 3. Express Setup
+    const app = express();
+    app.use(express.json()); // Parse JSON bodies
+
+    app.get("/health", (req, res) => {
+      res.json({ ok: true });
+    });
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+    ```
+  </Step>
+</Steps>
+
+## Get Top ERC20 Tokens
+
+We need a list of popular tokens to monitor. We'll use a Dune query to identify the top ERC20 tokens by trading volume, export the results as a CSV, and load them into our bot.
+
+### Run the Dune Query
+
+1. Go to [Dune Analytics](https://dune.com/queries).
+2. Create a new query with the following SQL:
+
+```sql
+WITH ranked_tokens AS (
+  SELECT
+    blockchain,
+    symbol,
+    contract_address,
+    ROW_NUMBER() OVER (PARTITION BY blockchain ORDER BY volume_24h DESC) as rank,
+    volume_24h
+  FROM
+    dex.prices_latest
+  WHERE
+    volume_24h > 100000
+    AND symbol IS NOT NULL
+    AND LENGTH(symbol) <= 10
+)
+SELECT
+  blockchain,
+  symbol,
+  contract_address,
+  rank,
+  volume_24h
+FROM ranked_tokens
+WHERE rank <= 10
+ORDER BY blockchain, rank
+```
+
+3. Run the query.
+4. Click **"Export to CSV"** at the bottom of the results.
+5. Save the file as **`tokens.csv`** in your project root folder.
+
+### Load Token Data
+
+We need to read this CSV file and map the blockchain names (e.g., "ethereum") to their respective Chain IDs (e.g., 1).
+
+Add this logic to `main.js`:
+
+```javascript main.js
+// Helper to map Dune blockchain names to Chain IDs
+function getChainId(blockchain) {
+  const map = {
+    ethereum: 1,
+    optimism: 10,
+    bnb: 56,
+    polygon: 137,
+    base: 8453,
+    arbitrum: 42161,
+    avalanche_c: 43114,
+  };
+  return map[blockchain.toLowerCase()] || 1;
+}
+
+function loadTokensFromCSV() {
+  try {
+    const fileContent = fs.readFileSync("tokens.csv", "utf-8");
+    const records = parse(fileContent, {
+      columns: true, // Auto-detect headers
+      skip_empty_lines: true,
+      trim: true,
+    });
+    return records;
+  } catch (error) {
+    console.error("Error loading tokens.csv. Make sure the file exists.", error);
+    return [];
+  }
+}
+```
+
+## Get Top Token Holders
+
+Now we'll identify the top holder addresses for each token using Sim's Token Holders API and store them in our SQLite database.
+
+### Fetch Holders for a Token
+
+```javascript main.js
+async function fetchTokenHolders(tokenAddress, chainId, limit = 3) {
+  const url = `https://api.sim.dune.com/v1/evm/token-holders/${chainId}/${tokenAddress}?limit=${limit}`;
+
+  const response = await fetch(url, {
+    headers: { "X-Sim-Api-Key": SIM_API_KEY },
+  });
+
+  if (!response.ok) {
+    console.warn(`Failed to fetch holders for ${tokenAddress}: ${response.status}`);
+    return [];
+  }
+
+  const data = await response.json();
+  return data.holders || [];
+}
+```
+
+### Store Top Holder Addresses
+
+This function iterates through the CSV records, fetches top holders, and saves them to the DB.
+
+```javascript main.js
+async function fetchAllTopHolders() {
+  const tokens = loadTokensFromCSV();
+  let totalHolders = 0;
+
+  console.log(`Processing ${tokens.length} tokens from CSV...`);
+
+  const insertStmt = db.prepare(`
+    INSERT OR REPLACE INTO top_holders (token_address, chain_id, symbol, blockchain, holders_json)
+    VALUES (?, ?, ?, ?, ?)
+  `);
+
+  for (const token of tokens) {
+    const chainId = getChainId(token.blockchain);
+    
+    // Skip if we don't support this chain
+    if (!chainId) continue;
+
+    const holders = await fetchTokenHolders(token.contract_address, chainId);
+
+    if (holders.length > 0) {
+      insertStmt.run(
+        token.contract_address.toLowerCase(),
+        chainId,
+        token.symbol,
+        token.blockchain,
+        JSON.stringify(holders)
+      );
+      totalHolders += holders.length;
+      console.log(`Found ${holders.length} top holders for ${token.symbol}`);
+    }
+
+    // Respect rate limits: 4 requests per second
+    await setTimeout(250);
+  }
+
+  return { totalHolders, tokensProcessed: tokens.length };
+}
+
+// Endpoint to trigger this manually
+app.post("/setup/fetch-holders", async (req, res) => {
+  try {
+    const result = await fetchAllTopHolders();
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+## Set Up Webhooks
+
+We'll use Sim's Subscriptions API (`/beta/`) to register webhooks. We use the `balances` subscription type.
+
+### Create a Webhook
+
+```javascript main.js
+async function createWebhook(config) {
+  const url = "https://api.sim.dune.com/beta/evm/subscriptions/webhooks";
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "X-Sim-Api-Key": SIM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(config),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to create webhook: ${error}`);
+  }
+
+  return response.json();
+}
+```
+
+### Create Webhooks for All Top Holders
+
+Iterate through our local `top_holders` table and create a subscription for each.
+
+```javascript main.js
+async function createWebhooksForTopHolders() {
+  const webhookIds = [];
+  const rows = db.prepare("SELECT * FROM top_holders").all();
+
+  const insertWebhookStmt = db.prepare(`
+    INSERT OR REPLACE INTO webhooks (id, token_address, chain_id) VALUES (?, ?, ?)
+  `);
+
+  for (const row of rows) {
+    const holders = JSON.parse(row.holders_json);
+    const addresses = holders.map((h) => h.wallet_address).filter(Boolean);
+
+    if (addresses.length === 0) continue;
+
+    const webhook = await createWebhook({
+      name: `Top Holders Tracker - ${row.symbol} on ${row.blockchain}`,
+      url: `${WEBHOOK_BASE_URL}/balances`,
+      type: "balances",
+      addresses: addresses,
+      chain_ids: [row.chain_id],
+      token_address: row.token_address,
+    });
+
+    if (webhook?.id) {
+      insertWebhookStmt.run(webhook.id, row.token_address, row.chain_id);
+      webhookIds.push(webhook.id);
+      console.log(`Created webhook for ${row.symbol}`);
+    }
+
+    await setTimeout(250);
+  }
+
+  return { webhooksCreated: webhookIds.length, webhookIds };
+}
+
+// Endpoint to trigger webhook creation
+app.post("/setup/create-webhooks", async (req, res) => {
+  try {
+    const result = await createWebhooksForTopHolders();
+    res.json({ ok: true, ...result });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+```
+
+## Handle Balance Change Events
+
+When a top holder moves funds, Sim sends a POST request to your webhook URL.
+
+### Process Incoming Webhooks
+
+Add the `/balances` route to your Express app.
+
+```javascript main.js
+app.post("/balances", async (req, res) => {
+  const balanceChanges = req.body.balance_changes || [];
+  
+  // Sim sends the Chain ID in the header
+  const chainId = parseInt(req.headers["dune-webhook-chain-id"] || "1");
+  const processedTxs = new Set();
+
+  for (const change of balanceChanges) {
+    // Deduplicate by transaction hash within this batch
+    if (processedTxs.has(change.transaction_hash)) continue;
+    processedTxs.add(change.transaction_hash);
+
+    // Skip small transactions (e.g., less than $100)
+    if (change.value_delta_usd < 100) continue;
+
+    // Format and send notification
+    const message = formatBalanceMessage(change, chainId);
+    await broadcastToSubscribers(message);
+  }
+
+  res.json({ ok: true, processed: processedTxs.size });
+});
+```
+
+## Send Telegram Notifications
+
+### Manage Subscribers
+
+We use SQLite to persist chat IDs.
+
+```javascript main.js
+function addSubscriber(chatId) {
+  db.prepare("INSERT OR IGNORE INTO subscribers (chat_id, subscribed_at) VALUES (?, ?)")
+    .run(chatId, new Date().toISOString());
+}
+
+function getAllSubscribers() {
+  const rows = db.prepare("SELECT chat_id FROM subscribers").all();
+  return rows.map(r => r.chat_id);
+}
+```
+
+### Send Messages
+
+```javascript main.js
+async function sendTelegramMessage(text, chatId) {
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: "Markdown",
+      disable_web_page_preview: true,
+    }),
+  });
+
+  return response.ok;
+}
+
+async function broadcastToSubscribers(text) {
+  const subscribers = getAllSubscribers();
+  for (const chatId of subscribers) {
+    await sendTelegramMessage(text, chatId);
+  }
+}
+```
+
+### Format Alert Messages
+
+```javascript main.js
+function formatNumber(value) {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function getExplorerLink(txHash, chainId) {
+  const explorers = {
+    1: "https://etherscan.io/tx/",
+    10: "https://optimistic.etherscan.io/tx/",
+    56: "https://bscscan.com/tx/",
+    137: "https://polygonscan.com/tx/",
+    8453: "https://basescan.org/tx/",
+    42161: "https://arbiscan.io/tx/",
+    43114: "https://snowtrace.io/tx/",
+  };
+  return `${explorers[chainId] || explorers[1]}${txHash}`;
+}
+
+function formatBalanceMessage(change, chainId) {
+  const usdValue = change.value_delta_usd || 0;
+  const symbol = change.asset?.symbol || "???";
+  const decimals = change.asset?.decimals || 18;
+  const direction = change.direction;
+
+  // Calculate token amount
+  const rawAmount = parseFloat(change.amount_delta);
+  const amount = rawAmount / Math.pow(10, decimals);
+
+  // Determine emoji count based on value
+  let emojiCount = 1;
+  if (usdValue >= 10_000_000) emojiCount = 5;
+  else if (usdValue >= 1_000_000) emojiCount = 4;
+  else if (usdValue >= 500_000) emojiCount = 3;
+  else if (usdValue >= 100_000) emojiCount = 2;
+
+  const emoji = "🚨 ".repeat(emojiCount).trim();
+  const directionEmoji = direction === "in" ? "📥" : "📤";
+  const directionText = direction === "in" ? "received" : "sent";
+
+  const holder = change.subscribed_address;
+  const holderShort = `${holder.slice(0, 6)}...${holder.slice(-4)}`;
+  const txLink = getExplorerLink(change.transaction_hash, chainId);
+
+  return `${emoji} ${directionEmoji} *${formatNumber(amount)} ${symbol}* ($${formatNumber(usdValue)}) ${directionText}
+
+Holder: \`${holderShort}\`
+
+[View Transaction](${txLink}) · Powered by [Sim APIs](https://sim.dune.com)`;
+}
+```
+
+### Handle Telegram Commands
+
+Add the endpoint for Telegram updates.
+
+```javascript main.js
+app.post("/telegram/webhook", async (req, res) => {
+  const body = req.body;
+  const message = body.message;
+
+  if (message?.text) {
+    const chatId = message.chat.id.toString();
+    const text = message.text;
+
+    if (text.startsWith("/start")) {
+      addSubscriber(chatId);
+      await sendTelegramMessage(
+        "📊 *Welcome to Top Holders Tracker!*\n\n" +
+          "You're now subscribed to top holder alerts.\n\n" +
+          "Commands:\n/start - Subscribe\n/status - Check subscription",
+        chatId
+      );
+    } else if (text.startsWith("/status")) {
+      const subscribers = getAllSubscribers();
+      const isSubscribed = subscribers.includes(chatId);
+      await sendTelegramMessage(
+        isSubscribed
+          ? "✅ You're subscribed to top holder alerts!"
+          : "❌ Not subscribed. Send /start to subscribe.",
+        chatId
+      );
+    }
+  }
+
+  res.json({ ok: true });
+});
+```
+
+## Manage Webhooks
+
+The Subscriptions API provides endpoints to list and update your webhooks.
+
+### Pause and Resume
+
+```javascript main.js
+async function listWebhooks() {
+  const url = "https://api.sim.dune.com/beta/evm/subscriptions/webhooks";
+  const response = await fetch(url, {
+    headers: { "X-Sim-Api-Key": SIM_API_KEY },
+  });
+  return response.json();
+}
+
+async function updateWebhookStatus(webhookId, active) {
+  const url = `https://api.sim.dune.com/beta/evm/subscriptions/webhooks/${webhookId}`;
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "X-Sim-Api-Key": SIM_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ active }),
+  });
+  return response.ok;
+}
+
+// Management Endpoints
+app.get("/setup/view-webhooks", async (req, res) => {
+  try {
+    const data = await listWebhooks();
+    res.json({ ok: true, ...data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post("/setup/pause-webhooks", async (req, res) => {
+  const data = await listWebhooks();
+  let paused = 0;
+  for (const webhook of data.webhooks || []) {
+    if (webhook.active) {
+      await updateWebhookStatus(webhook.id, false);
+      paused++;
+      await setTimeout(100);
+    }
+  }
+  res.json({ ok: true, paused });
+});
+
+app.post("/setup/resume-webhooks", async (req, res) => {
+  const data = await listWebhooks();
+  let resumed = 0;
+  for (const webhook of data.webhooks || []) {
+    if (!webhook.active) {
+      await updateWebhookStatus(webhook.id, true);
+      resumed++;
+      await setTimeout(100);
+    }
+  }
+  res.json({ ok: true, resumed });
+});
+```
+
+## Deploy and Configure
+
+<Steps>
+  <Step title="Start Your Server">
+    Run your Express app:
+
+    ```bash
+    npm start
+    ```
+  </Step>
+
+  <Step title="Expose to Public Internet">
+    If developing locally, use ngrok to make your localhost accessible:
+    
+    ```bash
+    ngrok http 3000
+    ```
+    
+    Copy the provided URL (e.g., `https://abcd-123.ngrok-free.app`) and update `WEBHOOK_BASE_URL` in your `.env`.
+  </Step>
+
+  <Step title="Register Telegram Webhook">
+    Tell Telegram to send updates to your server:
+
+    ```bash
+    curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=<YOUR_URL>/telegram/webhook"
+    ```
+  </Step>
+
+  <Step title="Initialize the Tracker">
+    Since our server is running, we can trigger the setup process using CURL or Postman:
+
+    ```bash
+    # 1. Fetch top holder addresses from your tokens.csv
+    curl -X POST https://your-url.com/setup/fetch-holders
+
+    # 2. Create webhooks for monitoring
+    curl -X POST https://your-url.com/setup/create-webhooks
+    ```
+  </Step>
+
+  <Step title="Subscribe to Alerts">
+    Open your Telegram bot and send `/start` to begin receiving top holder alerts.
+  </Step>
+</Steps>
+
+## Conclusion
+
+You've built a top token holders tracker bot that monitors large token holders in real-time using Sim's Subscriptions API. The key components we covered:
+
+- **Node.js & Express** - A modern server setup using native environment variable loading.
+- **CSV Integration** - Parsing Dune Analytics data to drive your bot's logic.
+- **SQLite** - Efficient local storage for caching top holders and managing subscribers.
+- **Sim APIs** - Using Token Holders and Subscriptions endpoints to power the logic.
+
+### Next Steps
+
+- **Add More Chains** - Extend the token list to cover additional blockchains
+- **Filter by Value** - Let users set minimum USD thresholds for alerts
+- **Persistent Storage** - If scaling beyond a single VPS, consider migrating SQLite to PostgreSQL.
+
+For more information, visit the [Sim API Documentation](https://docs.sim.dune.com) or explore other [Subscriptions API features](https://docs.sim.dune.com/evm/subscriptions).

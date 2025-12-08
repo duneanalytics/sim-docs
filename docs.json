@@ -43,7 +43,8 @@
                       "evm/show-nfts-collectibles"
                     ]
                   },
-                  "evm/build-a-realtime-chat-agent"
+                  "evm/build-a-realtime-chat-agent",
+                  "evm/build-a-top-holders-tracker-bot"
                 ]
               },
               "evm/supported-chains",
