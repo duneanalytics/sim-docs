@@ -39,7 +39,14 @@ export const SupportedChains = ({ endpoint, title }) => {
       }
     }
   } else {
-    supportedChains = data.chains;
+    // For defi_positions, filter out Arbitrum
+    for (var i = 0; i < data.chains.length; i++) {
+      var chain = data.chains[i];
+      if (endpoint === 'defi_positions' && chain.chain_id === 42161) {
+        continue; // Skip Arbitrum
+      }
+      supportedChains.push(chain);
+    }
   }
 
   var count = supportedChains.length;
