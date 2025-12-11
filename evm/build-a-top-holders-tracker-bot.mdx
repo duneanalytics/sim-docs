@@ -10,7 +10,7 @@ description: Create a Telegram bot that monitors and alerts you when top token h
 
 In this guide, you'll build a Telegram bot that tracks the top holders of popular ERC20 tokens and sends real-time alerts when they move funds.
 
-We'll use the [Token Holders API](/evm/token-holders) to identify the top holders for for each token, then set up the [Subscriptions API](/evm/subscriptions) to receive instant webhook notifications when those wallets move funds.
+We'll use the [Token Holders API](/evm/token-holders) to identify the top holders for each token, then set up the [Subscriptions API](/evm/subscriptions) to receive instant webhook notifications when those wallets move funds.
 
 <CardGroup cols={2}>
   <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/telegram-whale-tracker">
@@ -28,6 +28,7 @@ Before you begin, ensure you have:
 - **Node.js** - v22 or later
 - **Sim API Key** - [Get your API key](https://sim.dune.com)
 - **Telegram Bot Token** - Create one via [@BotFather](https://t.me/botfather)
+- **Supabase Account** - [Create a free account](https://supabase.com)
 
 ## Features
 
@@ -52,11 +53,22 @@ Let's initialize the project.
   </Step>
 
   <Step title="Install Dependencies">
-    We need Express, SQLite, and a CSV parser to handle the Dune export.
+    We need Express, the Postgres client, and a CSV parser to handle the Dune export.
 
     ```bash
-    npm install express better-sqlite3 csv-parse
+    npm install express postgres csv-parse
     ```
+  </Step>
+
+  <Step title="Set Up Supabase">
+    1. Go to [supabase.com/dashboard](https://supabase.com/dashboard) and create a new project
+    2. Once created, go to **Project Settings** → **Database**
+    3. Scroll to **Connection string** and select the **URI** tab
+    4. Copy the **Transaction pooler** connection string (uses port `6543`)
+    
+    <Note>
+      The Transaction pooler connection is recommended for serverless deployments like Vercel.
+    </Note>
   </Step>
 
   <Step title="Set Up Environment Variables">
@@ -66,10 +78,11 @@ Let's initialize the project.
     SIM_API_KEY=your_sim_api_key_here
     TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
     WEBHOOK_BASE_URL=https://your-deployed-url.com
+    DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
     ```
 
     <Warning>
-      Never commit your `.env` file to version control. Add it to your `.gitignore`.
+      If your database password contains special characters (`!`, `@`, `#`, etc.), URL-encode them. For example, `@` becomes `%40`.
     </Warning>
   </Step>
 
@@ -88,11 +101,11 @@ Let's initialize the project.
   </Step>
 
   <Step title="Initialize Server and Database">
-    Create the entry point `main.js`. We will initialize SQLite tables immediately on startup.
+    Create the entry point `main.js`. We initialize the database tables on startup.
 
     ```javascript main.js
     import express from "express";
-    import Database from "better-sqlite3";
+    import postgres from "postgres";
     import { setTimeout } from "node:timers/promises";
     import fs from "node:fs";
     import { parse } from "csv-parse/sync";
@@ -102,39 +115,46 @@ Let's initialize the project.
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
     const WEBHOOK_BASE_URL = process.env.WEBHOOK_BASE_URL || "";
     const PORT = process.env.PORT || 3000;
+    const DATABASE_URL = process.env.DATABASE_URL || "";
 
-    if (!SIM_API_KEY || !TELEGRAM_BOT_TOKEN) {
+    if (!SIM_API_KEY || !TELEGRAM_BOT_TOKEN || !DATABASE_URL) {
       console.error("Missing required environment variables");
       process.exit(1);
     }
 
-    // 2. Database Setup (SQLite)
-    const db = new Database("top-holders-tracker.db");
+    // 2. Database Setup (PostgreSQL via Supabase)
+    const sql = postgres(DATABASE_URL);
 
     // Initialize Tables
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS top_holders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        token_address TEXT,
-        chain_id INTEGER,
-        symbol TEXT,
-        blockchain TEXT,
-        holders_json TEXT, -- Storing holder list as JSON
-        UNIQUE(token_address, chain_id)
-      );
+    async function initDatabase() {
+      await sql`
+        CREATE TABLE IF NOT EXISTS top_holders (
+          id SERIAL PRIMARY KEY,
+          token_address TEXT,
+          chain_id INTEGER,
+          symbol TEXT,
+          blockchain TEXT,
+          holders_json TEXT,
+          UNIQUE(token_address, chain_id)
+        )
+      `;
 
-      CREATE TABLE IF NOT EXISTS subscribers (
-        chat_id TEXT PRIMARY KEY,
-        subscribed_at TEXT
-      );
+      await sql`
+        CREATE TABLE IF NOT EXISTS subscribers (
+          chat_id TEXT PRIMARY KEY,
+          subscribed_at TEXT
+        )
+      `;
 
-      CREATE TABLE IF NOT EXISTS webhooks (
-        id TEXT PRIMARY KEY,
-        token_address TEXT,
-        chain_id INTEGER,
-        active INTEGER DEFAULT 1
-      );
-    `);
+      await sql`
+        CREATE TABLE IF NOT EXISTS webhooks (
+          id TEXT PRIMARY KEY,
+          token_address TEXT,
+          chain_id INTEGER,
+          active INTEGER DEFAULT 1
+        )
+      `;
+    }
 
     // 3. Express Setup
     const app = express();
@@ -144,10 +164,41 @@ Let's initialize the project.
       res.json({ ok: true });
     });
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+    // Start server after database is ready
+    initDatabase().then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    }).catch(err => {
+      console.error("Failed to initialize database:", err);
+      process.exit(1);
     });
     ```
+  </Step>
+
+  <Step title="Enable Row Level Security (RLS)">
+    In your Supabase dashboard, go to **SQL Editor** and run:
+
+    ```sql
+    -- Enable RLS on all tables
+    ALTER TABLE top_holders ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
+
+    -- Create policies that allow all operations (server-side access)
+    CREATE POLICY "Allow all operations on top_holders" ON top_holders
+      FOR ALL USING (true) WITH CHECK (true);
+
+    CREATE POLICY "Allow all operations on subscribers" ON subscribers
+      FOR ALL USING (true) WITH CHECK (true);
+
+    CREATE POLICY "Allow all operations on webhooks" ON webhooks
+      FOR ALL USING (true) WITH CHECK (true);
+    ```
+
+    <Note>
+      This enables RLS (a Supabase security requirement) with permissive policies since only your server accesses these tables.
+    </Note>
   </Step>
 </Steps>
 
@@ -229,7 +280,7 @@ function loadTokensFromCSV() {
 
 ## Get Top Token Holders
 
-Now we'll identify the top holder addresses for each token using Sim's Token Holders API and store them in our SQLite database.
+Now we'll identify the top holder addresses for each token using Sim's Token Holders API and store them in our database.
 
 ### Fetch Holders for a Token
 
@@ -253,7 +304,7 @@ async function fetchTokenHolders(tokenAddress, chainId, limit = 3) {
 
 ### Store Top Holder Addresses
 
-This function iterates through the CSV records, fetches top holders, and saves them to the DB.
+This function iterates through the CSV records, fetches top holders, and saves them to the database.
 
 ```javascript main.js
 async function fetchAllTopHolders() {
@@ -261,11 +312,6 @@ async function fetchAllTopHolders() {
   let totalHolders = 0;
 
   console.log(`Processing ${tokens.length} tokens from CSV...`);
-
-  const insertStmt = db.prepare(`
-    INSERT OR REPLACE INTO top_holders (token_address, chain_id, symbol, blockchain, holders_json)
-    VALUES (?, ?, ?, ?, ?)
-  `);
 
   for (const token of tokens) {
     const chainId = getChainId(token.blockchain);
@@ -276,13 +322,15 @@ async function fetchAllTopHolders() {
     const holders = await fetchTokenHolders(token.contract_address, chainId);
 
     if (holders.length > 0) {
-      insertStmt.run(
-        token.contract_address.toLowerCase(),
-        chainId,
-        token.symbol,
-        token.blockchain,
-        JSON.stringify(holders)
-      );
+      const tokenAddress = token.contract_address.toLowerCase();
+      const holdersJson = JSON.stringify(holders);
+      
+      await sql`
+        INSERT INTO top_holders (token_address, chain_id, symbol, blockchain, holders_json)
+        VALUES (${tokenAddress}, ${chainId}, ${token.symbol}, ${token.blockchain}, ${holdersJson})
+        ON CONFLICT (token_address, chain_id) 
+        DO UPDATE SET symbol = ${token.symbol}, blockchain = ${token.blockchain}, holders_json = ${holdersJson}
+      `;
       totalHolders += holders.length;
       console.log(`Found ${holders.length} top holders for ${token.symbol}`);
     }
@@ -335,16 +383,12 @@ async function createWebhook(config) {
 
 ### Create Webhooks for All Top Holders
 
-Iterate through our local `top_holders` table and create a subscription for each.
+Iterate through our `top_holders` table and create a subscription for each.
 
 ```javascript main.js
 async function createWebhooksForTopHolders() {
   const webhookIds = [];
-  const rows = db.prepare("SELECT * FROM top_holders").all();
-
-  const insertWebhookStmt = db.prepare(`
-    INSERT OR REPLACE INTO webhooks (id, token_address, chain_id) VALUES (?, ?, ?)
-  `);
+  const rows = await sql`SELECT * FROM top_holders`;
 
   for (const row of rows) {
     const holders = JSON.parse(row.holders_json);
@@ -362,7 +406,11 @@ async function createWebhooksForTopHolders() {
     });
 
     if (webhook?.id) {
-      insertWebhookStmt.run(webhook.id, row.token_address, row.chain_id);
+      await sql`
+        INSERT INTO webhooks (id, token_address, chain_id) 
+        VALUES (${webhook.id}, ${row.token_address}, ${row.chain_id})
+        ON CONFLICT (id) DO UPDATE SET token_address = ${row.token_address}, chain_id = ${row.chain_id}
+      `;
       webhookIds.push(webhook.id);
       console.log(`Created webhook for ${row.symbol}`);
     }
@@ -421,16 +469,20 @@ app.post("/balances", async (req, res) => {
 
 ### Manage Subscribers
 
-We use SQLite to persist chat IDs.
+We use PostgreSQL to persist chat IDs.
 
 ```javascript main.js
-function addSubscriber(chatId) {
-  db.prepare("INSERT OR IGNORE INTO subscribers (chat_id, subscribed_at) VALUES (?, ?)")
-    .run(chatId, new Date().toISOString());
+async function addSubscriber(chatId) {
+  const subscribedAt = new Date().toISOString();
+  await sql`
+    INSERT INTO subscribers (chat_id, subscribed_at) 
+    VALUES (${chatId}, ${subscribedAt})
+    ON CONFLICT (chat_id) DO NOTHING
+  `;
 }
 
-function getAllSubscribers() {
-  const rows = db.prepare("SELECT chat_id FROM subscribers").all();
+async function getAllSubscribers() {
+  const rows = await sql`SELECT chat_id FROM subscribers`;
   return rows.map(r => r.chat_id);
 }
 ```
@@ -456,7 +508,7 @@ async function sendTelegramMessage(text, chatId) {
 }
 
 async function broadcastToSubscribers(text) {
-  const subscribers = getAllSubscribers();
+  const subscribers = await getAllSubscribers();
   for (const chatId of subscribers) {
     await sendTelegramMessage(text, chatId);
   }
@@ -533,7 +585,7 @@ app.post("/telegram/webhook", async (req, res) => {
     const text = message.text;
 
     if (text.startsWith("/start")) {
-      addSubscriber(chatId);
+      await addSubscriber(chatId);
       await sendTelegramMessage(
         "📊 *Welcome to Top Holders Tracker!*\n\n" +
           "You're now subscribed to top holder alerts.\n\n" +
@@ -541,7 +593,7 @@ app.post("/telegram/webhook", async (req, res) => {
         chatId
       );
     } else if (text.startsWith("/status")) {
-      const subscribers = getAllSubscribers();
+      const subscribers = await getAllSubscribers();
       const isSubscribed = subscribers.includes(chatId);
       await sendTelegramMessage(
         isSubscribed
@@ -646,7 +698,9 @@ app.post("/setup/resume-webhooks", async (req, res) => {
     Tell Telegram to send updates to your server:
 
     ```bash
-    curl "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=<YOUR_URL>/telegram/webhook"
+    curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook" \
+      -H "Content-Type: application/json" \
+      -d '{"url": "<YOUR_URL>/telegram/webhook"}'
     ```
   </Step>
 
@@ -673,13 +727,13 @@ You've built a top token holders tracker bot that monitors large token holders i
 
 - **Node.js & Express** - A modern server setup using native environment variable loading.
 - **CSV Integration** - Parsing Dune Analytics data to drive your bot's logic.
-- **SQLite** - Efficient local storage for caching top holders and managing subscribers.
+- **Supabase PostgreSQL** - Cloud-hosted database for storing top holders and managing subscribers.
 - **Sim APIs** - Using Token Holders and Subscriptions endpoints to power the logic.
 
 ### Next Steps
 
 - **Add More Chains** - Extend the token list to cover additional blockchains
 - **Filter by Value** - Let users set minimum USD thresholds for alerts
-- **Persistent Storage** - If scaling beyond a single VPS, consider migrating SQLite to PostgreSQL.
+- **Deploy to Vercel** - Use the Supabase-Vercel integration for seamless deployment
 
 For more information, visit the [Sim API Documentation](https://docs.sim.dune.com) or explore other [Subscriptions API features](https://docs.sim.dune.com/evm/subscriptions).
