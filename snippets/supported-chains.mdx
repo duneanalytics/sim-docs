@@ -35,6 +35,11 @@ export const SupportedChains = ({ endpoint, title }) => {
     for (var i = 0; i < data.chains.length; i++) {
       var chain = data.chains[i];
       if (chain[endpoint] && chain[endpoint].supported) {
+        // Temporary filter: Remove Arbitrum chains from Token Holders API
+        // These chains are not actually supported despite what the API returns
+        if (endpoint === 'token_holders' && (chain.chain_id === 42161 || chain.chain_id === 42170)) {
+          continue;
+        }
         supportedChains.push(chain);
       }
     }
