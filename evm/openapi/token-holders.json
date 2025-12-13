@@ -43,7 +43,7 @@
           "error"
         ]
       },
-      "Holder": {
+      "Holder": {0x5ed7c60f0b5413c53355459838c46129f8b65f85
         "type": "object",
         "properties": {
           "wallet_address": {
