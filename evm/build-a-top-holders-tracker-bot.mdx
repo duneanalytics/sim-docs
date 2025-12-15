@@ -13,10 +13,10 @@ In this guide, you'll build a Telegram bot that tracks the top holders of popula
 We'll use the [Token Holders API](/evm/token-holders) to identify the top holders for each token, then set up the [Subscriptions API](/evm/subscriptions) to receive instant webhook notifications when those wallets move funds.
 
 <CardGroup cols={2}>
-  <Card title="View Source Code" icon="github" href="https://github.com/duneanalytics/telegram-whale-tracker">
+  <Card title="View Source Code" icon="github" href="https://github.com/dericksozo/sim-top-token-holders-tracker-telegram-bot">
     Access the complete source code for this bot on GitHub
   </Card>
-  <Card title="Try Live Demo" icon="telegram" href="https://t.me/SimWhaleTrackerBot">
+  <Card title="Try Live Demo" icon="telegram" href="https://t.me/SimTopTokenHoldersGuideBot">
     Interact with the finished bot on Telegram
   </Card>
 </CardGroup>
@@ -87,34 +87,40 @@ Let's initialize the project.
   </Step>
 
   <Step title="Create Configuration">
-    Update your `package.json` to enable ES Modules and add a start script. Note the usage of `--env-file` which is native to Node v20.6+.
+    Update your `package.json` to enable ES Modules and add a start script:
 
     ```json package.json
     {
       "type": "module",
       "scripts": {
-        "dev": "node --watch --env-file=.env main.js",
-        "start": "node --env-file=.env main.js"
+        "dev": "node index.js",
+        "start": "node index.js"
       }
     }
     ```
   </Step>
 
   <Step title="Initialize Server and Database">
-    Create the entry point `main.js`. We initialize the database tables on startup.
+    Create the entry point `index.js`. We initialize the database tables on startup.
 
-    ```javascript main.js
+    ```javascript index.js expandable
     import express from "express";
     import postgres from "postgres";
     import { setTimeout } from "node:timers/promises";
     import fs from "node:fs";
+    import path from "node:path";
+    import { fileURLToPath } from "node:url";
     import { parse } from "csv-parse/sync";
+
+    // ES Module directory resolution
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
 
     // 1. Environment Setup
     const SIM_API_KEY = process.env.SIM_API_KEY || "";
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
     const WEBHOOK_BASE_URL = process.env.WEBHOOK_BASE_URL || "";
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 3001;
     const DATABASE_URL = process.env.DATABASE_URL || "";
 
     if (!SIM_API_KEY || !TELEGRAM_BOT_TOKEN || !DATABASE_URL) {
@@ -156,6 +162,11 @@ Let's initialize the project.
       `;
     }
 
+    // Initialize database when module loads
+    initDatabase().catch(err => {
+      console.error("Failed to initialize database:", err);
+    });
+
     // 3. Express Setup
     const app = express();
     app.use(express.json()); // Parse JSON bodies
@@ -164,107 +175,173 @@ Let's initialize the project.
       res.json({ ok: true });
     });
 
-    // Start server after database is ready
-    initDatabase().then(() => {
-      app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-      });
-    }).catch(err => {
-      console.error("Failed to initialize database:", err);
-      process.exit(1);
+    // ... route definitions go here (added in subsequent sections) ...
+
+    // Start server for local development
+    // For Vercel deployment, export the app instead (see Deploy section)
+    const server = app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
     });
     ```
   </Step>
 
-  <Step title="Enable Row Level Security (RLS)">
+  <Step title="Create Tables and Enable Row Level Security">
     In your Supabase dashboard, go to **SQL Editor** and run:
 
-    ```sql
-    -- Enable RLS on all tables
-    ALTER TABLE top_holders ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
-    ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
+    ```sql expandable
+-- ============================================
+-- 1. CREATE TABLES (Optional - app creates these automatically)
+-- ============================================
 
-    -- Create policies that allow all operations (server-side access)
-    CREATE POLICY "Allow all operations on top_holders" ON top_holders
-      FOR ALL USING (true) WITH CHECK (true);
+CREATE TABLE IF NOT EXISTS top_holders (
+  id SERIAL PRIMARY KEY,
+  token_address TEXT,
+  chain_id INTEGER,
+  symbol TEXT,
+  blockchain TEXT,
+  holders_json TEXT,
+  UNIQUE(token_address, chain_id)
+);
 
-    CREATE POLICY "Allow all operations on subscribers" ON subscribers
-      FOR ALL USING (true) WITH CHECK (true);
+CREATE TABLE IF NOT EXISTS subscribers (
+  chat_id TEXT PRIMARY KEY,
+  subscribed_at TEXT
+);
 
-    CREATE POLICY "Allow all operations on webhooks" ON webhooks
-      FOR ALL USING (true) WITH CHECK (true);
+CREATE TABLE IF NOT EXISTS webhooks (
+  id TEXT PRIMARY KEY,
+  token_address TEXT,
+  chain_id INTEGER,
+  active INTEGER DEFAULT 1
+);
+
+-- ============================================
+-- 2. ENABLE ROW LEVEL SECURITY (Required)
+-- ============================================
+
+ALTER TABLE top_holders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
+
+-- ============================================
+-- 3. CREATE PERMISSIVE POLICIES (Required)
+-- ============================================
+
+-- Drop existing policies if they exist (prevents errors on re-run)
+DROP POLICY IF EXISTS "Allow all operations on top_holders" ON top_holders;
+DROP POLICY IF EXISTS "Allow all operations on subscribers" ON subscribers;
+DROP POLICY IF EXISTS "Allow all operations on webhooks" ON webhooks;
+
+-- Create new policies
+CREATE POLICY "Allow all operations on top_holders" ON top_holders
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on subscribers" ON subscribers
+  FOR ALL USING (true) WITH CHECK (true);
+
+CREATE POLICY "Allow all operations on webhooks" ON webhooks
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================
+-- 4. VERIFY SETUP (Run to check everything)
+-- ============================================
+
+SELECT 
+  tablename,
+  rowsecurity as "RLS Enabled"
+FROM pg_tables 
+WHERE schemaname = 'public' 
+  AND tablename IN ('top_holders', 'subscribers', 'webhooks');
     ```
 
-    <Note>
-      This enables RLS (a Supabase security requirement) with permissive policies since only your server accesses these tables.
-    </Note>
+    This creates three tables: `top_holders` for storing token holder data, `subscribers` for Telegram chat IDs, and `webhooks` for tracking active subscriptions. The RLS policies allow your server full access while keeping the database secure.
   </Step>
 </Steps>
 
 ## Get Top ERC20 Tokens
 
-We need a list of popular tokens to monitor. We'll use a Dune query to identify the top ERC20 tokens by trading volume, export the results as a CSV, and load them into our bot.
+We need a list of popular tokens to monitor. Create a file called `tokens.csv` in your project root with the following content:
 
-### Run the Dune Query
-
-1. Go to [Dune Analytics](https://dune.com/queries).
-2. Create a new query with the following SQL:
-
-```sql
-WITH ranked_tokens AS (
-  SELECT
-    blockchain,
-    symbol,
-    contract_address,
-    ROW_NUMBER() OVER (PARTITION BY blockchain ORDER BY volume_24h DESC) as rank,
-    volume_24h
-  FROM
-    dex.prices_latest
-  WHERE
-    volume_24h > 100000
-    AND symbol IS NOT NULL
-    AND LENGTH(symbol) <= 10
-)
-SELECT
-  blockchain,
-  symbol,
-  contract_address,
-  rank,
-  volume_24h
-FROM ranked_tokens
-WHERE rank <= 10
-ORDER BY blockchain, rank
+```csv tokens.csv expandable
+blockchain,symbol,contract_address,rank,volume_24h
+abstract,WETH,0x3439153eb7af838ad19d56e1571fbd09333c2809,1,541879
+arbitrum,WETH,0x82af49447d8a07e3bd95bd0d56f35241523fbab1,1,215631888
+arbitrum,USDC,0xaf88d065e77c8cc2239327c5edb3a432268e5831,2,202791327
+avalanche_c,USDC,0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e,1,27753674
+base,WETH,0x4200000000000000000000000000000000000006,1,384703859
+base,USDC,0x833589fcd6edb6e08f4c7c32d4f71b54bda02913,2,319573649
+berachain,WETH,0x2f6f07cdcf3588944bf4c42ac74ff24bf56e7590,1,1241956
+bnb,USDC,0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d,1,141562139
+celo,USDC,0xceba9300f2b948710d2653dd7b07f33a8b32118c,1,26675517
+celo,WETH,0xd221812de1bd094f35587ee8e174b07b6167d9af,2,355806
+ethereum,USDC,0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48,1,401923545
+ethereum,WETH,0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2,2,399397077
+gnosis,WETH,0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1,1,319235
+ink,WETH,0x4200000000000000000000000000000000000006,1,632429
+ink,USDC,0x2d270e6886d130d724215a266106e6832161eaed,2,181985
+linea,WETH,0xe5d7c2a44ffddf6b295a15c148167daaaf5cf34f,1,3931486
+linea,USDC,0x176211869ca2b568f2a7d4ee941e073a821ee1ff,2,3639358
+mantle,WETH,0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111,1,2213930
+mantle,USDC,0x09bc4e0d864854c6afb6eb9a9cdf58ac190d0df9,2,173356
+monad,USDC,0x754704bc059f8c67012fed69bc8a327a5aafb603,1,2548822
+monad,WETH,0xee8c0e9f1bffb4eb878d8f15f368a02a35481242,2,178282
+optimism,USDC,0x0b2c639c533813f4aa9d7837caf62653d097ff85,1,9659093
+optimism,WETH,0x4200000000000000000000000000000000000006,2,8755339
+plasma,WETH,0x9895d81bb462a195b4922ed7de0e3acd007c32cb,1,1185216
+polygon,USDC,0x3c499c542cef5e3811e1192ce70d8cc03d5c3359,1,13687294
+polygon,WETH,0x7ceb23fd6bc0add59e62ac25578270cff1b9f619,2,5280750
+scroll,USDC,0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4,1,157489
+scroll,WETH,0x5300000000000000000000000000000000000004,2,98385
+sei,USDC,0xe15fc38f6d8c56af07bbcbe3baf5708a2bf42392,1,7740957
+sei,WETH,0x160345fc359604fc6e70e3c5facbde5f7a9342d8,2,73158
+sonic,WETH,0x50c42deacd8fc9773493ed674b675be577f2634b,1,661442
+unichain,USDC,0x078d782b760474a361dda0af3839290b0ef57ad6,1,19398150
+unichain,WETH,0x4200000000000000000000000000000000000006,2,4860719
+zksync,WETH,0x5aea5775959fbc2557cc8789bc1bf90a239d9a91,1,293777
 ```
 
-3. Run the query.
-4. Click **"Export to CSV"** at the bottom of the results.
-5. Save the file as **`tokens.csv`** in your project root folder.
+<Note>
+  This CSV contains the top WETH and USDC tokens by volume across chains. To verify or explore a larger dataset, see [this Dune query](https://dune.com/queries/6355954).
+</Note>
 
 ### Load Token Data
 
 We need to read this CSV file and map the blockchain names (e.g., "ethereum") to their respective Chain IDs (e.g., 1).
 
-Add this logic to `main.js`:
+Add this logic to `index.js`:
 
-```javascript main.js
+```javascript index.js expandable
 // Helper to map Dune blockchain names to Chain IDs
 function getChainId(blockchain) {
   const map = {
-    ethereum: 1,
-    optimism: 10,
-    bnb: 56,
-    polygon: 137,
-    base: 8453,
+    abstract: 2741,
     arbitrum: 42161,
     avalanche_c: 43114,
+    base: 8453,
+    berachain: 80094,
+    bnb: 56,
+    celo: 42220,
+    ethereum: 1,
+    gnosis: 100,
+    ink: 57073,
+    linea: 59144,
+    mantle: 5000,
+    monad: 10143,
+    optimism: 10,
+    plasma: 1273227453,
+    polygon: 137,
+    scroll: 534352,
+    sei: 1329,
+    sonic: 146,
+    unichain: 130,
+    zksync: 324,
   };
-  return map[blockchain.toLowerCase()] || 1;
+  return map[blockchain.toLowerCase()] || null;
 }
 
 function loadTokensFromCSV() {
   try {
-    const fileContent = fs.readFileSync("tokens.csv", "utf-8");
+    const fileContent = fs.readFileSync(path.join(__dirname, "tokens.csv"), "utf-8");
     const records = parse(fileContent, {
       columns: true, // Auto-detect headers
       skip_empty_lines: true,
@@ -284,7 +361,7 @@ Now we'll identify the top holder addresses for each token using Sim's Token Hol
 
 ### Fetch Holders for a Token
 
-```javascript main.js
+```javascript index.js expandable
 async function fetchTokenHolders(tokenAddress, chainId, limit = 3) {
   const url = `https://api.sim.dune.com/v1/evm/token-holders/${chainId}/${tokenAddress}?limit=${limit}`;
 
@@ -306,7 +383,7 @@ async function fetchTokenHolders(tokenAddress, chainId, limit = 3) {
 
 This function iterates through the CSV records, fetches top holders, and saves them to the database.
 
-```javascript main.js
+```javascript index.js expandable
 async function fetchAllTopHolders() {
   const tokens = loadTokensFromCSV();
   let totalHolders = 0;
@@ -359,7 +436,7 @@ We'll use Sim's Subscriptions API (`/beta/`) to register webhooks. We use the `b
 
 ### Create a Webhook
 
-```javascript main.js
+```javascript index.js expandable
 async function createWebhook(config) {
   const url = "https://api.sim.dune.com/beta/evm/subscriptions/webhooks";
 
@@ -385,7 +462,7 @@ async function createWebhook(config) {
 
 Iterate through our `top_holders` table and create a subscription for each.
 
-```javascript main.js
+```javascript index.js expandable
 async function createWebhooksForTopHolders() {
   const webhookIds = [];
   const rows = await sql`SELECT * FROM top_holders`;
@@ -440,7 +517,7 @@ When a top holder moves funds, Sim sends a POST request to your webhook URL.
 
 Add the `/balances` route to your Express app.
 
-```javascript main.js
+```javascript index.js expandable
 app.post("/balances", async (req, res) => {
   const balanceChanges = req.body.balance_changes || [];
   
@@ -453,8 +530,8 @@ app.post("/balances", async (req, res) => {
     if (processedTxs.has(change.transaction_hash)) continue;
     processedTxs.add(change.transaction_hash);
 
-    // Skip small transactions (e.g., less than $100)
-    if (change.value_delta_usd < 100) continue;
+    // Skip small transactions (e.g., less than $100,000)
+    if (change.value_delta_usd < 100000) continue;
 
     // Format and send notification
     const message = formatBalanceMessage(change, chainId);
@@ -471,7 +548,7 @@ app.post("/balances", async (req, res) => {
 
 We use PostgreSQL to persist chat IDs.
 
-```javascript main.js
+```javascript index.js
 async function addSubscriber(chatId) {
   const subscribedAt = new Date().toISOString();
   await sql`
@@ -489,7 +566,7 @@ async function getAllSubscribers() {
 
 ### Send Messages
 
-```javascript main.js
+```javascript index.js expandable
 async function sendTelegramMessage(text, chatId) {
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
@@ -517,7 +594,7 @@ async function broadcastToSubscribers(text) {
 
 ### Format Alert Messages
 
-```javascript main.js
+```javascript index.js expandable
 function formatNumber(value) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
@@ -575,7 +652,7 @@ Holder: \`${holderShort}\`
 
 Add the endpoint for Telegram updates.
 
-```javascript main.js
+```javascript index.js expandable
 app.post("/telegram/webhook", async (req, res) => {
   const body = req.body;
   const message = body.message;
@@ -614,7 +691,7 @@ The Subscriptions API provides endpoints to list and update your webhooks.
 
 ### Pause and Resume
 
-```javascript main.js
+```javascript index.js expandable
 async function listWebhooks() {
   const url = "https://api.sim.dune.com/beta/evm/subscriptions/webhooks";
   const response = await fetch(url, {
@@ -688,7 +765,7 @@ app.post("/setup/resume-webhooks", async (req, res) => {
     If developing locally, use ngrok to make your localhost accessible:
     
     ```bash
-    ngrok http 3000
+    ngrok http 3001
     ```
     
     Copy the provided URL (e.g., `https://abcd-123.ngrok-free.app`) and update `WEBHOOK_BASE_URL` in your `.env`.
@@ -725,15 +802,11 @@ app.post("/setup/resume-webhooks", async (req, res) => {
 
 You've built a top token holders tracker bot that monitors large token holders in real-time using Sim's Subscriptions API. The key components we covered:
 
-- **Node.js & Express** - A modern server setup using native environment variable loading.
+- **Node.js & Express** - A lightweight server for handling webhooks and Telegram commands.
 - **CSV Integration** - Parsing Dune Analytics data to drive your bot's logic.
 - **Supabase PostgreSQL** - Cloud-hosted database for storing top holders and managing subscribers.
 - **Sim APIs** - Using Token Holders and Subscriptions endpoints to power the logic.
 
-### Next Steps
-
-- **Add More Chains** - Extend the token list to cover additional blockchains
-- **Filter by Value** - Let users set minimum USD thresholds for alerts
-- **Deploy to Vercel** - Use the Supabase-Vercel integration for seamless deployment
+For production use, deploy your server to a platform like Vercel, Railway, or a VPS. Configuration for serverless deployment is beyond the scope of this guide, but you can reference the [complete source code](https://github.com/dericksozo/sim-top-token-holders-tracker-telegram-bot) for a Vercel-ready setup.
 
 For more information, visit the [Sim API Documentation](https://docs.sim.dune.com) or explore other [Subscriptions API features](https://docs.sim.dune.com/evm/subscriptions).
