@@ -5,6 +5,44 @@ description: "How to handle errors when using Sim APIs"
 
 This guide explains how to handle errors when using Sim APIs, including common error codes, troubleshooting steps, and code examples for proper error handling.
 
+## Errors vs. Warnings
+
+Sim APIs distinguish between **errors** and **warnings**:
+
+- **Errors** indicate that the request failed and could not be fulfilled. The API returns an error response with an HTTP 4xx or 5xx status code.
+- **Warnings** indicate non-fatal issues where the request was partially fulfilled. The API returns a successful HTTP 200 response with data, but includes a `warnings` array to inform you about issues that occurred.
+
+### When Warnings Occur
+
+Warnings are currently used when you request data for specific chains via the `chain_ids` parameter and some of those chains are not supported. For example:
+
+- If you request `?chain_ids=1,9999,10` and chain 9999 is not supported, the API will return data for chains 1 and 10, plus a warning about chain 9999.
+
+### Warning Response Format
+
+When warnings are present, they appear in a `warnings` array within the successful (HTTP 200) response:
+
+```json
+{
+  "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+  "balances": [...],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Balances are returned only for supported chains.",
+      "chain_ids": [9999, 77777777777],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+Each warning includes:
+- `code`: A machine-readable warning code (e.g., `UNSUPPORTED_CHAIN_IDS`)
+- `message`: A human-readable description of the warning
+- `chain_ids`: The list of chain IDs that caused this warning (for chain-related warnings)
+- `docs_url`: A link to relevant documentation for more information
+
 ## Error Response Format
 
 When an error occurs, Sim APIs return a JSON response with error information:
@@ -29,6 +67,58 @@ The error property can be either `"error"` or `"message"` depending on the type 
 | 404 | Resource not found | Verify the endpoint URL and resource identifiers |
 | 429 | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
 | 500 | Server-side error | Retry the request after a short delay; if persistent, contact support |
+
+## Handling Warnings in Code
+
+When processing API responses, check for the `warnings` array to be notified of non-fatal issues:
+
+<Tabs>
+<Tab title="JavaScript">
+```javascript
+const response = await fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045?chain_ids=1,9999,10', {
+  headers: {'X-Sim-Api-Key': 'YOUR_API_KEY'}
+});
+
+const data = await response.json();
+
+// Check for warnings
+if (data.warnings && data.warnings.length > 0) {
+  data.warnings.forEach(warning => {
+    if (warning.code === 'UNSUPPORTED_CHAIN_IDS') {
+      console.warn(`Warning: Chains ${warning.chain_ids.join(', ')} are not supported.`);
+      console.warn(`See: ${warning.docs_url}`);
+    }
+  });
+}
+
+// Process the data that was successfully returned
+console.log(`Found ${data.balances.length} balances`);
+```
+</Tab>
+<Tab title="Python">
+```python
+import requests
+
+response = requests.get(
+    'https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045',
+    headers={'X-Sim-Api-Key': 'YOUR_API_KEY'},
+    params={'chain_ids': '1,9999,10'}
+)
+
+data = response.json()
+
+# Check for warnings
+if 'warnings' in data and len(data['warnings']) > 0:
+    for warning in data['warnings']:
+        if warning['code'] == 'UNSUPPORTED_CHAIN_IDS':
+            print(f"Warning: Chains {warning['chain_ids']} are not supported.")
+            print(f"See: {warning['docs_url']}")
+
+# Process the data that was successfully returned
+print(f"Found {len(data['balances'])} balances")
+```
+</Tab>
+</Tabs>
 
 ## Handling Errors in Code
 

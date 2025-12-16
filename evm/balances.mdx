@@ -73,6 +73,58 @@ When set, each balance includes a `historical_prices` array with one entry per o
   The maximum number of historical price offsets is 3. If more than 3 are provided, the API returns an error.
 </Warning>
 
+## Warnings
+
+When requesting balances for specific chains using the `chain_ids` parameter, the API may return warnings if some requested chain IDs are not supported. Unlike errors, warnings indicate non-fatal issues where the request can still be partially fulfilled.
+
+When unsupported chain IDs are included in your request, the API will:
+- Return balances for all supported chains you requested
+- Include a `warnings` array in the response with details about the unsupported chains
+
+### Example: Request with Unsupported Chain IDs
+
+If you request `?chain_ids=1,9999,10,77777777777`, the API returns balances for chains 1 and 10 (supported), and includes a warning about chains 9999 and 77777777777 (unsupported):
+
+```json
+{
+  "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+  "balances": [
+    {
+      "chain": "ethereum",
+      "chain_id": 1,
+      "address": "native",
+      "amount": "1000000000000000000",
+      "symbol": "ETH",
+      "decimals": 18,
+      "price_usd": 3896.8315,
+      "value_usd": 3896.8315
+    },
+    {
+      "chain": "optimism",
+      "chain_id": 10,
+      "address": "native",
+      "amount": "500000000000000000",
+      "symbol": "ETH",
+      "decimals": 18,
+      "price_usd": 3896.8315,
+      "value_usd": 1948.41575
+    }
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Balances are returned only for supported chains.",
+      "chain_ids": [9999, 77777777777],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Tip>
+  Check the [Supported Chains](/evm/supported-chains) page to see which chains are currently supported for the Balances endpoint.
+</Tip>
+
 ## Pagination
 
 This endpoint is using cursor based pagination. You can use the `limit` query parameter to define the maximum page size.

@@ -28,6 +28,49 @@ For more details, see the [response information](#response-logs-decoded) below.
   Decoding is only available for contracts that exist on [Dune.com](https://dune.com). Search for your contract on Dune to check if it's available for decoding. Transactions without logs, logs without known signatures, or contracts not indexed on Dune **will not** include decoded data.
 </Note>
 
+## Warnings
+
+When requesting transactions for specific chains using the `chain_ids` parameter, the API may return warnings if some requested chain IDs are not supported. Unlike errors, warnings indicate non-fatal issues where the request can still be partially fulfilled.
+
+When unsupported chain IDs are included in your request, the API will:
+- Return transactions for all supported chains you requested
+- Include a `warnings` array in the response with details about the unsupported chains
+
+### Example: Request with Unsupported Chain IDs
+
+If you request `?chain_ids=1,9999,10`, the API returns transactions for chains 1 and 10 (supported), and includes a warning about chain 9999 (unsupported):
+
+```json
+{
+  "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+  "transactions": [
+    {
+      "address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+      "block_hash": "0x745bdf699cee1fef27b9304be43a2435c744500ef455cc6b7dfb4c34417601a2",
+      "block_number": "30819446",
+      "block_time": "2025-05-28T10:30:39Z",
+      "chain": "ethereum",
+      "from": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+      "to": "0x6ff5693b99212da76ad316178a184ab56d299b43",
+      "hash": "0x1081ebf623669338e9de6865d08d7ff3a3d1b0ef6f6486b350c3caf5b2e9257d",
+      "value": "0x0"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Transactions are returned only for supported chains.",
+      "chain_ids": [9999],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Tip>
+  Check the [Supported Chains](/evm/supported-chains) page to see which chains are currently supported for the Transactions endpoint.
+</Tip>
+
 ## Pagination
 
 This endpoint is using cursor based pagination.
