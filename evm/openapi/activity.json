@@ -324,6 +324,38 @@
           }
         }
       },
+      "Warning": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Warning code identifier",
+            "example": "UNSUPPORTED_CHAIN_IDS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message",
+            "example": "Some requested chain_ids are not supported. Activity is returned only for supported chains."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "List of chain IDs that triggered this warning"
+          },
+          "docs_url": {
+            "type": "string",
+            "description": "URL to relevant documentation",
+            "example": "https://docs.sim.dune.com/evm/supported-chains"
+          }
+        }
+      },
       "ActivityResponse": {
         "type": "object",
         "required": [
@@ -336,6 +368,13 @@
               "$ref": "#/components/schemas/ActivityItem"
             },
             "description": "Array of activity items"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "description": "Array of warnings about the request. For example, warnings about unsupported chain IDs."
           },
           "next_offset": {
             "type": "string",
