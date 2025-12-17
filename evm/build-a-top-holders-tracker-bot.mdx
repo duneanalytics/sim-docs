@@ -29,6 +29,7 @@ Before you begin, ensure you have:
 - **Sim API Key** - [Get your API key](https://sim.dune.com)
 - **Telegram Bot Token** - Create one via [@BotFather](https://t.me/botfather)
 - **Supabase Account** - [Create a free account](https://supabase.com)
+- **ngrok Account** - [Create a free account](https://dashboard.ngrok.com) for local development
 
 ## Features
 
@@ -61,10 +62,12 @@ Let's initialize the project.
   </Step>
 
   <Step title="Set Up Supabase">
-    1. Go to [supabase.com/dashboard](https://supabase.com/dashboard) and create a new project
-    2. Once created, go to **Project Settings** → **Database**
-    3. Scroll to **Connection string** and select the **URI** tab
-    4. Copy the **Transaction pooler** connection string (uses port `6543`)
+    1. Go to [supabase.com/dashboard](https://supabase.com/dashboard) and click **Create a new project**
+    2. Fill in your project details (project name, database password, region) and click **Create new project**
+    3. Once created, click **Connect** in the top navigation bar
+    4. Select the **Connection string** tab, then choose type **URI**
+    5. Select **Transaction pooler** and copy the connection string
+    6. Replace `[YOUR-PASSWORD]` with your [URL-encoded](https://www.urlencoder.org/) database password
     
     <Note>
       The Transaction pooler connection is recommended for serverless deployments like Vercel.
@@ -93,8 +96,8 @@ Let's initialize the project.
     {
       "type": "module",
       "scripts": {
-        "dev": "node index.js",
-        "start": "node index.js"
+        "dev": "node --env-file=.env index.js",
+        "start": "node --env-file=.env index.js"
       }
     }
     ```
@@ -185,38 +188,13 @@ Let's initialize the project.
     ```
   </Step>
 
-  <Step title="Create Tables and Enable Row Level Security">
-    In your Supabase dashboard, go to **SQL Editor** and run:
+  <Step title="Enable Row Level Security">
+    The application creates tables automatically on startup, but you need to enable Row Level Security (RLS) policies in the Supabase dashboard. Go to **SQL Editor** and run:
 
     ```sql expandable
--- ============================================
--- 1. CREATE TABLES (Optional - app creates these automatically)
--- ============================================
-
-CREATE TABLE IF NOT EXISTS top_holders (
-  id SERIAL PRIMARY KEY,
-  token_address TEXT,
-  chain_id INTEGER,
-  symbol TEXT,
-  blockchain TEXT,
-  holders_json TEXT,
-  UNIQUE(token_address, chain_id)
-);
-
-CREATE TABLE IF NOT EXISTS subscribers (
-  chat_id TEXT PRIMARY KEY,
-  subscribed_at TEXT
-);
-
-CREATE TABLE IF NOT EXISTS webhooks (
-  id TEXT PRIMARY KEY,
-  token_address TEXT,
-  chain_id INTEGER,
-  active INTEGER DEFAULT 1
-);
 
 -- ============================================
--- 2. ENABLE ROW LEVEL SECURITY (Required)
+-- 1. ENABLE ROW LEVEL SECURITY (Required)
 -- ============================================
 
 ALTER TABLE top_holders ENABLE ROW LEVEL SECURITY;
@@ -224,7 +202,7 @@ ALTER TABLE subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
--- 3. CREATE PERMISSIVE POLICIES (Required)
+-- 2. CREATE PERMISSIVE POLICIES (Required)
 -- ============================================
 
 -- Drop existing policies if they exist (prevents errors on re-run)
@@ -243,7 +221,7 @@ CREATE POLICY "Allow all operations on webhooks" ON webhooks
   FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================
--- 4. VERIFY SETUP (Run to check everything)
+-- 3. VERIFY SETUP (Run to check everything)
 -- ============================================
 
 SELECT 
@@ -254,13 +232,17 @@ WHERE schemaname = 'public'
   AND tablename IN ('top_holders', 'subscribers', 'webhooks');
     ```
 
-    This creates three tables: `top_holders` for storing token holder data, `subscribers` for Telegram chat IDs, and `webhooks` for tracking active subscriptions. The RLS policies allow your server full access while keeping the database secure.
+    These RLS policies allow your server full access while keeping the database secure.
   </Step>
 </Steps>
 
-## Get Top ERC20 Tokens
+## Build the Bot
 
-We need a list of popular tokens to monitor. Create a file called `tokens.csv` in your project root with the following content:
+With the project set up, we'll now implement the core functionality: loading token data, fetching top holders from Sim's Token Holders API, setting up webhook subscriptions, and wiring everything to Telegram.
+
+<Steps>
+  <Step title="Get Top ERC20 Tokens">
+    We need a list of popular tokens to monitor. Create a file called `tokens.csv` in your project root with the following content:
 
 ```csv tokens.csv expandable
 blockchain,symbol,contract_address,rank,volume_24h
@@ -354,10 +336,10 @@ function loadTokensFromCSV() {
   }
 }
 ```
+  </Step>
 
-## Get Top Token Holders
-
-Now we'll identify the top holder addresses for each token using Sim's Token Holders API and store them in our database.
+  <Step title="Get Top Token Holders">
+    Now we'll identify the top holder addresses for each token using Sim's Token Holders API and store them in our database.
 
 ### Fetch Holders for a Token
 
@@ -429,10 +411,10 @@ app.post("/setup/fetch-holders", async (req, res) => {
   }
 });
 ```
+  </Step>
 
-## Set Up Webhooks
-
-We'll use Sim's Subscriptions API (`/beta/`) to register webhooks. We use the `balances` subscription type.
+  <Step title="Set Up Webhooks">
+    We'll use the Sim Subscriptions API (`/beta/subscriptions`) to register webhooks. We use the `balances` subscription type.
 
 ### Create a Webhook
 
@@ -508,10 +490,10 @@ app.post("/setup/create-webhooks", async (req, res) => {
   }
 });
 ```
+  </Step>
 
-## Handle Balance Change Events
-
-When a top holder moves funds, Sim sends a POST request to your webhook URL.
+  <Step title="Handle Balance Change Events">
+    When a top holder moves funds, Sim sends a POST request to your webhook URL.
 
 ### Process Incoming Webhooks
 
@@ -541,10 +523,10 @@ app.post("/balances", async (req, res) => {
   res.json({ ok: true, processed: processedTxs.size });
 });
 ```
+  </Step>
 
-## Send Telegram Notifications
-
-### Manage Subscribers
+  <Step title="Send Telegram Notifications">
+    ### Manage Subscribers
 
 We use PostgreSQL to persist chat IDs.
 
@@ -684,10 +666,10 @@ app.post("/telegram/webhook", async (req, res) => {
   res.json({ ok: true });
 });
 ```
+  </Step>
 
-## Manage Webhooks
-
-The Subscriptions API provides endpoints to list and update your webhooks.
+  <Step title="Manage Webhooks">
+    The Subscriptions API provides endpoints to list and update your webhooks.
 
 ### Pause and Resume
 
@@ -730,7 +712,7 @@ app.post("/setup/pause-webhooks", async (req, res) => {
     if (webhook.active) {
       await updateWebhookStatus(webhook.id, false);
       paused++;
-      await setTimeout(100);
+      await setTimeout(250);
     }
   }
   res.json({ ok: true, paused });
@@ -743,12 +725,14 @@ app.post("/setup/resume-webhooks", async (req, res) => {
     if (!webhook.active) {
       await updateWebhookStatus(webhook.id, true);
       resumed++;
-      await setTimeout(100);
+      await setTimeout(250);
     }
   }
   res.json({ ok: true, resumed });
 });
 ```
+  </Step>
+</Steps>
 
 ## Deploy and Configure
 
@@ -762,7 +746,7 @@ app.post("/setup/resume-webhooks", async (req, res) => {
   </Step>
 
   <Step title="Expose to Public Internet">
-    If developing locally, use ngrok to make your localhost accessible:
+    If developing locally, you can expose a port to the public internet so that Sim Subscriptions can call it. [ngrok](https://ngrok.com) is a utility that helps with that. You need an account on [dashboard.ngrok.com](https://dashboard.ngrok.com) to use it.
     
     ```bash
     ngrok http 3001
