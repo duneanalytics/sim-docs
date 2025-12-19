@@ -1,4 +1,4 @@
-export const SupportedChains = ({ endpoint, title }) => {
+export const SupportedChains = ({ endpoint, title, excludeChains }) => {
   const dataState = useState(null);
   const data = dataState[0];
   const setData = dataState[1];
@@ -30,16 +30,22 @@ export const SupportedChains = ({ endpoint, title }) => {
 
   var supportedChains = [];
   var totalChains = data.chains.length;
+  var excludedChainNames = excludeChains || [];
 
   if (endpoint !== undefined && endpoint !== 'defi_positions') {
     for (var i = 0; i < data.chains.length; i++) {
       var chain = data.chains[i];
-      if (chain[endpoint] && chain[endpoint].supported) {
+      if (chain[endpoint] && chain[endpoint].supported && excludedChainNames.indexOf(chain.name) === -1) {
         supportedChains.push(chain);
       }
     }
   } else {
-    supportedChains = data.chains;
+    for (var i = 0; i < data.chains.length; i++) {
+      var chain = data.chains[i];
+      if (excludedChainNames.indexOf(chain.name) === -1) {
+        supportedChains.push(chain);
+      }
+    }
   }
 
   var count = supportedChains.length;
