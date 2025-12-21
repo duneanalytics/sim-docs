@@ -73,6 +73,33 @@ When set, each balance includes a `historical_prices` array with one entry per o
   The maximum number of historical price offsets is 3. If more than 3 are provided, the API returns an error.
 </Warning>
 
+## Unsupported Chain IDs
+
+When you request chain IDs that are not supported, the API will return a warning in the response instead of throwing an error. The `warnings` field will contain information about which chain IDs were not supported, and balances will be returned only for the supported chains.
+
+For example, if you request `chain_ids=1,9999,10,77777777777`:
+
+```json
+{
+  "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+  "balances": [
+    // Balances for chains 1 and 10 only
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Balances are returned only for supported chains.",
+      "chain_ids": [9999, 77777777777],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Note>
+  Invalid chain ID tags (like typos in tag names) will still return errors as designed. Only invalid numeric chain IDs generate warnings.
+</Note>
+
 ## Pagination
 
 This endpoint is using cursor based pagination. You can use the `limit` query parameter to define the maximum page size.

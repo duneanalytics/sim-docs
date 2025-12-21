@@ -14,6 +14,33 @@ Transactions are ordered by descending block time, so the most recent transactio
 
 <SupportedChains endpoint="transactions" />
 
+## Unsupported Chain IDs
+
+When you request chain IDs that are not supported, the API will return a warning in the response instead of throwing an error. The `warnings` field will contain information about which chain IDs were not supported, and transactions will be returned only for the supported chains.
+
+For example, if you request `chain_ids=1,9999,10,77777777777`:
+
+```json
+{
+  "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+  "transactions": [
+    // Transactions for chains 1 and 10 only
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Transactions are returned only for supported chains.",
+      "chain_ids": [9999, 77777777777],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Note>
+  Invalid chain ID tags (like typos in tag names) will still return errors as designed. Only invalid numeric chain IDs generate warnings.
+</Note>
+
 ## Decoded transactions
 
 Enable decoded transaction data and logs by adding the `?decode=true` query parameter to your request.

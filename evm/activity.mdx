@@ -32,6 +32,32 @@ Each activity includes detailed information such as:
 Activities are mostly indexed events. There are, of course, no events for native token transfers (wen [7708](https://ethereum-magicians.org/t/eip-7708-eth-transfers-emit-a-log/20034)?). We do have a heuristic to catch very simple native token transfers, where the native token transfer is the entirety of the transaction, but unfortunately we don't currently catch native token transfers that happen within internal txns.
 </Callout>
 
+## Unsupported Chain IDs
+
+When you request chain IDs that are not supported, the API will return a warning in the response instead of throwing an error. The `warnings` field will contain information about which chain IDs were not supported, and activity will be returned only for the supported chains.
+
+For example, if you request `chain_ids=1,9999,10,77777777777`:
+
+```json
+{
+  "activity": [
+    // Activity for chains 1 and 10 only
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Activity is returned only for supported chains.",
+      "chain_ids": [9999, 77777777777],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Note>
+  Invalid chain ID tags (like typos in tag names) will still return errors as designed. Only invalid numeric chain IDs generate warnings.
+</Note>
+
 ## Data Finality & Re-orgs
 
 Sim APIs are designed to automatically detect and handle blockchain re-organizations.
