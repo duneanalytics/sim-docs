@@ -93,168 +93,123 @@
                 "schema": {
                   "$ref": "#/components/schemas/TransactionsResponse"
                 },
-                "example": {
-                  "transactions": [
-                    {
-                      "address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "block_hash": "0x745bdf699cee1fef27b9304be43a2435c744500ef455cc6b7dfb4c34417601a2",
-                      "block_number": "30819446",
-                      "block_time": "2025-05-28T10:30:39Z",
-                      "chain": "base",
-                      "from": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "to": "0x6ff5693b99212da76ad316178a184ab56d299b43",
-                      "data": "0x3593564c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000006836ecce000000000000000000000000000000000000000000000000000000000000000308060c000000000000000000000000000000000000000000000000000000000000",
-                      "gas_price": "0x5aaa88",
-                      "hash": "0x1081ebf623669338e9de6865d08d7ff3a3d1b0ef6f6486b350c3caf5b2e9257d",
-                      "index": "35",
-                      "nonce": "0x8",
-                      "transaction_type": "0x2",
-                      "value": "0x0",
-                      "decoded": {
-                        "name": "execute",
-                        "inputs": [
-                          {
-                            "name": "_commands",
-                            "type": "bytes",
-                            "value": "0x08060c"
-                          },
-                          {
-                            "name": "_inputs",
-                            "type": "bytes[]",
-                            "value": [
-                              "0x000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000186a0"
-                            ]
-                          },
-                          {
-                            "name": "_deadline",
-                            "type": "uint256",
-                            "value": "1748430030"
-                          }
-                        ]
-                      },
-                      "logs": [
+                "examples": {
+                  "success": {
+                    "summary": "Successful response",
+                    "value": {
+                      "transactions": [
                         {
-                          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-                          "data": "0x00000000000000000000000000000000000000000000000000000000000186a0",
-                          "topics": [
-                            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-                            "0x0000000000000000000000007532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                            "0x00000000000000000000000088a43bbdf9d098eec7bceda4e2494615dfd9bb9c"
-                          ],
+                          "address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
+                          "block_hash": "0x745bdf699cee1fef27b9304be43a2435c744500ef455cc6b7dfb4c34417601a2",
+                          "block_number": "30819446",
+                          "block_time": "2025-05-28T10:30:39Z",
+                          "chain": "base",
+                          "from": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
+                          "to": "0x6ff5693b99212da76ad316178a184ab56d299b43",
+                          "data": "0x3593564c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000006836ecce000000000000000000000000000000000000000000000000000000000000000308060c000000000000000000000000000000000000000000000000000000000000",
+                          "gas_price": "0x5aaa88",
+                          "hash": "0x1081ebf623669338e9de6865d08d7ff3a3d1b0ef6f6486b350c3caf5b2e9257d",
+                          "index": "35",
+                          "nonce": "0x8",
+                          "transaction_type": "0x2",
+                          "value": "0x0",
                           "decoded": {
-                            "name": "Transfer",
+                            "name": "execute",
                             "inputs": [
                               {
-                                "name": "sender",
-                                "type": "address",
-                                "value": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa"
+                                "name": "_commands",
+                                "type": "bytes",
+                                "value": "0x08060c"
                               },
                               {
-                                "name": "to",
-                                "type": "address",
-                                "value": "0x88a43bbdf9d098eec7bceda4e2494615dfd9bb9c"
+                                "name": "_inputs",
+                                "type": "bytes[]",
+                                "value": [
+                                  "0x000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000186a0"
+                                ]
                               },
                               {
-                                "name": "value",
+                                "name": "_deadline",
                                 "type": "uint256",
-                                "value": "100000"
+                                "value": "1748430030"
                               }
                             ]
-                          }
-                        }
-                      ]
-                    },
-                    {
-                      "address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "block_hash": "0x76947181fe3fe124085e1de7dc9494312cd417c02dd4f279da75bcca1e24c7d4",
-                      "block_number": "30819278",
-                      "block_time": "2025-05-28T10:25:03Z",
-                      "chain": "base",
-                      "from": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "to": "0x6ff5693b99212da76ad316178a184ab56d299b43",
-                      "data": "0x3593564c000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000a0000000000000000000000000000000000000000000000000000000006836eb82",
-                      "gas_price": "0x2a6b28",
-                      "hash": "0xa1e2251a9ccad288024bddbd8ba983ef9de8caf4f46bed2dc72be4550edee2be",
-                      "index": "81",
-                      "nonce": "0x7",
-                      "transaction_type": "0x2",
-                      "value": "0x0",
-                      "decoded": {
-                        "name": "execute",
-                        "inputs": [
-                          {
-                            "name": "_commands",
-                            "type": "bytes",
-                            "value": "0x0a100604"
                           },
-                          {
-                            "name": "_inputs",
-                            "type": "bytes[]",
-                            "value": [
-                              "0x000000000000000000000000833589fcd6edb6e08f4c7c32d4f71b54bda02913000000000000000000000000ffffffffffffffffffffffffffffffffffffffff"
-                            ]
-                          },
-                          {
-                            "name": "_deadline",
-                            "type": "uint256",
-                            "value": "1748429698"
-                          }
-                        ]
-                      },
-                      "logs": [
-                        {
-                          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-                          "data": "0x0000000000000000000000000000000000000000000000000000000000030d40",
-                          "topics": [
-                            "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-                            "0x0000000000000000000000007532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                            "0x000000000000000000000000498581ff718922c3f8e6a244956af099b2652b2b"
-                          ],
-                          "decoded": {
-                            "name": "Transfer",
-                            "inputs": [
-                              {
-                                "name": "sender",
-                                "type": "address",
-                                "value": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa"
-                              },
-                              {
-                                "name": "to",
-                                "type": "address",
-                                "value": "0x498581ff718922c3f8e6a244956af099b2652b2b"
-                              },
-                              {
-                                "name": "value",
-                                "type": "uint256",
-                                "value": "200000"
+                          "logs": [
+                            {
+                              "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+                              "data": "0x00000000000000000000000000000000000000000000000000000000000186a0",
+                              "topics": [
+                                "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
+                                "0x0000000000000000000000007532cd0651030d3dc80b28199a125fc9f5ac80fa",
+                                "0x00000000000000000000000088a43bbdf9d098eec7bceda4e2494615dfd9bb9c"
+                              ],
+                              "decoded": {
+                                "name": "Transfer",
+                                "inputs": [
+                                  {
+                                    "name": "sender",
+                                    "type": "address",
+                                    "value": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa"
+                                  },
+                                  {
+                                    "name": "to",
+                                    "type": "address",
+                                    "value": "0x88a43bbdf9d098eec7bceda4e2494615dfd9bb9c"
+                                  },
+                                  {
+                                    "name": "value",
+                                    "type": "uint256",
+                                    "value": "100000"
+                                  }
+                                ]
                               }
-                            ]
-                          }
+                            }
+                          ]
                         }
-                      ]
-                    },
-                    {
-                      "address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "block_hash": "0x90f2b615c81dbf0dcc4f61e0dc9a6101cee206bd923e31829d3b18a6c4553eb9",
-                      "block_number": "21554172",
-                      "block_time": "2025-02-06T21:17:12Z",
-                      "chain": "base_sepolia",
-                      "from": "0xbab76e4365a2dff89ddb2d3fc9994103b48886c0",
-                      "to": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa",
-                      "data": "0x",
-                      "gas_price": "0x174876e800",
-                      "hash": "0x7ab170893e06abeaa5aa88e2e6d25873e7635b2da49484b9422359491fd6774b",
-                      "index": "1",
-                      "nonce": "0x1773d",
-                      "transaction_type": "0x2",
-                      "value": "0xb1a2bc2ec50000",
-                      "logs": []
+                      ],
+                      "next_offset": "QBHrUqbdBQDkBwAAAAAAACHjyAAAAAAAAAAAAAAAAAACAAAAAAAAAA",
+                      "request_time": "2025-05-28T10:31:56Z",
+                      "response_time": "2025-05-28T10:31:56Z",
+                      "wallet_address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa"
                     }
-                  ],
-                  "next_offset": "QBHrUqbdBQDkBwAAAAAAACHjyAAAAAAAAAAAAAAAAAACAAAAAAAAAA",
-                  "request_time": "2025-05-28T10:31:56Z",
-                  "response_time": "2025-05-28T10:31:56Z",
-                  "wallet_address": "0x7532cd0651030d3dc80b28199a125fc9f5ac80fa"
+                  },
+                  "with_warnings": {
+                    "summary": "Response with unsupported chain IDs warning",
+                    "value": {
+                      "transactions": [
+                        {
+                          "address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+                          "block_hash": "0x745bdf699cee1fef27b9304be43a2435c744500ef455cc6b7dfb4c34417601a2",
+                          "block_number": "30819446",
+                          "block_time": "2025-05-28T10:30:39Z",
+                          "chain": "ethereum",
+                          "from": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+                          "to": "0x6ff5693b99212da76ad316178a184ab56d299b43",
+                          "data": "0x",
+                          "gas_price": "0x5aaa88",
+                          "hash": "0x1081ebf623669338e9de6865d08d7ff3a3d1b0ef6f6486b350c3caf5b2e9257d",
+                          "index": "35",
+                          "nonce": "0x8",
+                          "transaction_type": "0x2",
+                          "value": "0x0",
+                          "logs": []
+                        }
+                      ],
+                      "warnings": [
+                        {
+                          "code": "UNSUPPORTED_CHAIN_IDS",
+                          "message": "Some requested chain_ids are not supported. Transactions are returned only for supported chains.",
+                          "chain_ids": [9999, 77777777777],
+                          "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+                        }
+                      ],
+                      "next_offset": "QBHrUqbdBQDkBwAAAAAAACHjyAAAAAAAAAAAAAAAAAACAAAAAAAAAA",
+                      "request_time": "2025-12-16T10:31:56Z",
+                      "response_time": "2025-12-16T10:31:56Z",
+                      "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341"
+                    }
+                  }
                 }
               }
             }
@@ -453,6 +408,38 @@
           }
         }
       },
+      "Warning": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Warning code identifier (e.g., 'UNSUPPORTED_CHAIN_IDS')",
+            "example": "UNSUPPORTED_CHAIN_IDS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message",
+            "example": "Some requested chain_ids are not supported. Transactions are returned only for supported chains."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "List of chain IDs that triggered this warning (for chain-related warnings)"
+          },
+          "docs_url": {
+            "type": "string",
+            "description": "URL to documentation with more information about the warning",
+            "example": "https://docs.sim.dune.com/evm/supported-chains"
+          }
+        }
+      },
       "TransactionsResponse": {
         "type": "object",
         "required": [
@@ -472,6 +459,13 @@
                 "$ref": "#/components/schemas/TransactionErrors"
               }
             ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "description": "Array of warnings that occurred during request processing. Warnings indicate non-fatal issues (e.g., unsupported chain IDs) where the request can still be partially fulfilled."
           },
           "next_offset": {
             "type": "string"

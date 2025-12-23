@@ -166,6 +166,44 @@
                         "request_time": "2025-08-13T10:31:08Z",
                         "response_time": "2025-08-13T10:31:08Z"
                     }
+                  },
+                  "with_warnings": {
+                    "summary": "Response with unsupported chain IDs warning",
+                    "value": {
+                      "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+                      "balances": [
+                        {
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "address": "native",
+                          "amount": "1000000000000000000",
+                          "symbol": "ETH",
+                          "decimals": 18,
+                          "price_usd": 3896.8315,
+                          "value_usd": 3896.8315
+                        },
+                        {
+                          "chain": "optimism",
+                          "chain_id": 10,
+                          "address": "native",
+                          "amount": "500000000000000000",
+                          "symbol": "ETH",
+                          "decimals": 18,
+                          "price_usd": 3896.8315,
+                          "value_usd": 1948.41575
+                        }
+                      ],
+                      "warnings": [
+                        {
+                          "code": "UNSUPPORTED_CHAIN_IDS",
+                          "message": "Some requested chain_ids are not supported. Balances are returned only for supported chains.",
+                          "chain_ids": [9999, 77777777777],
+                          "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+                        }
+                      ],
+                      "request_time": "2025-12-16T10:31:08Z",
+                      "response_time": "2025-12-16T10:31:08Z"
+                    }
                   }
                 }
               }
@@ -431,6 +469,38 @@
           }
         }
       },
+      "Warning": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Warning code identifier (e.g., 'UNSUPPORTED_CHAIN_IDS')",
+            "example": "UNSUPPORTED_CHAIN_IDS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message",
+            "example": "Some requested chain_ids are not supported. Balances are returned only for supported chains."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "List of chain IDs that triggered this warning (for chain-related warnings)"
+          },
+          "docs_url": {
+            "type": "string",
+            "description": "URL to documentation with more information about the warning",
+            "example": "https://docs.sim.dune.com/evm/supported-chains"
+          }
+        }
+      },
       "BalancesResponse": {
         "type": "object",
         "required": [
@@ -450,6 +520,13 @@
                 "$ref": "#/components/schemas/BalanceErrors"
               }
             ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "description": "Array of warnings that occurred during request processing. Warnings indicate non-fatal issues (e.g., unsupported chain IDs) where the request can still be partially fulfilled."
           },
           "next_offset": {
             "type": "string",
@@ -481,6 +558,11 @@
           "balances": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/BalanceData" }
+          },
+          "warnings": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Warning" },
+            "description": "Array of warnings that occurred during request processing. Warnings indicate non-fatal issues (e.g., unsupported chain IDs) where the request can still be partially fulfilled."
           },
           "request_time": { "type": "string", "format": "date-time" },
           "response_time": { "type": "string", "format": "date-time" },

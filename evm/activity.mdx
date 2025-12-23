@@ -38,6 +38,54 @@ Sim APIs are designed to automatically detect and handle blockchain re-organizat
 We detect any potentially broken parent-child block relationships as soon as they arise and update our internal state to match the onchain state, typically within a few hundred milliseconds.
 This re-org handling is an automatic, non-configurable feature designed to provide the most reliable data.
 
+## Warnings
+
+When requesting activity for specific chains using the `chain_ids` parameter, the API may return warnings if some requested chain IDs are not supported. Unlike errors, warnings indicate non-fatal issues where the request can still be partially fulfilled.
+
+When unsupported chain IDs are included in your request, the API will:
+- Return activity for all supported chains you requested
+- Include a `warnings` array in the response with details about the unsupported chains
+
+### Example: Request with Unsupported Chain IDs
+
+If you request `?chain_ids=1,9999,10`, the API returns activity for chains 1 and 10 (supported), and includes a warning about chain 9999 (unsupported):
+
+```json
+{
+  "activity": [
+    {
+      "chain_id": 1,
+      "block_number": 18500000,
+      "block_time": "2025-02-20T13:52:29+00:00",
+      "tx_hash": "0x184544c8d67a0cbed0a3f04abe5f958b96635e8c743c070f70e24b1c06cd1aa6",
+      "type": "receive",
+      "asset_type": "erc20",
+      "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "from": "0xd152f549545093347a162dce210e7293f1452150",
+      "value": "1000000",
+      "value_usd": 1.0,
+      "token_metadata": {
+        "symbol": "USDC",
+        "decimals": 6,
+        "price_usd": 1.0
+      }
+    }
+  ],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported. Activity is returned only for supported chains.",
+      "chain_ids": [9999],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+<Tip>
+  Check the [Supported Chains](/evm/supported-chains) page to see which chains are currently supported for the Activity endpoint.
+</Tip>
+
 ## Token Filtering
 
 We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
