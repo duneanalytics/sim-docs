@@ -26,7 +26,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "API key to access the service",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
