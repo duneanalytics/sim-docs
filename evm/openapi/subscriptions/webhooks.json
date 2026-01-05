@@ -24,7 +24,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -111,7 +111,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -185,7 +185,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -246,7 +246,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -325,7 +325,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -370,7 +370,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -443,7 +443,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"
@@ -502,7 +502,7 @@
           {
             "name": "X-Sim-Api-Key",
             "in": "header",
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "required": true,
             "schema": {
               "type": "string"

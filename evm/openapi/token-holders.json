@@ -114,7 +114,7 @@
             "name": "X-Sim-Api-Key",
             "in": "header",
             "required": true,
-            "description": "Used for authenticating requests. Provide an API key with a purpose of `Sim API`. See [Authentication](/#authentication).",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
             "schema": {
               "type": "string"
             }
