@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Sim API - DeFi Positions Endpoint",
-    "description": "Retrieve DeFi positions along with pricing and metadata for an address across supported EVM chains.",
+    "description": "⚠️ **Coming Soon**: This endpoint is temporarily unavailable while being rearchitected for expanded coverage. The DeFi Positions API will retrieve DeFi positions along with pricing and metadata for an address across supported EVM chains.",
     "license": {
       "name": ""
     },
@@ -19,8 +19,8 @@
         "tags": [
           "defi-positions"
         ],
-        "summary": "Get DeFi positions for an address",
-        "description": "Returns a wallet's DeFi positions including USD values, position-specific metadata, and aggregation summaries across supported protocols.",
+        "summary": "Get DeFi positions for an address (Coming Soon)",
+        "description": "⚠️ **This endpoint is temporarily unavailable** while being rearchitected for expanded coverage. When available, it will return a wallet's DeFi positions including USD values, position-specific metadata, and aggregation summaries across supported protocols.",
         "operationId": "getEvmDefiPositions",
         "parameters": [
           {
