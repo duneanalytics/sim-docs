@@ -43,6 +43,19 @@ You can set up and manage your subscriptions in two ways:
   </Card>
 </CardGroup>
 
+## Filtering Events
+
+You can apply optional filters when creating or updating webhooks to reduce noise and only receive the events you care about. Available filters vary by webhook type:
+
+- **All types**: `chain_ids` (specific blockchains), `asset_type` (native/ERC20/ERC721/ERC1155), `token_address` (specific token contract)
+- **Transactions**: `transaction_type` (sender/receiver), `counterparty` (specific counterparty address)
+- **Activities**: `activity_type` (send/receive/swap/approve/mint/burn/call)
+- **Balances**: All common filters apply
+
+<Tip>
+Start with broad filters and refine them based on your needs. Tighter filters help reduce webhook volume and costs.
+</Tip>
+
 ## Compute Unit Cost
 
 The Subscriptions API costs **2 CUs per event** sent to your webhook. Note that a single webhook call may include multiple events. For example, multiple balance changes or transactions.

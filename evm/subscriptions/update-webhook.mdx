@@ -43,6 +43,17 @@ To temporarily stop receiving webhook deliveries without deleting the webhook:
 }
 ```
 
+### Update Filter Settings
+
+Update type-specific filters for your webhook:
+
+```json
+{
+  "activity_type": "send",
+  "asset_type": "erc20"
+}
+```
+
 ### Update Multiple Properties
 
 You can update multiple properties in a single request:
@@ -51,7 +62,8 @@ You can update multiple properties in a single request:
 {
   "name": "Updated USDC Monitor",
   "active": true,
-  "chain_ids": [1, 8453]
+  "chain_ids": [1, 8453],
+  "token_address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 }
 ```
 
