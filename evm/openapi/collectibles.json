@@ -138,16 +138,18 @@
                     "unique_buyers",
                     "unique_sellers",
                     "externally_flagged",
-                    "ipfs_uri_present",
+                    "uri_non_ipfs",
                     "suspicious_words",
-                    "url_shortener_in_uri"
+                    "url_shortener",
+                    "manual_classification"
                   ]
                 },
                 "value": {
                   "description": "Observed value for the feature (type varies by feature).",
                   "oneOf": [
                     { "type": "integer", "format": "int32" },
-                    { "type": "boolean" }
+                    { "type": "boolean" },
+                    { "type": "string" }
                   ]
                 },
                 "feature_score": {
@@ -286,7 +288,7 @@
             "name": "filter_spam",
             "in": "query",
             "required": false,
-            "description": "When true, hide collectibles identified as spam. Set to false to return all collectibles, including potential spam. See the [Spam Filtering](##spam-filtering) section for more details.",
+            "description": "When true, hide collectibles identified as spam. Set to false to return all collectibles, including potential spam. See the [Spam Filtering](#spam-filtering) section for more details.",
             "schema": {
               "type": "boolean",
               "default": true
@@ -296,7 +298,7 @@
             "name": "show_spam_scores",
             "in": "query",
             "required": false,
-            "description": "When true, include spam scoring details including contributing signals to explain filtering decisions.",
+            "description": "When true, include spam scoring details (`spam_score` and `explanations`) to explain filtering decisions.",
             "schema": {
               "type": "boolean",
               "default": false
