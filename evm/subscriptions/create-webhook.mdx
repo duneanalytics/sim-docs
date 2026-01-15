@@ -16,15 +16,22 @@ Creates a new webhook subscription. When creating a webhook, you must specify:
 
 You can narrow down the events you receive by adding optional filters:
 
+### Universal Filters
 - **chain_ids**: Monitor only specific chains (e.g., `[1, 8453]` for Ethereum and Base)
-- **transaction_type**: For transaction webhooks, filter by `sender` or `receiver`
-- **counterparty**: Filter transactions by counterparty address
-- **activity_type**: For activity webhooks, filter by specific types (`send`, `receive`, `swap`, etc.)
 - **asset_type**: Filter by asset type (`native`, `erc20`, `erc721`, `erc1155`)
-- **token_address**: Monitor only a specific token contract
+- **token_address**: Monitor only a specific token contract address
+
+### Transaction Webhook Filters
+Available only when `type: "transactions"`:
+- **transaction_type**: Filter by `sender` or `receiver` to monitor only outgoing or incoming transactions
+- **counterparty**: Filter transactions by a specific counterparty address
+
+### Activity Webhook Filters
+Available only when `type: "activities"`:
+- **activity_type**: Filter by specific activity types: `approve`, `mint`, `burn`, `receive`, `send`, `swap`, or `call`
 
 <Tip>
-Start with broad filters and narrow them down based on your app's needs. This helps reduce unnecessary webhook deliveries.
+Start with broad filters and narrow them down based on your app's needs. This helps reduce unnecessary webhook deliveries and compute unit costs.
 </Tip>
 
 ## Example Use Cases
@@ -52,6 +59,18 @@ Start with broad filters and narrow them down based on your app's needs. This he
   "type": "transactions",
   "addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"],
   "transaction_type": "receiver"
+}
+```
+
+### Track Transactions with Specific Counterparty
+
+```json
+{
+  "name": "Transactions with USDC Contract",
+  "url": "https://example.com/webhooks/usdc-txns",
+  "type": "transactions",
+  "addresses": ["0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"],
+  "counterparty": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
 }
 ```
 
