@@ -25,7 +25,8 @@
             "pages": [
               "index",
               "support",
-              "compute-units"
+              "compute-units",
+              "dune-analytics-api"
             ]
           },
           {
@@ -77,12 +78,6 @@
               "svm/overview",
               "svm/balances",
               "svm/transactions"
-            ]
-          },
-          {
-            "group": "Dune Analytics API",
-            "pages": [
-              "dune-analytics-api/overview"
             ]
           },
           {
