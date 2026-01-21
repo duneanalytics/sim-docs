@@ -1103,6 +1103,38 @@
           }
         }
       },
+      "Warning": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Warning code identifier",
+            "example": "UNSUPPORTED_CHAIN_IDS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message",
+            "example": "Some chain_ids are not supported."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "List of chain IDs that triggered this warning (for chain-related warnings)"
+          },
+          "docs_url": {
+            "type": "string",
+            "description": "URL to documentation with more information about the warning",
+            "example": "https://docs.sim.dune.com/evm/supported-chains"
+          }
+        }
+      },
       "DefiPositionsResponse": {
         "type": "object",
         "required": ["positions"],
@@ -1119,6 +1151,13 @@
                 "$ref": "#/components/schemas/DefiAggregations"
               }
             ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "description": "Array of warnings that occurred during request processing. Warnings indicate non-fatal issues (e.g., unsupported chain IDs) where the request can still be partially fulfilled."
           }
         }
       }
