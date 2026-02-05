@@ -1,0 +1,368 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Sim API - Stablecoin Balances Endpoint",
+    "description": "This API provides realtime stablecoin balances for addresses across different EVM chains.",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.sim.dune.com"
+    }
+  ],
+  "paths": {
+    "/v1/evm/balances/{address}/stablecoins": {
+      "get": {
+        "tags": [
+          "stablecoins"
+        ],
+        "summary": "Get stablecoin balances for a given address",
+        "description": "This endpoint returns stablecoin balances for an address across supported EVM chains. It filters the standard balances response to include only configured stablecoins (USD-pegged, yield-bearing, and euro-pegged).",
+        "operationId": "getEvmStablecoinBalances",
+        "parameters": [
+          {
+            "name": "X-Sim-Api-Key",
+            "in": "header",
+            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "description": "Wallet address to get stablecoin balances for",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+            }
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8453,137`). If omitted, results include balances from chains with the `default` tag. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "metadata",
+            "in": "query",
+            "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`, `pools`",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "historical_prices",
+            "in": "query",
+            "description": "Historical price selection. Provide a single integer or a comma-separated list of up to 3 integers representing hours in the past (e.g. `168` for 1 week ago or `720,168,24` for 1 month, 1 week, and 1 day ago). When set, each balance includes a historical_prices array with one entry per offset.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "single_offset": {
+                "summary": "Single offset (1 week ago)",
+                "value": "168"
+              },
+              "three_offsets": {
+                "summary": "Three offsets (1 month, 1 week, 1 day ago)",
+                "value": "720,168,24"
+              }
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "The offset to paginate through result sets. This is a cursor being passed from the previous response, only use what the backend returns here.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of balances to return. Default is 1000 when not provided. Values above 1000 are reduced to 1000.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 1000
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StablecoinBalancesResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+                      "balances": [
+                        {
+                          "chain": "ethereum",
+                          "chain_id": 1,
+                          "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                          "amount": "1000000000",
+                          "symbol": "USDC",
+                          "name": "USD Coin",
+                          "decimals": 6,
+                          "price_usd": 1.0,
+                          "value_usd": 1000.0
+                        },
+                        {
+                          "chain": "base",
+                          "chain_id": 8453,
+                          "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+                          "amount": "500000000",
+                          "symbol": "USDC",
+                          "name": "USD Coin",
+                          "decimals": 6,
+                          "price_usd": 1.0,
+                          "value_usd": 500.0
+                        },
+                        {
+                          "chain": "gnosis",
+                          "chain_id": 100,
+                          "address": "native",
+                          "amount": "100000000000000000000",
+                          "symbol": "XDAI",
+                          "decimals": 18,
+                          "price_usd": 1.0,
+                          "value_usd": 100.0
+                        }
+                      ],
+                      "next_offset": "opaque-pagination-token",
+                      "request_time": "2026-02-05T10:31:08Z",
+                      "response_time": "2026-02-05T10:31:08Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request. The request could not be understood by the server due to malformed data"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error. A generic error occurred on the server."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HistoricalPricePoint": {
+        "type": "object",
+        "required": [
+          "offset_hours",
+          "price_usd"
+        ],
+        "properties": {
+          "offset_hours": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1
+          },
+          "price_usd": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PoolMetadata": {
+        "type": "object",
+        "required": [
+          "pool_type",
+          "address",
+          "token0",
+          "token1"
+        ],
+        "properties": {
+          "pool_type": {
+            "type": "string",
+            "description": "The type of liquidity pool used for pricing (e.g., aerodrome_stable, uniswap_v2, uniswap_v3)"
+          },
+          "address": {
+            "type": "string",
+            "description": "The contract address of the liquidity pool"
+          },
+          "token0": {
+            "type": "string",
+            "description": "The contract address of the first token in the pool pair"
+          },
+          "token1": {
+            "type": "string",
+            "description": "The contract address of the second token in the pool pair"
+          }
+        }
+      },
+      "StablecoinBalanceData": {
+        "type": "object",
+        "required": [
+          "chain",
+          "address",
+          "amount"
+        ],
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "Token contract address, or 'native' for native stablecoins like xDAI on Gnosis"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price_usd": {
+            "type": "number",
+            "format": "double"
+          },
+          "historical_prices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HistoricalPricePoint"
+            },
+            "description": "Historical price points for the requested offsets. Only present when the historical_prices query parameter is provided."
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "token_metadata": {
+            "type": "object",
+            "properties": {
+              "logo": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              }
+            }
+          },
+          "pool": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PoolMetadata"
+              }
+            ],
+            "description": "Liquidity pool information used for token pricing. Only present when metadata=pools is specified."
+          },
+          "value_usd": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "Warning": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Warning code identifier (e.g., 'UNSUPPORTED_CHAIN_IDS')",
+            "example": "UNSUPPORTED_CHAIN_IDS"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable warning message",
+            "example": "Some requested chain_ids are not supported. Balances are returned only for supported chains."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "List of chain IDs that triggered this warning (for chain-related warnings)"
+          },
+          "docs_url": {
+            "type": "string",
+            "description": "URL to documentation with more information about the warning",
+            "example": "https://docs.sim.dune.com/evm/supported-chains"
+          }
+        }
+      },
+      "StablecoinBalancesResponse": {
+        "type": "object",
+        "required": [
+          "wallet_address",
+          "balances"
+        ],
+        "properties": {
+          "balances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StablecoinBalanceData"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Warning"
+            },
+            "description": "Array of warnings that occurred during request processing. Warnings indicate non-fatal issues (e.g., unsupported chain IDs) where the request can still be partially fulfilled."
+          },
+          "next_offset": {
+            "type": "string",
+            "description": "Use this value as the `offset` in your next request to continue pagination. Not included when there are no more balances."
+          },
+          "request_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of when the request was received."
+          },
+          "response_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of when the response was generated."
+          },
+          "wallet_address": {
+            "type": "string",
+            "example": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "stablecoins",
+      "description": "Stablecoin Balances API"
+    }
+  ]
+}

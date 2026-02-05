@@ -50,6 +50,7 @@
               },
               "evm/supported-chains",
               "evm/balances",
+              "evm/stablecoins",
               "evm/activity",
               "evm/collectibles",
               "evm/defi-positions",
@@ -176,6 +177,10 @@
     {
       "name": "EVM Balances",
       "file": "evm/openapi/balances.json"
+    },
+    {
+      "name": "EVM Stablecoin Balances",
+      "file": "evm/openapi/stablecoins.json"
     },
     {
       "name": "EVM Activity",
