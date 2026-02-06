@@ -41,12 +41,6 @@ curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9
 
 Both methods return identical results.
 
-## Token Prices
-
-Stablecoin prices are determined using onchain liquidity pools, the same as the standard Balances endpoint. Most stablecoins will show a price close to their peg (e.g., ~$1.00 for USD-pegged stablecoins).
-
-You can include `metadata=pools` in your request to see which liquidity pool was used for pricing each stablecoin.
-
 ## Compute Unit Cost
 
 The Stablecoin Balances endpoint's CU cost equals the number of chains you include via the `chain_ids` query parameter, the same as the standard Balances endpoint.
@@ -54,31 +48,6 @@ The Stablecoin Balances endpoint's CU cost equals the number of chains you inclu
 <Note>
   If you omit `chain_ids`, the endpoint uses its `default` chain set, which equals {<DefaultChainCount endpoint="balances" />} chains at request time. See the tags section of the <a href="/evm/supported-chains#tags">Supported Chains</a> page.
 </Note>
-
-## Historical Prices
-
-You can request historical point-in-time prices by adding the `historical_prices` query parameter. Use whole numbers to specify the number of hours in the past. You can request up to three offsets.
-
-```bash
-curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/stablecoins?chain_ids=1&historical_prices=168' \
-  -H 'X-Sim-Api-Key: YOUR_API_KEY'
-```
-
-When set, each balance includes a `historical_prices` array:
-
-```json
-{
-  "balances": [
-    {
-      "symbol": "USDC",
-      "price_usd": 1.0001,
-      "historical_prices": [
-        { "offset_hours": 168, "price_usd": 0.9998 }
-      ]
-    }
-  ]
-}
-```
 
 ## Pagination
 
