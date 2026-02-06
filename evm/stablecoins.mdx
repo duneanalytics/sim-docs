@@ -12,15 +12,19 @@ The Stablecoin Balances API provides a dedicated endpoint for retrieving only st
 
 <SupportedChains endpoint="balances" />
 
-## Stablecoin Types
+## Supported Stablecoins
 
-The endpoint returns three categories of stablecoins:
+The endpoint includes stablecoins from three categories:
 
-| Type | Description | Examples |
-|------|-------------|----------|
+| Category | Description | Examples |
+|----------|-------------|----------|
 | **Standard** | USD-pegged stablecoins | USDC, USDT, DAI, BUSD |
 | **Yield-bearing** | Stablecoins that accrue yield | sDAI, sUSDe |
 | **Euro-pegged** | EUR-pegged stablecoins | EURC, EURe |
+
+<Info>
+  The stablecoin category is used for filtering only and is not included in the response. The response format is identical to the standard Balances endpoint.
+</Info>
 
 <Note>
   On Gnosis chain (chain_id: 100), the native token xDAI is a stablecoin and will be included in results with `address: "native"`.

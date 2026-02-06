@@ -62,6 +62,16 @@
             }
           },
           {
+            "name": "asset_class",
+            "in": "query",
+            "description": "Filter by asset class. Use `stablecoin` to return only stablecoin balances. This is equivalent to using the `/stablecoins` endpoint.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["stablecoin"]
+            }
+          },
+          {
             "name": "metadata",
             "in": "query",
             "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`, `pools`",

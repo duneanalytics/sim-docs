@@ -52,12 +52,32 @@
             }
           },
           {
+            "name": "filters",
+            "in": "query",
+            "description": "Specify `erc20` or `native` to get only ERC20 stablecoins or native stablecoins (e.g., xDAI on Gnosis), respectively",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["erc20", "native"]
+            }
+          },
+          {
             "name": "metadata",
             "in": "query",
             "description": "A comma separated list of additional metadata fields to include for each token. Supported values: `logo`, `url`, `pools`",
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "exclude_spam_tokens",
+            "in": "query",
+            "description": "When true, excludes tokens with less than 100 USD liquidity from the response. This differs from the `low_liquidity` field in the response.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           },
           {
@@ -243,8 +263,15 @@
             "type": "integer",
             "format": "int64"
           },
+          "low_liquidity": {
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
+          },
+          "pool_size": {
+            "type": "number",
+            "format": "double"
           },
           "price_usd": {
             "type": "number",
@@ -282,6 +309,39 @@
           "value_usd": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "BalanceErrorInformation": {
+        "type": "object",
+        "required": [
+          "chain_id",
+          "address"
+        ],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "BalanceErrors": {
+        "type": "object",
+        "properties": {
+          "error_message": {
+            "type": "string"
+          },
+          "token_errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BalanceErrorInformation"
+            }
           }
         }
       },
@@ -329,6 +389,13 @@
             "items": {
               "$ref": "#/components/schemas/StablecoinBalanceData"
             }
+          },
+          "errors": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BalanceErrors"
+              }
+            ]
           },
           "warnings": {
             "type": "array",
