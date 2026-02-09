@@ -1,0 +1,97 @@
+---
+title: "Stablecoins"
+description: "Get realtime stablecoin balances across all supported EVM chains. Includes USD-pegged, yield-bearing, and euro-pegged stablecoins."
+openapi: "/evm/openapi/stablecoins.json GET /v1/evm/balances/{address}/stablecoins"
+sidebarTitle: "Stablecoins"
+---
+
+import { DefaultChainCount } from "/snippets/default-chain-count.mdx";
+import { SupportedChains } from "/snippets/supported-chains.mdx";
+
+The Stablecoin Balances API provides a dedicated endpoint for retrieving only stablecoin holdings for a wallet across supported EVM chains. This is a specialized version of the [Balances](/evm/balances) endpoint that filters results to include only configured stablecoins.
+
+<SupportedChains endpoint="balances" />
+
+## Supported Stablecoins
+
+The endpoint includes stablecoins from three categories:
+
+| Category | Description | Examples |
+|----------|-------------|----------|
+| **Standard** | USD-pegged stablecoins | USDC, USDT, DAI, BUSD |
+| **Yield-bearing** | Stablecoins that accrue yield | sDAI, sUSDe |
+| **Euro-pegged** | EUR-pegged stablecoins | EURC, EURe |
+
+<Info>
+  The stablecoin category is used for filtering only and is not included in the response. The response format is identical to the standard Balances endpoint.
+</Info>
+
+<Note>
+  On Gnosis chain (chain_id: 100), the native token xDAI is a stablecoin and will be included in results with `address: "native"`.
+</Note>
+
+## Alternative Access
+
+You can also access stablecoin balances through the main [Balances](/evm/balances) endpoint using the `asset_class` query parameter:
+
+```bash
+curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?asset_class=stablecoin&chain_ids=1,8453' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+Both methods return identical results.
+
+## Compute Unit Cost
+
+The Stablecoin Balances endpoint's CU cost equals the number of chains you include via the `chain_ids` query parameter, the same as the standard Balances endpoint.
+
+<Note>
+  If you omit `chain_ids`, the endpoint uses its `default` chain set, which equals {<DefaultChainCount endpoint="balances" />} chains at request time. See the tags section of the <a href="/evm/supported-chains#tags">Supported Chains</a> page.
+</Note>
+
+## Pagination
+
+This endpoint uses cursor-based pagination, identical to the Balances endpoint. Use the `limit` query parameter to define the maximum page size. The `next_offset` value from the response can be used to fetch subsequent pages.
+
+```bash
+# First page
+curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/stablecoins?limit=10' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+
+# Next page (using next_offset from previous response)
+curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045/stablecoins?limit=10&offset=NEXT_OFFSET_VALUE' \
+  -H 'X-Sim-Api-Key: YOUR_API_KEY'
+```
+
+## Example Response
+
+```json
+{
+  "request_time": "2026-02-05T10:31:08Z",
+  "response_time": "2026-02-05T10:31:08Z",
+  "wallet_address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+  "balances": [
+    {
+      "chain": "ethereum",
+      "chain_id": 1,
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "amount": "1000000000",
+      "symbol": "USDC",
+      "name": "USD Coin",
+      "decimals": 6,
+      "price_usd": 1.0,
+      "value_usd": 1000.0
+    },
+    {
+      "chain": "gnosis",
+      "chain_id": 100,
+      "address": "native",
+      "amount": "100000000000000000000",
+      "symbol": "XDAI",
+      "decimals": 18,
+      "price_usd": 1.0,
+      "value_usd": 100.0
+    }
+  ]
+}
+```
