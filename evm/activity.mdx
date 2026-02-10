@@ -92,11 +92,18 @@ You can filter activities server-side using the following query parameters:
 
 - **`token_address`** — Filter by token contract address. For example, pass the USDC contract address to return only USDC-related activity.
 - **`activity_type`** — Filter by activity type. Accepted values: `send`, `receive`, `mint`, `burn`, `swap`, `approve`, `call`.
+- **`asset_type`** — Filter by asset standard. Accepted values: `native`, `erc20`, `erc721`, `erc1155`. Use `native` to get only native token transfers (e.g. ETH). Contract call activities have no asset type and are excluded when this filter is set.
 
-Both filters are optional and can be combined. For example, to get only USDC receives:
+All filters are optional and can be combined. For example, to get only native token receives:
 
 ```
-GET /v1/evm/activity/{address}?token_address=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&activity_type=receive
+GET /v1/evm/activity/{address}?activity_type=receive&asset_type=native
+```
+
+Or to get only USDC sends:
+
+```
+GET /v1/evm/activity/{address}?token_address=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&activity_type=send
 ```
 
 For additional client-side filtering, we include all the data needed in the responses. See our [Token Filtering](/token-filtering) guide for more details.

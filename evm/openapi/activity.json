@@ -93,6 +93,16 @@
               "type": "string",
               "enum": ["send", "receive", "mint", "burn", "swap", "approve", "call"]
             }
+          },
+          {
+            "name": "asset_type",
+            "in": "query",
+            "description": "Filter activities by asset standard. Use `native` to get only native token transfers (e.g. ETH), or `erc20`, `erc721`, `erc1155` for specific token standards. Contract call activities have no asset type and are excluded when this filter is set.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["native", "erc20", "erc721", "erc1155"]
+            }
           }
         ],
         "responses": {
