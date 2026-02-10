@@ -73,6 +73,26 @@
               "maximum": 100,
               "default": 20
             }
+          },
+          {
+            "name": "token_address",
+            "in": "query",
+            "description": "Filter activities by token contract address. Only activities involving this specific token will be returned. For example, use the USDC contract address to get only USDC transfers.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          },
+          {
+            "name": "activity_type",
+            "in": "query",
+            "description": "Filter activities by type. Only activities matching the specified type will be returned.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["send", "receive", "mint", "burn", "swap", "approve", "call"]
+            }
           }
         ],
         "responses": {

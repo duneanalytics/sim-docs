@@ -86,9 +86,20 @@ If you request `?chain_ids=1,9999,10`, the API returns activity for chains 1 and
   Check the [Supported Chains](/evm/supported-chains) page to see which chains are currently supported for the Activity endpoint.
 </Tip>
 
-## Token Filtering
+## Filtering
 
-We include all the data needed for custom filtering in the responses, allowing you to implement your own filtering logic. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
+You can filter activities server-side using the following query parameters:
+
+- **`token_address`** — Filter by token contract address. For example, pass the USDC contract address to return only USDC-related activity.
+- **`activity_type`** — Filter by activity type. Accepted values: `send`, `receive`, `mint`, `burn`, `swap`, `approve`, `call`.
+
+Both filters are optional and can be combined. For example, to get only USDC receives:
+
+```
+GET /v1/evm/activity/{address}?token_address=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48&activity_type=receive
+```
+
+For additional client-side filtering, we include all the data needed in the responses. See our [Token Filtering](/token-filtering) guide for more details.
 
 ## Compute Unit Cost
 
