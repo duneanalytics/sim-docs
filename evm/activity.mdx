@@ -90,7 +90,7 @@ If you request `?chain_ids=1,9999,10`, the API returns activity for chains 1 and
 
 You can filter activities server-side using the following query parameters:
 
-- **`token_address`** — Filter by token contract address. For example, pass the USDC contract address to return only USDC-related activity. Note: swap and call activities do not have a single token address, so they are always excluded when this filter is set. Native transfers are also excluded since they have no token contract.
+- **`token_address`** — Filter by token contract address. Accepts a single address or a comma-separated list. For example, pass the USDC contract address to return only USDC-related activity, or pass multiple addresses to match any of them. Note: swap and call activities do not have a single token address, so they are always excluded when this filter is set. Native transfers are also excluded since they have no token contract.
 - **`activity_type`** — Filter by activity type. Accepts a single value or a comma-separated list. Accepted values: `send`, `receive`, `mint`, `burn`, `swap`, `approve`, `call`.
 - **`asset_type`** — Filter by asset standard. Accepts a single value or a comma-separated list. Accepted values: `native`, `erc20`, `erc721`, `erc1155`. Use `native` to include native token transfers (e.g. ETH). Contract call activities have no asset type and are excluded when this filter is set.
 

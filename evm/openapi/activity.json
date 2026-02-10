@@ -77,7 +77,7 @@
           {
             "name": "token_address",
             "in": "query",
-            "description": "Filter activities by token contract address. Only activities involving this specific token will be returned. For example, use the USDC contract address to get only USDC transfers.",
+            "description": "Filter activities by token contract address. Provide a single address (e.g. `?token_address=0xa0b8...`) or a comma-separated list (e.g. `?token_address=0xa0b8...,0xdac1...`). Only activities involving the specified token(s) will be returned. Swap and call activities are excluded when this filter is set, as they do not have a single token address. Native transfers are also excluded since they have no token contract.",
             "required": false,
             "schema": {
               "type": "string"
