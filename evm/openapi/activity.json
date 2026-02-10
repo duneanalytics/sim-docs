@@ -87,22 +87,22 @@
           {
             "name": "activity_type",
             "in": "query",
-            "description": "Filter activities by type. Only activities matching the specified type will be returned.",
+            "description": "Filter activities by type. Provide a single value (e.g. `?activity_type=send`) or a comma-separated list (e.g. `?activity_type=send,receive`). Only activities matching one of the specified types will be returned.",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": ["send", "receive", "mint", "burn", "swap", "approve", "call"]
-            }
+              "type": "string"
+            },
+            "example": "send,receive"
           },
           {
             "name": "asset_type",
             "in": "query",
-            "description": "Filter activities by asset standard. Use `native` to get only native token transfers (e.g. ETH), or `erc20`, `erc721`, `erc1155` for specific token standards. Contract call activities have no asset type and are excluded when this filter is set.",
+            "description": "Filter activities by asset standard. Provide a single value (e.g. `?asset_type=native`) or a comma-separated list (e.g. `?asset_type=erc20,erc721`). Use `native` to include native token transfers (e.g. ETH). Contract call activities have no asset type and are excluded when this filter is set.",
             "required": false,
             "schema": {
-              "type": "string",
-              "enum": ["native", "erc20", "erc721", "erc1155"]
-            }
+              "type": "string"
+            },
+            "example": "erc20"
           }
         ],
         "responses": {
