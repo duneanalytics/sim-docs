@@ -7,23 +7,9 @@ sidebarTitle: "DeFi Positions"
 
 import { SupportedChains } from '/snippets/supported-chains.mdx';
 
-<Warning>
-**Coming Soon: This endpoint is temporarily unavailable**
-
-The DeFi Positions endpoint is currently being rearchitected to provide expanded protocol coverage and enhanced functionality. We're working to bring it back with improved support for more DeFi protocols and chains.
-
-Please check back soon for updates on availability.
-</Warning>
-
 ![Defi Positions API](/images/evm/defi-positions.svg)
 
-The DeFi Positions API will return a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets.
-Each position will include token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
-
-<Note>
-When available, this endpoint will be accessible at the beta path (`/beta/evm/defi/positions`).
-The information below represents the planned functionality and supported protocols for the rearchitected endpoint.
-</Note>
+The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets. The endpoint is available at the beta path (`/beta/evm/defi/positions`). Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
 
 ## Supported Protocols
 
@@ -31,22 +17,15 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 
 <Accordion title="Protocol Chain Coverage Table" icon="table">
 
-| Protocol / Standard | Ethereum (1) | Base (8453) | Optimism (10) | Unichain (130) | Zora (7777777) | World Chain (480) | Ink (57073) | Soneium (1868) | Mode (34443) | BOB (60808) | Shape (360) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |  |  |  |
-| Algebra V3 |  |  |  |  |  |  |  |  |  |  |  |
-| iZumi Swap |  | ✓ |  |  |  |  |  |  |  |  |  |
-| Aave v2 | ✓ |  |  |  |  |  |  |  |  |  |  |
-| Aave v3 | ✓ | ✓ | ✓ |  |  |  |  | ✓ |  |  |  |
-| Compound v2 | ✓ |  |  |  |  |  |  |  |  |  |  |
-| Compound v3 (Comet) | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
-| Moonwell |  | ✓ | ✓ |  |  |  |  |  |  |  |  |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Pendle v2 | ✓ | ✓ | ✓ |  |  |  |  |  |  |  |  |
-| EigenLayer | ✓ |  |  |  |  |  |  |  |  |  |  |
+| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | BNB (56) | Avalanche (43114) | Optimism (10) | Polygon (137) | Unichain (130) | HyperEVM (999) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Aave v2 | ✓ |  |  |  |  |  |  |  |  |
+| Aave v3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 </Accordion>
 
@@ -57,7 +36,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 <AccordionGroup>
   <Accordion title="Uniswap V2 (and Forks)" icon="droplet">
   **Type:** `UniswapV2`  
-  **Chains:** Ethereum (1), Base (8453), Ink (57073), World Chain (480), Soneium (1868), Unichain (130), Zora (7777777), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
   **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
   **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value. Both Uniswap V2 and its forks are detected by factory address and returned under the same `UniswapV2` type, with the specific protocol name indicated in the `protocol` field.
   
@@ -138,7 +117,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 
   <Accordion title="Uniswap V3 (and Forks)" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Ink (57073), Unichain (130), Zora (7777777), World Chain (480), Soneium (1868), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
   **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations. Both Uniswap V3 and its forks are detected by factory address and returned under the same `Nft` type, with the specific protocol name indicated in the `protocol` field.
   
   **Example Response (Uniswap V3):**
@@ -234,20 +213,8 @@ Liquidity pool positions represent token pairs deposited into automated market m
 
   <Accordion title="Uniswap V4" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Unichain (130), Optimism (10), Base (8453), Zora (7777777), World Chain (480), Ink (57073), Soneium (1868)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
   **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
-  </Accordion>
-
-  <Accordion title="Algebra V3" icon="chart-line">
-  **Type:** `Nft`  
-  **Chains:**  
-  **Description:** Concentrated liquidity positions compatible with the Algebra V3 architecture. Includes tick ranges and liquidity metadata.
-  </Accordion>
-
-  <Accordion title="iZumi Swap" icon="water">
-  **Type:** `Nft`  
-  **Chains:** Base (8453)  
-  **Description:** Concentrated liquidity positions on the iZumi Swap protocol. Returns NFT-based position data with tick ranges and holdings.
   </Accordion>
 </AccordionGroup>
 
@@ -294,7 +261,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   <Accordion title="Aave v3" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
-  **Chains:** Ethereum (1), Base (8453), Soneium (1868), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
   **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
   
   **Example Response:**
@@ -325,88 +292,6 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   }
   ```
   </Accordion>
-
-  <Accordion title="Compound v2" icon="building-columns">
-  **Type:** `CompoundV2` (combined in API response)  
-  **Token Types:** `CTOKEN`, `CTOKEN_BORROW`  
-  **Chains:** Ethereum (1)  
-  **Description:** Supply and borrow positions across Compound v2 markets. Responses include separate supply and debt quotes with USD values.
-  
-  **Example Response:**
-  
-  ```json [expandable]
-  {
-    "wallet_address": "0x0f4ee9631f4be0a63756515141281a3e2b293bbe",
-    "positions": [
-      {
-        "type": "CompoundV2",
-        "chain_id": 1,
-        "token_type": "Ctoken",
-        "token": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
-        "token_name": "Compound Dai",
-        "token_symbol": "cDAI",
-        "supply_quote": {
-          "calculated_balance": 1958.09737575,
-          "price_in_usd": 0.025019102381892096,
-          "usd_value": 48.98983871760349
-        },
-        "logo": null,
-        "usd_value": 48.98983871760349
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 48.98983871760349,
-      "total_by_chain": {
-        "1": 48.98983871760349
-      }
-    }
-  }
-  ```
-  </Accordion>
-
-  <Accordion title="Compound v3 (Comet)" icon="building-columns">
-  **Type:** `CompoundV3`  
-  **Chains:** Ethereum (1), Base (8453), Optimism (10)  
-  **Description:** Base asset supply and borrow positions in Compound v3. Also includes collateral positions for each supported asset in Comet markets.
-  </Accordion>
-
-  <Accordion title="Moonwell" icon="moon">
-  **Type:** `Moonwell` (combined in API response)  
-  **Token Types:** `MTOKEN`, `MTOKEN_BORROW`  
-  **Chains:** Base (8453), Optimism (10)  
-  **Description:** Supply and borrow positions on Moonwell (a Compound v2 fork). Includes separate supply and debt quotes.
-  
-  **Example Response:**
-  
-  ```json [expandable]
-  {
-    "wallet_address": "0x8b529ef78046008f9d1fbc91c7407030de96ee32",
-    "positions": [
-      {
-        "type": "Moonwell",
-        "chain_id": 8453,
-        "token_type": "Mtoken",
-        "token": "0xf877acafa28c19b96727966690b2f44d35ad5976",
-        "token_name": "Moonwell cbBTC",
-        "token_symbol": "mcbBTC",
-        "supply_quote": {
-          "calculated_balance": 4.3e-07,
-          "price_in_usd": 2140.029374370961,
-          "usd_value": 0.0009202126309795131
-        },
-        "logo": null,
-        "usd_value": 0.0009202126309795131
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 0.0009202126309795131,
-      "total_by_chain": {
-        "8453": 0.0009202126309795131
-      }
-    }
-  }
-  ```
-  </Accordion>
 </AccordionGroup>
 
 ### Yield Positions
@@ -416,7 +301,7 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 <AccordionGroup>
   <Accordion title="ERC-4626 Vaults" icon="vault">
   **Type:** `Erc4626`  
-  **Chains:** Ethereum (1), Base (8453), World Chain (480), Mode (34443), Ink (57073), Unichain (130), Zora (7777777), BOB (60808), Soneium (1868), Shape (360), Optimism (10)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
   **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
   
   **Example Response:**
@@ -450,57 +335,7 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
   }
   ```
   </Accordion>
-
-  <Accordion title="Pendle V2" icon="chart-area">
-  **Type:** `Pendle`  
-  **Token Types:** `Principal`, `Yield`, `LP` (in `token_type` field)  
-  **Chains:** Ethereum (1), Optimism (10), Base (8453)  
-  **Description:** Principal Tokens (PT), Yield Tokens (YT), and LP positions in Pendle V2 markets. Each position includes the underlying asset, market address, and USD value based on the asset price.
-  
-  **Example Response (Yield Token):**
-  
-  ```json [expandable]
-  {
-    "wallet_address": "0x9cb21ce0ff81e55db73bbb36d5a9eac9d50a938b",
-    "positions": [
-      {
-        "type": "Pendle",
-        "chain_id": 1,
-        "token": "0x1de6ff19fda7496ddc12f2161f6ad6427c52abbe",
-        "token_type": "Yield",
-        "balance": "0xfa50f5ee142bb44f982",
-        "token_name": "YT Ethena sUSDE 29MAY2025",
-        "token_symbol": "YT-sUSDE-29MAY2025",
-        "token_decimals": 18,
-        "market": "0xb162b764044697cf03617c2efbcb1f42e31e4766",
-        "asset": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
-        "asset_name": "USDe",
-        "asset_symbol": "USDe",
-        "asset_decimals": 18,
-        "calculated_balance": 73880.31758544187,
-        "price_in_usd": 0.0,
-        "usd_value": 0.0,
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 0.0,
-      "total_by_chain": {
-        "1": 0.0
-      }
-    }
-  }
-  ```
-  </Accordion>
 </AccordionGroup>
-
-### Restaking Positions
-
-<Accordion title="EigenLayer" icon="layer-group">
-**Type:** `EigenStrategy` (or similar in API response)  
-**Chains:** Ethereum (1)  
-**Description:** Share balances in EigenLayer restaking strategies. Includes the strategy contract, underlying token, and USD-denominated position value.
-</Accordion>
 
 ## Compute Units
 

@@ -5,9 +5,6 @@ export const SupportedChains = ({ endpoint, title, excludeChains }) => {
   
   useEffect(function() {
     var url = "https://api.sim.dune.com/v1/evm/supported-chains";
-    if (endpoint === 'defi_positions') {
-      url = "https://api.sim.dune.com/idx/supported-chains";
-    }
 
     fetch(url, {
       method: "GET",
@@ -32,19 +29,13 @@ export const SupportedChains = ({ endpoint, title, excludeChains }) => {
   var totalChains = data.chains.length;
   var excludedChainNames = excludeChains || [];
 
-  if (endpoint !== undefined && endpoint !== 'defi_positions') {
-    for (var i = 0; i < data.chains.length; i++) {
-      var chain = data.chains[i];
-      if (chain[endpoint] && chain[endpoint].supported && excludedChainNames.indexOf(chain.name) === -1) {
-        supportedChains.push(chain);
-      }
-    }
-  } else {
-    for (var i = 0; i < data.chains.length; i++) {
-      var chain = data.chains[i];
-      if (excludedChainNames.indexOf(chain.name) === -1) {
-        supportedChains.push(chain);
-      }
+  for (var i = 0; i < data.chains.length; i++) {
+    var chain = data.chains[i];
+    if (excludedChainNames.indexOf(chain.name) !== -1) continue;
+    if (endpoint === undefined) {
+      supportedChains.push(chain);
+    } else if (chain[endpoint] && chain[endpoint].supported) {
+      supportedChains.push(chain);
     }
   }
 
