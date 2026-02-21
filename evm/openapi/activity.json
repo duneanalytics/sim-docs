@@ -73,6 +73,36 @@
               "maximum": 100,
               "default": 20
             }
+          },
+          {
+            "name": "token_address",
+            "in": "query",
+            "description": "Filter activities by token contract address. Provide a single address (e.g. `?token_address=0xa0b8...`) or a comma-separated list (e.g. `?token_address=0xa0b8...,0xdac1...`). Only activities involving the specified token(s) will be returned. Swap and call activities are excluded when this filter is set, as they do not have a single token address. Native transfers are also excluded since they have no token contract.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          },
+          {
+            "name": "activity_type",
+            "in": "query",
+            "description": "Filter activities by type. Provide a single value (e.g. `?activity_type=send`) or a comma-separated list (e.g. `?activity_type=send,receive`). Only activities matching one of the specified types will be returned.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "send,receive"
+          },
+          {
+            "name": "asset_type",
+            "in": "query",
+            "description": "Filter activities by asset standard. Provide a single value (e.g. `?asset_type=native`) or a comma-separated list (e.g. `?asset_type=erc20,erc721`). Use `native` to include native token transfers (e.g. ETH). Contract call activities have no asset type and are excluded when this filter is set.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "example": "erc20"
           }
         ],
         "responses": {
