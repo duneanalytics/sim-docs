@@ -9,6 +9,10 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Defi Positions API](/images/evm/defi-positions.svg)
 
+<Warning>
+**Preview Endpoint**: The DeFi Positions API is currently in preview while we validate data accuracy across protocols and chains. Response schemas and coverage may change. If you encounter any data discrepancies, please report them through our [support channels](/support).
+</Warning>
+
 The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets. The endpoint is available at the beta path (`/beta/evm/defi/positions`). Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
 
 ## Supported Protocols
