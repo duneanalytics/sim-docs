@@ -85,6 +85,7 @@
             "group": "Resources",
             "pages": [
               "build-with-ai",
+              "agent-reference",
               "token-filtering",
               "error-handling",
               "proxy"
