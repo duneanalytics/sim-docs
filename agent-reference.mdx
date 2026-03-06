@@ -1,0 +1,659 @@
+---
+title: "Agent Reference"
+sidebarTitle: "Agent Reference"
+description: "A dense, self-contained API reference designed for AI coding agents. Copy this into your project to help Claude Code, Cursor, Codex, Gemini CLI, and other agents generate correct Sim API integration code."
+---
+
+The Agent Reference is a single, dense document that gives AI coding agents everything they need to generate correct Sim API integration code — authentication, every endpoint, parameters, response shapes, pagination, error handling, and common workflows.
+
+## Who Is This For?
+
+This reference is designed for **AI coding agents** — tools like Claude Code, OpenAI Codex, Cursor Agent, Gemini CLI, Windsurf, GitHub Copilot, and similar. It's optimized for machine consumption: tables over prose, terse descriptions, and complete coverage of the API surface.
+
+## How to Use It
+
+Add the agent reference to your project so your AI agent reads it automatically:
+
+| Agent | How to Add |
+|---|---|
+| **Claude Code** | Save as `CLAUDE.md` in your project root, or reference with `@agent-reference.md` |
+| **Cursor** | Save as `.cursorrules` or add `docs.sim.dune.com` via Settings → Indexing & Docs |
+| **OpenAI Codex / Copilot / Gemini CLI / Windsurf** | Save as `AGENTS.md` in your project root |
+| **Any agent** | Include in your system prompt or project context |
+
+<Tip>
+You can copy the entire rendered reference below, or use the raw markdown version in the accordion at the bottom of this page. You can also press `⌘C` / `Ctrl+C` on this page to copy it as markdown, or click "View Markdown" in the top-right menu.
+</Tip>
+
+---
+
+## Authentication
+
+All requests require the `X-Sim-Api-Key` header. Get your key from the [Sim Dashboard](https://sim.dune.com).
+
+```bash
+curl -X GET "https://api.sim.dune.com/v1/evm/balances/{address}" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+- All requests must use **HTTPS**. Plain HTTP will fail.
+- Never expose API keys in client-side code or public repositories.
+
+## Base URL
+
+```
+https://api.sim.dune.com
+```
+
+Stable endpoints use `/v1/`. Beta endpoints use `/beta/`.
+
+## Endpoint Reference
+
+### EVM Endpoints (Stable — `/v1`)
+
+| Endpoint | Method | Path | CU Cost | Key Parameters |
+|---|---|---|---|---|
+| **Balances** | GET | `/v1/evm/balances/{address}` | N (1 per chain) | `chain_ids`, `filter_type` (erc20\|native), `asset_class` (stablecoin), `metadata` (logo,url,pools), `exclude_spam_tokens` (bool), `historical_prices` (hours, max 3 offsets), `offset`, `limit` (max 1000) |
+| **Balances (single token)** | GET | `/v1/evm/balances/{address}/token/{token_address}` | 1 fixed | `chain_ids` (exactly one required). Use `native` as `token_address` for native assets |
+| **Stablecoins** | GET | `/v1/evm/balances/{address}/stablecoins` | N (1 per chain) | `chain_ids`, `offset`, `limit`. Returns only stablecoins (USD-pegged, yield-bearing, euro-pegged) |
+| **Activity** | GET | `/v1/evm/activity/{address}` | 3 fixed | `chain_ids`, `activity_type` (send,receive,mint,burn,swap,approve,call), `asset_type` (native,erc20,erc721,erc1155), `token_address`, `offset`, `limit` (max 100) |
+| **Transactions** | GET | `/v1/evm/transactions/{address}` | 1 fixed | `chain_ids`, `decode` (bool), `offset`, `limit` (max 100) |
+| **Collectibles** | GET | `/v1/evm/collectibles/{address}` | N (1 per chain) | `chain_ids`, `filter_spam` (bool, default true), `show_spam_scores` (bool), `offset`, `limit` (max 500) |
+| **Token Info** | GET | `/v1/evm/token-info/{address}` | 2 fixed | `chain_ids` (**required**, single chain), `historical_prices` (hours, max 3 offsets), `offset`, `limit`. Use `native` as `address` for native assets |
+| **Token Holders** | GET | `/v1/evm/token-holders/{chain_id}/{address}` | 2 fixed | `offset`, `limit` (max 500) |
+| **Supported Chains** | GET | `/v1/evm/supported-chains` | 0 | None. Returns all chains with per-endpoint support booleans |
+
+### EVM Endpoints (Beta — `/beta`)
+
+| Endpoint | Method | Path | CU Cost | Key Parameters |
+|---|---|---|---|---|
+| **DeFi Positions** | GET | `/beta/evm/defi/positions/{address}` | 2N (2 per chain) | `chain_ids`. Returns LP positions, lending, yield vaults with USD values |
+
+### SVM Endpoints (Beta — `/beta`)
+
+| Endpoint | Method | Path | CU Cost | Key Parameters |
+|---|---|---|---|---|
+| **Balances** | GET | `/beta/svm/balances/{address}` | N (1 per chain) | `chains` (all, solana, eclipse), `offset`, `limit` |
+| **Transactions** | GET | `/beta/svm/transactions/{address}` | 1 fixed | `offset`, `limit`. Solana only |
+
+<Note>
+SVM endpoints use `chains` (not `chain_ids`) with string values: `solana`, `eclipse`, or `all`.
+</Note>
+
+### Subscriptions API (Webhooks)
+
+| Operation | Method | Path | CU Cost |
+|---|---|---|---|
+| **Create Webhook** | POST | `/v1/evm/subscriptions` | 0 |
+| **List Webhooks** | GET | `/v1/evm/subscriptions` | 0 |
+| **Get Webhook** | GET | `/v1/evm/subscriptions/{id}` | 0 |
+| **Update Webhook** | PATCH | `/v1/evm/subscriptions/{id}` | 0 |
+| **Delete Webhook** | DELETE | `/v1/evm/subscriptions/{id}` | 0 |
+| **Events delivered** | — | — | 2 CU per event |
+
+Webhook types: `balances`, `activities`, `transactions`. Retry logic: exponential backoff, up to 5 retries over 24 hours. Validate authenticity via the `dune-webhook-signature` header.
+
+## Pagination
+
+All list endpoints use **cursor-based pagination** with the same pattern:
+
+1. Set `limit` to your desired page size.
+2. The response includes `next_offset` when more results exist.
+3. Pass `next_offset` as the `offset` query parameter in your next request.
+4. When `next_offset` is absent or `null`, you have reached the last page.
+
+<Warning>
+**Never construct your own `offset` value.** The offset is an opaque cursor — only use the value returned by the API in `next_offset`.
+</Warning>
+
+```bash
+# First page
+curl "https://api.sim.dune.com/v1/evm/balances/{address}?chain_ids=1,8453&limit=100" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+
+# Next page (use next_offset from previous response)
+curl "https://api.sim.dune.com/v1/evm/balances/{address}?chain_ids=1,8453&limit=100&offset=NEXT_OFFSET_VALUE" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+## Error Handling
+
+### HTTP Error Codes
+
+| Status | Description | Action |
+|---|---|---|
+| 400 | Malformed request | Check address format, parameter names, and values |
+| 401 | Invalid or missing API key | Verify `X-Sim-Api-Key` header |
+| 402 | Compute unit quota exceeded | Upgrade plan. Do not retry |
+| 404 | Resource not found | Check endpoint URL and path parameters |
+| 429 | Rate limited | Implement exponential backoff, then retry |
+| 500 | Server error | Retry after a short delay |
+
+### Error Response Format
+
+```json
+{ "error": "Description of what went wrong" }
+```
+
+<Note>
+The error property can be either `"error"` or `"message"` depending on the error type.
+</Note>
+
+### Warnings (Non-Fatal)
+
+A `200` response can include a `warnings[]` array alongside valid data. This occurs when some requested `chain_ids` are unsupported — the API returns data for supported chains and warns about the rest.
+
+```json
+{
+  "balances": [...],
+  "warnings": [
+    {
+      "code": "UNSUPPORTED_CHAIN_IDS",
+      "message": "Some requested chain_ids are not supported.",
+      "chain_ids": [9999],
+      "docs_url": "https://docs.sim.dune.com/evm/supported-chains"
+    }
+  ]
+}
+```
+
+Always check for and surface warnings to the user.
+
+## Compute Units
+
+| Endpoint | Type | CU Formula |
+|---|---|---|
+| Balances (EVM & SVM) | Chain-dependent | N (one CU per chain after tag expansion) |
+| Balances (single token) | Fixed | 1 |
+| Stablecoins | Chain-dependent | N |
+| Collectibles | Chain-dependent | N |
+| DeFi Positions | Chain-dependent | 2N |
+| Activity | Fixed | 3 |
+| Transactions (EVM & SVM) | Fixed | 1 |
+| Token Info | Fixed | 2 |
+| Token Holders | Fixed | 2 |
+| Subscriptions | Event-based | 2 per event delivered |
+
+<Warning>
+If `chain_ids` is omitted on chain-dependent endpoints, the `default` tag is used — this expands to 20+ chains and CU scales accordingly. **Always pass explicit `chain_ids` for predictable costs.**
+</Warning>
+
+## Chain ID Reference
+
+### Common EVM Mainnets
+
+| Chain | Chain ID | Default Tag |
+|---|---|---|
+| Ethereum | 1 | Yes |
+| Base | 8453 | Yes |
+| Arbitrum | 42161 | Yes |
+| Optimism | 10 | Yes |
+| Polygon | 137 | Yes |
+| BNB | 56 | — |
+| Avalanche | 43114 | — |
+| Unichain | 130 | — |
+| HyperEVM | 999 | — |
+
+### SVM Chains
+
+| Chain | Parameter Value |
+|---|---|
+| Solana | `chains=solana` |
+| Eclipse | `chains=eclipse` |
+| Both | `chains=all` |
+
+### Chain Tags
+
+The `chain_ids` parameter accepts tags in place of (or mixed with) numeric IDs:
+- `default` — Low-latency, well-supported chains (used when `chain_ids` is omitted)
+- `mainnet` — All supported mainnets
+- `testnet` — All supported testnets
+- Mix: `?chain_ids=1,8453,testnet`
+
+<Note>
+**Chain names are not accepted** in the `chain_ids` parameter — only numeric IDs or tags. For the full, live list of supported chains, call `GET /v1/evm/supported-chains` or visit [Supported Chains](/evm/supported-chains).
+</Note>
+
+## Response Shapes
+
+### Balances
+
+```json
+{
+  "wallet_address": "0x...",
+  "balances": [{
+    "chain": "ethereum", "chain_id": 1,
+    "address": "native|0x...", "symbol": "ETH", "name": "Ether",
+    "amount": "605371497350928252303", "decimals": 18,
+    "price_usd": 3042.81, "value_usd": 1842034.66,
+    "pool_size": 25000000, "low_liquidity": false
+  }],
+  "warnings": [],
+  "next_offset": "...",
+  "request_time": "...", "response_time": "..."
+}
+```
+
+### Activity
+
+```json
+{
+  "activity": [{
+    "chain_id": 8453, "block_number": 18500000,
+    "block_time": "2025-02-20T13:52:29+00:00",
+    "tx_hash": "0x...",
+    "type": "receive|send|mint|burn|swap|approve|call",
+    "asset_type": "erc20|native|erc721|erc1155",
+    "token_address": "0x...",
+    "from": "0x...", "value": "1000000", "value_usd": 1.0,
+    "token_metadata": { "symbol": "USDC", "decimals": 6, "price_usd": 1.0 }
+  }],
+  "next_offset": "..."
+}
+```
+
+### Transactions
+
+```json
+{
+  "wallet_address": "0x...",
+  "transactions": [{
+    "chain": "ethereum", "address": "0x...",
+    "block_time": "2025-05-28T10:30:39Z", "block_number": "30819446",
+    "hash": "0x...", "from": "0x...", "to": "0x...", "value": "0x0",
+    "success": true, "gas_price": "...", "gas_used": "..."
+  }],
+  "next_offset": "..."
+}
+```
+
+### Token Info
+
+```json
+{
+  "contract_address": "0x...|native",
+  "tokens": [{
+    "chain_id": 1, "chain": "ethereum",
+    "symbol": "ETH", "name": "Ethereum", "decimals": 18,
+    "price_usd": 3900.77, "pool_size": 456370.67,
+    "total_supply": "...", "fully_diluted_value": 8971891.55,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1"
+  }],
+  "next_offset": "..."
+}
+```
+
+### Collectibles
+
+```json
+{
+  "wallet_address": "0x...",
+  "collectibles": [{
+    "chain": "ethereum", "chain_id": 1,
+    "contract_address": "0x...", "token_id": "1234",
+    "token_standard": "erc721|erc1155",
+    "name": "...", "symbol": "...",
+    "balance": "1", "is_spam": false
+  }],
+  "next_offset": "..."
+}
+```
+
+### Token Holders
+
+```json
+{
+  "holders": [{
+    "address": "0x...",
+    "balance": "1000000000000000000",
+    "share": 0.05
+  }],
+  "next_offset": "..."
+}
+```
+
+### DeFi Positions
+
+```json
+{
+  "wallet_address": "0x...",
+  "positions": [{
+    "type": "UniswapV2|Nft|Tokenized|Erc4626",
+    "chain_id": 1, "protocol": "UniswapV3",
+    "pool": "0x...",
+    "usd_value": 6179.74
+  }],
+  "aggregations": {
+    "total_usd_value": 6179.74,
+    "total_by_chain": { "1": 6179.74 }
+  }
+}
+```
+
+## Common Workflows
+
+### 1. Portfolio Balance Lookup
+
+Fetch all token balances for a wallet across specific chains, paginating to completion.
+
+```bash
+# Page 1
+curl "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+
+# If response contains next_offset, fetch page 2:
+curl "https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415d37aa96045?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true&offset=NEXT_OFFSET_VALUE" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+Sum `value_usd` across all pages for total portfolio value.
+
+### 2. Activity Feed with Filters
+
+Get recent ERC-20 receives for a wallet.
+
+```bash
+curl "https://api.sim.dune.com/v1/evm/activity/0xd8da6bf26964af9d7eed9e03e53415d37aa96045?chain_ids=1,8453&activity_type=receive&asset_type=erc20&limit=50" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+Filter combos: `activity_type` accepts comma-separated values (`send,receive`). Same for `asset_type` and `token_address`.
+
+### 3. Token Metadata & Price Lookup
+
+Get current and historical price for a token.
+
+```bash
+curl "https://api.sim.dune.com/v1/evm/token-info/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48?chain_ids=1&historical_prices=720,168,24" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+Returns current `price_usd` plus `historical_prices[]` array with prices at 720h, 168h, and 24h ago. Compute percent changes yourself.
+
+### 4. Webhook Subscription Setup
+
+Create a webhook to receive real-time balance changes.
+
+```bash
+curl -X POST "https://api.sim.dune.com/v1/evm/subscriptions" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "webhook_url": "https://your-app.com/webhook",
+       "type": "balances",
+       "chain_ids": [1, 8453],
+       "addresses": ["0xd8da6bf26964af9d7eed9e03e53415d37aa96045"]
+     }'
+```
+
+Validate incoming webhooks using the `dune-webhook-signature` header. Handle retries via `dune-webhook-retry-index` (0 = first attempt, up to 5 retries over 24h).
+
+## Rules for Agents
+
+### Always
+
+- Include the `X-Sim-Api-Key` header in every request
+- Use HTTPS
+- Pass explicit `chain_ids` for predictable CU costs
+- Handle `next_offset` for pagination — loop until absent/null
+- Check for `warnings[]` in 200 responses
+- Implement exponential backoff for 429 and 500 errors
+
+### Ask First
+
+- Before omitting `chain_ids` (uses the `default` tag, queries 20+ chains)
+- Before using beta endpoints (`/beta/`) in production code
+- Before creating webhook subscriptions (ongoing CU cost per event)
+
+### Never
+
+- Construct your own `offset` values — only use `next_offset` from the API
+- Use chain names (e.g., "ethereum") in the `chain_ids` parameter — use numeric IDs or tags only
+- Assume all endpoints share the same parameters or response shapes
+- Hardcode API keys in client-side code
+- Expect write/transaction-submission capabilities — Sim APIs are read-only (except subscription management)
+
+## What This API Does NOT Support
+
+- **No write/POST endpoints** — Read-only API (except Subscriptions management). No transaction submission, token transfers, or contract interactions.
+- **No historical balance snapshots** — `historical_prices` returns past token prices, not past balance amounts.
+- **No real-time WebSocket streaming** — Use REST polling or webhook Subscriptions for real-time data.
+- **No ENS / domain resolution** — Addresses must be raw hex (EVM) or base58 (SVM). Resolve ENS names before calling the API.
+- **No aggregated EVM + SVM in one call** — EVM (`/v1/evm/`, `/beta/evm/`) and SVM (`/beta/svm/`) are separate namespaces.
+- **No custom SQL / query execution** — Sim APIs are not Dune's Query API. They do not execute arbitrary SQL.
+- **No token swap / DEX routing** — Provides balances and positions, not trading functionality.
+- **No chain names in `chain_ids`** — Only numeric chain IDs or tags (`default`, `mainnet`, `testnet`).
+
+## Links
+
+| Resource | URL |
+|---|---|
+| Full Documentation | [docs.sim.dune.com](https://docs.sim.dune.com) |
+| OpenAPI Specification | [openapi.json](https://github.com/duneanalytics/sim-docs/blob/main/openapi.json) |
+| LLM-Optimized Full Docs | [llms-full.txt](https://docs.sim.dune.com/llms-full.txt) |
+| Per-Page Markdown | Append `.md` to any page URL (e.g., `docs.sim.dune.com/evm/balances.md`) |
+| Sim Dashboard (API Keys) | [sim.dune.com](https://sim.dune.com) |
+
+---
+
+## Copy Raw Agent Reference
+
+Use the accordion below to copy the complete agent reference as raw markdown. Paste it into your `AGENTS.md`, `CLAUDE.md`, `.cursorrules`, or any agent context file.
+
+<Accordion title="Raw Agent Reference (Markdown)" icon="copy">
+
+~~~markdown
+# Sim API Agent Reference
+
+> Dense, self-contained API reference for AI coding agents.
+> Source: https://docs.sim.dune.com/agent-reference
+
+## Authentication
+
+Every request requires the `X-Sim-Api-Key` header. HTTPS only. Never expose keys in client-side code.
+
+```
+X-Sim-Api-Key: YOUR_API_KEY
+```
+
+## Base URL
+
+```
+https://api.sim.dune.com
+```
+
+Stable: `/v1/` · Beta: `/beta/`
+
+## EVM Endpoints (Stable — /v1)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| Balances | GET | /v1/evm/balances/{address} | N per chain | chain_ids, filter_type (erc20|native), asset_class (stablecoin), metadata (logo,url,pools), exclude_spam_tokens, historical_prices (hours, max 3), offset, limit (max 1000) |
+| Balances (single token) | GET | /v1/evm/balances/{address}/token/{token_address} | 1 | chain_ids (exactly one). Use "native" for native assets |
+| Stablecoins | GET | /v1/evm/balances/{address}/stablecoins | N per chain | chain_ids, offset, limit |
+| Activity | GET | /v1/evm/activity/{address} | 3 | chain_ids, activity_type (send,receive,mint,burn,swap,approve,call), asset_type (native,erc20,erc721,erc1155), token_address, offset, limit (max 100) |
+| Transactions | GET | /v1/evm/transactions/{address} | 1 | chain_ids, decode (bool), offset, limit (max 100) |
+| Collectibles | GET | /v1/evm/collectibles/{address} | N per chain | chain_ids, filter_spam (bool, default true), show_spam_scores (bool), offset, limit (max 500) |
+| Token Info | GET | /v1/evm/token-info/{address} | 2 | chain_ids (required, single), historical_prices (hours, max 3), offset, limit. Use "native" for native assets |
+| Token Holders | GET | /v1/evm/token-holders/{chain_id}/{address} | 2 | offset, limit (max 500) |
+| Supported Chains | GET | /v1/evm/supported-chains | 0 | None |
+
+## EVM Endpoints (Beta — /beta)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| DeFi Positions | GET | /beta/evm/defi/positions/{address} | 2N per chain | chain_ids |
+
+## SVM Endpoints (Beta — /beta)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| Balances | GET | /beta/svm/balances/{address} | N per chain | chains (solana, eclipse, all), offset, limit |
+| Transactions | GET | /beta/svm/transactions/{address} | 1 | offset, limit. Solana only |
+
+Note: SVM uses `chains` param (not `chain_ids`) with string values.
+
+## Subscriptions API (Webhooks)
+
+| Operation | Method | Path | CU |
+|---|---|---|---|
+| Create Webhook | POST | /v1/evm/subscriptions | 0 |
+| List Webhooks | GET | /v1/evm/subscriptions | 0 |
+| Get Webhook | GET | /v1/evm/subscriptions/{id} | 0 |
+| Update Webhook | PATCH | /v1/evm/subscriptions/{id} | 0 |
+| Delete Webhook | DELETE | /v1/evm/subscriptions/{id} | 0 |
+| Events delivered | — | — | 2 per event |
+
+Types: balances, activities, transactions. Retries: exponential backoff, 5 attempts over 24h.
+Validate via `dune-webhook-signature` header. Track retries via `dune-webhook-retry-index`.
+
+## Pagination
+
+All list endpoints use cursor-based pagination:
+1. Set `limit` for page size.
+2. Response includes `next_offset` when more pages exist.
+3. Pass `next_offset` as `offset` in the next request.
+4. Stop when `next_offset` is absent or null.
+
+IMPORTANT: Never construct your own offset. Only use the `next_offset` value from the API.
+
+## Error Handling
+
+| Status | Meaning | Action |
+|---|---|---|
+| 400 | Malformed request | Check address format and parameters |
+| 401 | Invalid/missing API key | Verify X-Sim-Api-Key header |
+| 402 | CU quota exceeded | Upgrade plan; do not retry |
+| 404 | Not found | Check endpoint URL and path params |
+| 429 | Rate limited | Exponential backoff, then retry |
+| 500 | Server error | Retry after short delay |
+
+Error response: `{ "error": "..." }` (field may be `"error"` or `"message"`).
+
+Warning: 200 responses can include `warnings[]` array (e.g., UNSUPPORTED_CHAIN_IDS) alongside valid data. Always check for warnings.
+
+## Compute Units
+
+| Endpoint | Type | Formula |
+|---|---|---|
+| Balances (EVM & SVM) | Chain-dependent | N (1 per chain) |
+| Balances (single token) | Fixed | 1 |
+| Stablecoins | Chain-dependent | N |
+| Collectibles | Chain-dependent | N |
+| DeFi Positions | Chain-dependent | 2N |
+| Activity | Fixed | 3 |
+| Transactions (EVM & SVM) | Fixed | 1 |
+| Token Info | Fixed | 2 |
+| Token Holders | Fixed | 2 |
+| Subscriptions | Event-based | 2 per event |
+
+If chain_ids is omitted, the `default` tag expands to 20+ chains. Always pass explicit chain_ids for predictable costs.
+
+## Chain ID Reference
+
+| Chain | ID | Default |
+|---|---|---|
+| Ethereum | 1 | Yes |
+| Base | 8453 | Yes |
+| Arbitrum | 42161 | Yes |
+| Optimism | 10 | Yes |
+| Polygon | 137 | Yes |
+| BNB | 56 | No |
+| Avalanche | 43114 | No |
+| Unichain | 130 | No |
+| HyperEVM | 999 | No |
+
+SVM: Use `chains=solana`, `chains=eclipse`, or `chains=all`.
+
+Tags for chain_ids: `default` (omitted = default), `mainnet`, `testnet`. Mix allowed: `?chain_ids=1,8453,testnet`.
+
+Chain names are NOT accepted in chain_ids. Use numeric IDs or tags only.
+
+Full list: GET /v1/evm/supported-chains or https://docs.sim.dune.com/evm/supported-chains
+
+## Response Shapes
+
+Balances: `{ wallet_address, balances: [{ chain, chain_id, address, symbol, name, amount, decimals, price_usd, value_usd, pool_size, low_liquidity }], warnings, next_offset }`
+
+Activity: `{ activity: [{ chain_id, block_number, block_time, tx_hash, type, asset_type, token_address, from, value, value_usd, token_metadata: { symbol, decimals, price_usd } }], next_offset }`
+
+Transactions: `{ wallet_address, transactions: [{ chain, address, block_time, block_number, hash, from, to, value, success }], next_offset }`
+
+Token Info: `{ contract_address, tokens: [{ chain_id, chain, symbol, name, decimals, price_usd, pool_size, total_supply, fully_diluted_value, logo }], next_offset }`
+
+Collectibles: `{ wallet_address, collectibles: [{ chain, chain_id, contract_address, token_id, token_standard, name, symbol, balance, is_spam }], next_offset }`
+
+Token Holders: `{ holders: [{ address, balance, share }], next_offset }`
+
+DeFi Positions: `{ wallet_address, positions: [{ type, chain_id, protocol, pool, usd_value }], aggregations: { total_usd_value, total_by_chain } }`
+
+## Common Workflows
+
+### Portfolio Balance Lookup
+```
+GET /v1/evm/balances/{address}?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true
+```
+Paginate until next_offset is null. Sum value_usd for total portfolio.
+
+### Activity Feed
+```
+GET /v1/evm/activity/{address}?chain_ids=1,8453&activity_type=receive&asset_type=erc20&limit=50
+```
+Filters: activity_type and asset_type accept comma-separated values.
+
+### Token Price Lookup
+```
+GET /v1/evm/token-info/{contract_address}?chain_ids=1&historical_prices=720,168,24
+```
+Returns current price_usd + historical_prices[] array. Compute % changes yourself.
+
+### Webhook Setup
+```
+POST /v1/evm/subscriptions
+{ "webhook_url": "https://...", "type": "balances", "chain_ids": [1, 8453], "addresses": ["0x..."] }
+```
+Validate: dune-webhook-signature header. Retry tracking: dune-webhook-retry-index.
+
+## Rules
+
+ALWAYS:
+- Include X-Sim-Api-Key header
+- Use HTTPS
+- Pass explicit chain_ids
+- Handle next_offset pagination
+- Check warnings[] in 200 responses
+- Exponential backoff on 429/500
+
+ASK FIRST:
+- Omitting chain_ids (default tag = 20+ chains)
+- Using /beta/ endpoints in production
+- Creating webhooks (ongoing CU cost)
+
+NEVER:
+- Construct your own offset values
+- Use chain names in chain_ids (numeric IDs or tags only)
+- Assume endpoints share parameters/response shapes
+- Hardcode API keys in client-side code
+- Expect write/transaction capabilities (read-only except subscriptions)
+
+## What This API Does NOT Support
+
+- No write/POST endpoints (read-only, except subscription management)
+- No historical balance snapshots (historical_prices = past prices, not past balances)
+- No WebSocket streaming (use REST polling or webhooks)
+- No ENS/domain resolution (resolve names before calling)
+- No combined EVM + SVM in one call (separate namespaces)
+- No custom SQL/query execution (not Dune Query API)
+- No token swap/DEX routing
+- No chain names in chain_ids parameter
+
+## Links
+
+- Docs: https://docs.sim.dune.com
+- OpenAPI: https://github.com/duneanalytics/sim-docs/blob/main/openapi.json
+- LLM Docs: https://docs.sim.dune.com/llms-full.txt
+- Per-page MD: append .md to any URL (e.g., docs.sim.dune.com/evm/balances.md)
+- Dashboard: https://sim.dune.com
+~~~
+
+</Accordion>
