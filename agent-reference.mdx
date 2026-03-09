@@ -130,21 +130,123 @@ If chain_ids is omitted, the `default` tag expands to 20+ chains. Always pass ex
 
 ## Chain ID Reference
 
-| Chain | ID | Default |
+Default chains (included when chain_ids is omitted):
+
+| Chain | ID |
+|---|---|
+| Ethereum | 1 |
+| Optimism | 10 |
+| BNB | 56 |
+| Gnosis | 100 |
+| Polygon | 137 |
+| zkSync | 324 |
+| HyperEVM | 999 |
+| Base | 8453 |
+| Arbitrum | 42161 |
+| Arbitrum Nova | 42170 |
+| Celo | 42220 |
+| Avalanche C-Chain | 43114 |
+| Blast | 81457 |
+| Zora | 7777777 |
+
+All supported chains:
+
+| Chain | ID | Tags |
 |---|---|---|
-| Ethereum | 1 | Yes |
-| Base | 8453 | Yes |
-| Arbitrum | 42161 | Yes |
-| Optimism | 10 | Yes |
-| Polygon | 137 | Yes |
-| BNB | 56 | No |
-| Avalanche | 43114 | No |
-| Unichain | 130 | No |
-| HyperEVM | 999 | No |
+| Ethereum | 1 | default, mainnet |
+| Optimism | 10 | default, mainnet |
+| Flare | 14 | mainnet |
+| Rootstock | 30 | mainnet |
+| BNB | 56 | default, mainnet |
+| Viction | 88 | mainnet |
+| Gnosis | 100 | default, mainnet |
+| Unichain | 130 | mainnet |
+| Polygon | 137 | default, mainnet |
+| Monad | 143 | mainnet |
+| Sonic | 146 | mainnet |
+| Omni | 166 | omni |
+| Mint | 185 | — |
+| xLayer | 196 | mainnet |
+| opBNB | 204 | mainnet |
+| Lens | 232 | mainnet |
+| TAC | 239 | — |
+| Fantom | 250 | mainnet |
+| Fraxtal | 252 | mainnet |
+| Boba | 288 | mainnet |
+| zkSync | 324 | default, mainnet |
+| Shape | 360 | mainnet |
+| World | 480 | mainnet |
+| Flow | 747 | mainnet |
+| HyperEVM | 999 | default, mainnet |
+| Stable | 988 | — |
+| zkEVM | 1101 | mainnet |
+| Lisk | 1135 | mainnet |
+| Sei | 1329 | mainnet |
+| Story | 1514 | mainnet |
+| Soneium | 1868 | mainnet |
+| Swellchain | 1923 | mainnet |
+| Ronin | 2020 | mainnet |
+| Abstract | 2741 | mainnet |
+| HyChain | 2911 | — |
+| Peaq | 3338 | mainnet |
+| MegaETH | 4326 | mainnet |
+| Rise | 4153 | mainnet |
+| Mantle | 5000 | mainnet |
+| Somnia | 5031 | mainnet |
+| HAM | 5112 | — |
+| Superseed | 5330 | mainnet |
+| Cyber | 7560 | mainnet |
+| Base | 8453 | default, mainnet |
+| B3 | 8333 | mainnet |
+| Kaia | 8217 | mainnet |
+| Plasma | 9745 | mainnet |
+| Monad Testnet | 10143 | testnet |
+| 0G Galileo | 16601 | — |
+| Corn | 21000000 | — |
+| Mezo | 31612 | mainnet |
+| Ape Chain | 33139 | mainnet |
+| FunkiChain | 33979 | — |
+| Mode | 34443 | mainnet |
+| Arbitrum | 42161 | default, mainnet |
+| Arbitrum Nova | 42170 | default, mainnet |
+| Tempo | 42431 | — |
+| Celo | 42220 | default, mainnet |
+| Hemi | 43111 | mainnet |
+| Avalanche C-Chain | 43114 | default, mainnet |
+| Avalanche Fuji | 43113 | testnet |
+| Sophon | 50104 | mainnet |
+| Superposition | 55244 | mainnet |
+| Ink | 57073 | mainnet |
+| Linea | 59144 | mainnet |
+| Bob | 60808 | mainnet |
+| Proof of Play | 70700 | — |
+| Proof of Play Boss | 70701 | — |
+| Berachain | 80094 | mainnet |
+| Polygon Amoy | 80002 | — |
+| Blast | 81457 | default, mainnet |
+| Base Sepolia | 84532 | testnet |
+| Plume | 98866 | mainnet |
+| Taiko | 167000 | — |
+| Zero Network | 543210 | mainnet |
+| Xai | 660279 | mainnet |
+| Katana | 747474 | — |
+| Forma | 984122 | — |
+| Redstone | 690 | mainnet |
+| Metis | 1088 | — |
+| WeMix | 1111 | — |
+| Tron | 728126428 | mainnet |
+| Ancient8 | 888888888 | mainnet |
+| Degen | 666666666 | mainnet |
+| Zora | 7777777 | default, mainnet |
+| Rari | 1380012617 | mainnet |
+| Sepolia | 11155111 | testnet |
+| Rise Testnet | 11155931 | testnet |
+| Interop Alpha 0 | 420120000 | devnet |
+| Interop Alpha 1 | 420120001 | devnet |
 
 SVM: Use `chains=solana`, `chains=eclipse`, or `chains=all`.
 
-Tags for chain_ids: `default` (omitted = default), `mainnet`, `testnet`. Mix allowed: `?chain_ids=1,8453,testnet`.
+Tags for chain_ids: `default` (omitted = default), `mainnet`, `testnet`, `devnet`. Mix allowed: `?chain_ids=1,8453,testnet`.
 
 Chain names are NOT accepted in chain_ids. Use numeric IDs or tags only.
 
