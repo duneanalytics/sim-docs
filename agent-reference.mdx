@@ -25,7 +25,7 @@ Copy the agent reference below and add it to your project so your AI agent reads
 
 Copy the full reference below into your agent context file. Click the expand icon to see the full content, then use the copy button to grab it.
 
-```markdown Sim API Agent Reference [expandable]
+````markdown Sim API Agent Reference [expandable]
 # Sim API Agent Reference
 
 > Dense, self-contained API reference for AI coding agents.
@@ -35,15 +35,11 @@ Copy the full reference below into your agent context file. Click the expand ico
 
 Every request requires the `X-Sim-Api-Key` header. HTTPS only. Never expose keys in client-side code.
 
-```
-X-Sim-Api-Key: YOUR_API_KEY
-```
+    X-Sim-Api-Key: YOUR_API_KEY
 
 ## Base URL
 
-```
-https://api.sim.dune.com
-```
+    https://api.sim.dune.com
 
 Stable: `/v1/` · Beta: `/beta/`
 
@@ -111,7 +107,7 @@ IMPORTANT: Never construct your own offset. Only use the `next_offset` value fro
 | 429 | Rate limited | Exponential backoff, then retry |
 | 500 | Server error | Retry after short delay |
 
-Error response: `{ "error": "..." }` (field may be `"error"` or `"message"`).
+Error response: `{"error": "..."}` (field may be `"error"` or `"message"`).
 
 Warning: 200 responses can include `warnings[]` array (e.g., UNSUPPORTED_CHAIN_IDS) alongside valid data. Always check for warnings.
 
@@ -172,29 +168,29 @@ DeFi Positions: `{ wallet_address, positions: [{ type, chain_id, protocol, pool,
 
 ## Common Workflows
 
-### Portfolio Balance Lookup
-```
-GET /v1/evm/balances/{address}?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true
-```
+Portfolio Balance Lookup:
+
+    GET /v1/evm/balances/{address}?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true
+
 Paginate until next_offset is null. Sum value_usd for total portfolio.
 
-### Activity Feed
-```
-GET /v1/evm/activity/{address}?chain_ids=1,8453&activity_type=receive&asset_type=erc20&limit=50
-```
+Activity Feed:
+
+    GET /v1/evm/activity/{address}?chain_ids=1,8453&activity_type=receive&asset_type=erc20&limit=50
+
 Filters: activity_type and asset_type accept comma-separated values.
 
-### Token Price Lookup
-```
-GET /v1/evm/token-info/{contract_address}?chain_ids=1&historical_prices=720,168,24
-```
+Token Price Lookup:
+
+    GET /v1/evm/token-info/{contract_address}?chain_ids=1&historical_prices=720,168,24
+
 Returns current price_usd + historical_prices[] array. Compute % changes yourself.
 
-### Webhook Setup
-```
-POST /v1/evm/subscriptions
-{ "webhook_url": "https://...", "type": "balances", "chain_ids": [1, 8453], "addresses": ["0x..."] }
-```
+Webhook Setup:
+
+    POST /v1/evm/subscriptions
+    Body: {"webhook_url": "https://...", "type": "balances", "chain_ids": [1, 8453], "addresses": ["0x..."]}
+
 Validate: dune-webhook-signature header. Retry tracking: dune-webhook-retry-index.
 
 ## Rules
@@ -237,4 +233,4 @@ NEVER:
 - LLM Docs: https://docs.sim.dune.com/llms-full.txt
 - Per-page MD: append .md to any URL (e.g., docs.sim.dune.com/evm/balances.md)
 - Dashboard: https://sim.dune.com
-```
+````
