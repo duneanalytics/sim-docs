@@ -1,0 +1,338 @@
+---
+title: "Agent Reference"
+sidebarTitle: "Agent Reference"
+description: "A ready-to-use agent reference file for Claude Code, Cursor, Codex, Gemini CLI, and other AI coding agents to integrate the Sim API. Copy it into your project and start building."
+---
+
+The Agent Reference is a single document that gives AI coding agents everything they need to generate correct Sim API integration code: authentication, every endpoint, parameters, response shapes, pagination, error handling, and common workflows.
+
+## Who Is This For?
+
+This reference is designed for **AI coding agents** like Claude Code, OpenAI Codex, Cursor Agent, Gemini CLI, Windsurf, GitHub Copilot, and similar.
+
+## How to Use It
+
+Copy the agent reference below and add it to your project so your AI agent reads it automatically:
+
+| Agent | How to Add |
+|---|---|
+| **Claude Code** | Save as `CLAUDE.md` in your project root, or reference with `@agent-reference.md` |
+| **Cursor** | Save as `.cursorrules` or add `docs.sim.dune.com` via Settings → Indexing & Docs |
+| **OpenAI Codex / Copilot / Gemini CLI / Windsurf** | Save as `AGENTS.md` in your project root |
+| **Any agent** | Include in your system prompt or project context |
+
+## Agent Reference
+
+Copy the full reference below into your agent context file. Click the expand icon to see the full content, then use the copy button to grab it.
+
+````markdown Sim API Agent Reference [expandable]
+# Sim API Agent Reference
+
+> Dense, self-contained API reference for AI coding agents.
+> Source: https://docs.sim.dune.com/agent-reference
+
+## Authentication
+
+Every request requires the `X-Sim-Api-Key` header. HTTPS only. Never expose keys in client-side code.
+
+    X-Sim-Api-Key: YOUR_API_KEY
+
+## Base URL
+
+    https://api.sim.dune.com
+
+Stable: `/v1/` · Beta: `/beta/`
+
+## EVM Endpoints (Stable — /v1)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| Balances | GET | /v1/evm/balances/{address} | N per chain | chain_ids, filter_type (erc20|native), asset_class (stablecoin), metadata (logo,url,pools), exclude_spam_tokens, historical_prices (hours, max 3), offset, limit (max 1000) |
+| Balances (single token) | GET | /v1/evm/balances/{address}/token/{token_address} | 1 | chain_ids (exactly one). Use "native" for native assets |
+| Stablecoins | GET | /v1/evm/balances/{address}/stablecoins | N per chain | chain_ids, offset, limit |
+| Activity | GET | /v1/evm/activity/{address} | 3 | chain_ids, activity_type (send,receive,mint,burn,swap,approve,call), asset_type (native,erc20,erc721,erc1155), token_address, offset, limit (max 100) |
+| Transactions | GET | /v1/evm/transactions/{address} | 1 | chain_ids, decode (bool), offset, limit (max 100) |
+| Collectibles | GET | /v1/evm/collectibles/{address} | N per chain | chain_ids, filter_spam (bool, default true), show_spam_scores (bool), offset, limit (max 500) |
+| Token Info | GET | /v1/evm/token-info/{address} | 2 | chain_ids (required, single), historical_prices (hours, max 3), offset, limit. Use "native" for native assets |
+| Token Holders | GET | /v1/evm/token-holders/{chain_id}/{address} | 2 | offset, limit (max 500) |
+| Supported Chains | GET | /v1/evm/supported-chains | 0 | None |
+
+## EVM Endpoints (Beta — /beta)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| DeFi Positions | GET | /beta/evm/defi/positions/{address} | 2N per chain | chain_ids |
+
+## SVM Endpoints (Beta — /beta)
+
+| Endpoint | Method | Path | CU | Key Parameters |
+|---|---|---|---|---|
+| Balances | GET | /beta/svm/balances/{address} | N per chain | chains (solana, eclipse, all), offset, limit |
+| Transactions | GET | /beta/svm/transactions/{address} | 1 | offset, limit. Solana only |
+
+Note: SVM uses `chains` param (not `chain_ids`) with string values.
+
+## Subscriptions API (Webhooks)
+
+| Operation | Method | Path | CU |
+|---|---|---|---|
+| Create Webhook | POST | /v1/evm/subscriptions | 0 |
+| List Webhooks | GET | /v1/evm/subscriptions | 0 |
+| Get Webhook | GET | /v1/evm/subscriptions/{id} | 0 |
+| Update Webhook | PATCH | /v1/evm/subscriptions/{id} | 0 |
+| Delete Webhook | DELETE | /v1/evm/subscriptions/{id} | 0 |
+| Events delivered | — | — | 2 per event |
+
+Types: balances, activities, transactions. Retries: exponential backoff, 5 attempts over 24h.
+Validate via `dune-webhook-signature` header. Track retries via `dune-webhook-retry-index`.
+
+## Pagination
+
+All list endpoints use cursor-based pagination:
+1. Set `limit` for page size.
+2. Response includes `next_offset` when more pages exist.
+3. Pass `next_offset` as `offset` in the next request.
+4. Stop when `next_offset` is absent or null.
+
+IMPORTANT: Never construct your own offset. Only use the `next_offset` value from the API.
+
+## Error Handling
+
+| Status | Meaning | Action |
+|---|---|---|
+| 400 | Malformed request | Check address format and parameters |
+| 401 | Invalid/missing API key | Verify X-Sim-Api-Key header |
+| 402 | CU quota exceeded | Upgrade plan; do not retry |
+| 404 | Not found | Check endpoint URL and path params |
+| 429 | Rate limited | Exponential backoff, then retry |
+| 500 | Server error | Retry after short delay |
+
+Error response: `{"error": "..."}` (field may be `"error"` or `"message"`).
+
+Warning: 200 responses can include `warnings[]` array (e.g., UNSUPPORTED_CHAIN_IDS) alongside valid data. Always check for warnings.
+
+## Compute Units
+
+| Endpoint | Type | Formula |
+|---|---|---|
+| Balances (EVM & SVM) | Chain-dependent | N (1 per chain) |
+| Balances (single token) | Fixed | 1 |
+| Stablecoins | Chain-dependent | N |
+| Collectibles | Chain-dependent | N |
+| DeFi Positions | Chain-dependent | 2N |
+| Activity | Fixed | 3 |
+| Transactions (EVM & SVM) | Fixed | 1 |
+| Token Info | Fixed | 2 |
+| Token Holders | Fixed | 2 |
+| Subscriptions | Event-based | 2 per event |
+
+If chain_ids is omitted, the `default` tag expands to 20+ chains. Always pass explicit chain_ids for predictable costs.
+
+## Chain ID Reference
+
+Default chains (included when chain_ids is omitted):
+
+| Chain | ID |
+|---|---|
+| Ethereum | 1 |
+| Optimism | 10 |
+| BNB | 56 |
+| Gnosis | 100 |
+| Polygon | 137 |
+| zkSync | 324 |
+| HyperEVM | 999 |
+| Base | 8453 |
+| Arbitrum | 42161 |
+| Arbitrum Nova | 42170 |
+| Celo | 42220 |
+| Avalanche C-Chain | 43114 |
+| Blast | 81457 |
+| Zora | 7777777 |
+
+All supported chains:
+
+| Chain | ID | Tags |
+|---|---|---|
+| Ethereum | 1 | default, mainnet |
+| Optimism | 10 | default, mainnet |
+| Flare | 14 | mainnet |
+| Rootstock | 30 | mainnet |
+| BNB | 56 | default, mainnet |
+| Viction | 88 | mainnet |
+| Gnosis | 100 | default, mainnet |
+| Unichain | 130 | mainnet |
+| Polygon | 137 | default, mainnet |
+| Monad | 143 | mainnet |
+| Sonic | 146 | mainnet |
+| Omni | 166 | omni |
+| Mint | 185 | — |
+| xLayer | 196 | mainnet |
+| opBNB | 204 | mainnet |
+| Lens | 232 | mainnet |
+| TAC | 239 | — |
+| Fantom | 250 | mainnet |
+| Fraxtal | 252 | mainnet |
+| Boba | 288 | mainnet |
+| zkSync | 324 | default, mainnet |
+| Shape | 360 | mainnet |
+| World | 480 | mainnet |
+| Flow | 747 | mainnet |
+| HyperEVM | 999 | default, mainnet |
+| Stable | 988 | — |
+| zkEVM | 1101 | mainnet |
+| Lisk | 1135 | mainnet |
+| Sei | 1329 | mainnet |
+| Story | 1514 | mainnet |
+| Soneium | 1868 | mainnet |
+| Swellchain | 1923 | mainnet |
+| Ronin | 2020 | mainnet |
+| Abstract | 2741 | mainnet |
+| HyChain | 2911 | — |
+| Peaq | 3338 | mainnet |
+| MegaETH | 4326 | mainnet |
+| Rise | 4153 | mainnet |
+| Mantle | 5000 | mainnet |
+| Somnia | 5031 | mainnet |
+| HAM | 5112 | — |
+| Superseed | 5330 | mainnet |
+| Cyber | 7560 | mainnet |
+| Base | 8453 | default, mainnet |
+| B3 | 8333 | mainnet |
+| Kaia | 8217 | mainnet |
+| Plasma | 9745 | mainnet |
+| Monad Testnet | 10143 | testnet |
+| 0G Galileo | 16601 | — |
+| Corn | 21000000 | — |
+| Mezo | 31612 | mainnet |
+| Ape Chain | 33139 | mainnet |
+| FunkiChain | 33979 | — |
+| Mode | 34443 | mainnet |
+| Arbitrum | 42161 | default, mainnet |
+| Arbitrum Nova | 42170 | default, mainnet |
+| Tempo | 42431 | — |
+| Celo | 42220 | default, mainnet |
+| Hemi | 43111 | mainnet |
+| Avalanche C-Chain | 43114 | default, mainnet |
+| Avalanche Fuji | 43113 | testnet |
+| Sophon | 50104 | mainnet |
+| Superposition | 55244 | mainnet |
+| Ink | 57073 | mainnet |
+| Linea | 59144 | mainnet |
+| Bob | 60808 | mainnet |
+| Proof of Play | 70700 | — |
+| Proof of Play Boss | 70701 | — |
+| Berachain | 80094 | mainnet |
+| Polygon Amoy | 80002 | — |
+| Blast | 81457 | default, mainnet |
+| Base Sepolia | 84532 | testnet |
+| Plume | 98866 | mainnet |
+| Taiko | 167000 | — |
+| Zero Network | 543210 | mainnet |
+| Xai | 660279 | mainnet |
+| Katana | 747474 | — |
+| Forma | 984122 | — |
+| Redstone | 690 | mainnet |
+| Metis | 1088 | — |
+| WeMix | 1111 | — |
+| Tron | 728126428 | mainnet |
+| Ancient8 | 888888888 | mainnet |
+| Degen | 666666666 | mainnet |
+| Zora | 7777777 | default, mainnet |
+| Rari | 1380012617 | mainnet |
+| Sepolia | 11155111 | testnet |
+| Rise Testnet | 11155931 | testnet |
+| Interop Alpha 0 | 420120000 | devnet |
+| Interop Alpha 1 | 420120001 | devnet |
+
+SVM: Use `chains=solana`, `chains=eclipse`, or `chains=all`.
+
+Tags for chain_ids: `default` (omitted = default), `mainnet`, `testnet`, `devnet`. Mix allowed: `?chain_ids=1,8453,testnet`.
+
+Chain names are NOT accepted in chain_ids. Use numeric IDs or tags only.
+
+Full list: GET /v1/evm/supported-chains or https://docs.sim.dune.com/evm/supported-chains
+
+## Response Shapes
+
+Balances: `{ wallet_address, balances: [{ chain, chain_id, address, symbol, name, amount, decimals, price_usd, value_usd, pool_size, low_liquidity }], warnings, next_offset }`
+
+Activity: `{ activity: [{ chain_id, block_number, block_time, tx_hash, type, asset_type, token_address, from, value, value_usd, token_metadata: { symbol, decimals, price_usd } }], next_offset }`
+
+Transactions: `{ wallet_address, transactions: [{ chain, address, block_time, block_number, hash, from, to, value, success }], next_offset }`
+
+Token Info: `{ contract_address, tokens: [{ chain_id, chain, symbol, name, decimals, price_usd, pool_size, total_supply, fully_diluted_value, logo }], next_offset }`
+
+Collectibles: `{ wallet_address, collectibles: [{ chain, chain_id, contract_address, token_id, token_standard, name, symbol, balance, is_spam }], next_offset }`
+
+Token Holders: `{ holders: [{ address, balance, share }], next_offset }`
+
+DeFi Positions: `{ wallet_address, positions: [{ type, chain_id, protocol, pool, usd_value }], aggregations: { total_usd_value, total_by_chain } }`
+
+## Common Workflows
+
+Portfolio Balance Lookup:
+
+    GET /v1/evm/balances/{address}?chain_ids=1,8453,42161&limit=500&exclude_spam_tokens=true
+
+Paginate until next_offset is null. Sum value_usd for total portfolio.
+
+Activity Feed:
+
+    GET /v1/evm/activity/{address}?chain_ids=1,8453&activity_type=receive&asset_type=erc20&limit=50
+
+Filters: activity_type and asset_type accept comma-separated values.
+
+Token Price Lookup:
+
+    GET /v1/evm/token-info/{contract_address}?chain_ids=1&historical_prices=720,168,24
+
+Returns current price_usd + historical_prices[] array. Compute % changes yourself.
+
+Webhook Setup:
+
+    POST /v1/evm/subscriptions
+    Body: {"webhook_url": "https://...", "type": "balances", "chain_ids": [1, 8453], "addresses": ["0x..."]}
+
+Validate: dune-webhook-signature header. Retry tracking: dune-webhook-retry-index.
+
+## Rules
+
+ALWAYS:
+- Include X-Sim-Api-Key header
+- Use HTTPS
+- Pass explicit chain_ids
+- Handle next_offset pagination
+- Check warnings[] in 200 responses
+- Exponential backoff on 429/500
+
+ASK FIRST:
+- Omitting chain_ids (default tag = 20+ chains)
+- Using /beta/ endpoints in production
+- Creating webhooks (ongoing CU cost)
+
+NEVER:
+- Construct your own offset values
+- Use chain names in chain_ids (numeric IDs or tags only)
+- Assume endpoints share parameters/response shapes
+- Hardcode API keys in client-side code
+- Expect write/transaction capabilities (read-only except subscriptions)
+
+## What This API Does NOT Support
+
+- No write/POST endpoints (read-only, except subscription management)
+- No historical balance snapshots (historical_prices = past prices, not past balances)
+- No WebSocket streaming (use REST polling or webhooks)
+- No ENS/domain resolution (resolve names before calling)
+- No combined EVM + SVM in one call (separate namespaces)
+- No custom SQL/query execution (not Dune Query API)
+- No token swap/DEX routing
+- No chain names in chain_ids parameter
+
+## Links
+
+- Docs: https://docs.sim.dune.com
+- OpenAPI: https://github.com/duneanalytics/sim-docs/blob/main/openapi.json
+- LLM Docs: https://docs.sim.dune.com/llms-full.txt
+- Per-page MD: append .md to any URL (e.g., docs.sim.dune.com/evm/balances.md)
+- Dashboard: https://sim.dune.com
+````
