@@ -30,6 +30,13 @@
             ]
           },
           {
+            "group": "Build with AI",
+            "pages": [
+              "build-with-ai",
+              "agent-reference"
+            ]
+          },
+          {
             "group": "EVM",
             "pages": [
               "evm/overview",
@@ -84,8 +91,6 @@
           {
             "group": "Resources",
             "pages": [
-              "build-with-ai",
-              "agent-reference",
               "token-filtering",
               "error-handling",
               "proxy"
