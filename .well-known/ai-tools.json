@@ -1,0 +1,414 @@
+{
+  "schemaVersion": "0.1.0",
+  "name": "Sim by Dune",
+  "slug": "sim-by-dune",
+  "description": "Agent-friendly tool manifest for querying real-time blockchain balances, activity, transactions, token data, NFT holdings, and related multichain data from Sim by Dune.",
+  "documentationUrl": "https://docs.sim.dune.com/",
+  "openapiUrl": "https://docs.sim.dune.com/openapi.json",
+  "baseUrl": "https://api.sim.dune.com",
+  "auth": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-Sim-Api-Key",
+    "required": true
+  },
+  "defaultHeaders": {
+    "Accept": "application/json"
+  },
+  "capabilities": {
+    "readOnly": true,
+    "supportsPagination": true,
+    "supportsMultichainQueries": true,
+    "primaryUseCases": [
+      "wallet balances",
+      "semantic onchain activity",
+      "transaction history",
+      "NFT ownership",
+      "token metadata",
+      "holder analysis"
+    ]
+  },
+  "rateLimits": {
+    "headers": [
+      "X-RateLimit-Limit",
+      "X-RateLimit-Remaining",
+      "X-RateLimit-Reset"
+    ],
+    "notes": "Clients should back off when remaining budget is low and respect retry timing."
+  },
+  "costModel": {
+    "headers": [
+      "X-Compute-Units-Cost",
+      "X-Compute-Units-Remaining"
+    ],
+    "notes": "Prefer lower-cost discovery calls before expensive portfolio-wide calls."
+  },
+  "formats": {
+    "mcp": {
+      "serverPackage": "@duneanalytics/mcp-server",
+      "serverUrl": "https://api.dune.com/mcp/v1",
+      "documentationUrl": "https://docs.dune.com/api-reference/agents/mcp",
+      "note": "Dune MCP server. Sim tools will be integrated into Dune MCP."
+    }
+  },
+  "toolSelectionGuidance": [
+    "Prefer semantic activity tools over raw transaction tools when the user asks what happened onchain.",
+    "Use balances tools for current holdings and valuations.",
+    "Use token metadata tools when symbol, decimals, logo, or project identity is needed.",
+    "Use supported chains before chain-specific calls when the chain is ambiguous.",
+    "Avoid broad multichain calls unless the user explicitly needs them."
+  ],
+  "tools": [
+    {
+      "name": "get_evm_wallet_balances",
+      "title": "Get EVM wallet balances",
+      "description": "Return token balances for an EVM wallet, including enriched metadata and USD pricing when available. Use this for wallet contents, portfolio views, and multichain balance checks.",
+      "method": "GET",
+      "path": "/v1/evm/balances/{address}",
+      "source": {
+        "openapiOperationId": "getEvmBalances"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "EVM wallet address."
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Optional list of chain IDs to limit the query."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "balances",
+        "expectPagination": true,
+        "structuredOutput": true
+      }
+    },
+    {
+      "name": "get_evm_wallet_activity",
+      "title": "Get EVM wallet activity",
+      "description": "Return semantically decoded onchain activity for an EVM wallet, such as swaps, sends, receives, approvals, mints, and burns. Prefer this over raw transactions when the user asks what happened or wants human-readable actions.",
+      "method": "GET",
+      "path": "/v1/evm/activity/{address}",
+      "source": {
+        "openapiOperationId": "getEvmActivity"
+      },
+      "preferOver": ["get_evm_transactions"],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "from_timestamp": {
+            "type": "string",
+            "description": "RFC3339 timestamp."
+          },
+          "to_timestamp": {
+            "type": "string",
+            "description": "RFC3339 timestamp."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "activity",
+        "expectPagination": true,
+        "structuredOutput": true
+      }
+    },
+    {
+      "name": "get_evm_transactions",
+      "title": "Get raw EVM transactions",
+      "description": "Return transaction history for an EVM wallet. Use this when the user explicitly wants raw transaction-level detail, hashes, or low-level transfer history rather than semantic activity.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getEvmTransactions"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_evm_collectibles",
+      "title": "Get NFT holdings",
+      "description": "Return NFT and collectible holdings for an EVM wallet. Use this for NFT ownership, collection exposure, and wallet inventory questions.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getEvmCollectibles"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_supported_chains",
+      "title": "Get supported chains",
+      "description": "Return the set of chains supported by Sim. Use this for discovery, chain-name resolution, and to validate user-supplied chain filters before making other calls.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getSupportedChains"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_token_info",
+      "title": "Get token metadata",
+      "description": "Return token metadata such as symbol, decimals, logo, and project details. Use this when balances or activity need enrichment or token identity is ambiguous.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getTokenInfo"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chain_id": {
+            "type": "integer"
+          },
+          "token_address": {
+            "type": "string"
+          }
+        },
+        "required": ["chain_id", "token_address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_token_holders",
+      "title": "Get token holders",
+      "description": "Return holder distribution data for a token. Use this for concentration analysis, whale checks, and holder-based token research.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getTokenHolders"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "chain_id": {
+            "type": "integer"
+          },
+          "token_address": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["chain_id", "token_address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_defi_positions",
+      "title": "Get DeFi positions",
+      "description": "Return DeFi positions for a wallet. Use this for protocol exposure, LP positions, and wallet portfolio decomposition beyond spot token balances.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getDefiPositions"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_stablecoin_balances",
+      "title": "Get stablecoin balances",
+      "description": "Return stablecoin balances for a wallet. Use this for treasury checks, settlement balances, and cash-like asset exposure.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getStablecoinBalances"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "chain_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_svm_wallet_balances",
+      "title": "Get Solana wallet balances",
+      "description": "Return balances for a Solana wallet. Use this for SVM wallet inventory and chain-specific balance questions.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getSvmBalances"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    },
+    {
+      "name": "get_svm_transactions",
+      "title": "Get Solana transactions",
+      "description": "Return Solana transaction history for a wallet. Use this when the user asks for raw Solana transaction history rather than balances.",
+      "method": "GET",
+      "path": "TBD_FROM_OPENAPI",
+      "source": {
+        "openapiOperationId": "getSvmTransactions"
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "offset": {
+            "type": "string"
+          }
+        },
+        "required": ["address"]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "idempotentHint": true
+      }
+    }
+  ]
+}
