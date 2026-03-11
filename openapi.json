@@ -223,13 +223,53 @@
             }
           },
           "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Invalid address or validation error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "validationError": {
+                    "summary": "Validation error",
+                    "value": "Invalid address format"
+                  }
+                }
+              }
+            }
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
+            "description": "Internal Server Error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "internalError": {
+                    "summary": "Internal server error",
+                    "value": "Internal server error"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -448,13 +488,73 @@
             }
           },
           "400": {
-            "description": "Bad Request. The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Invalid wallet address or invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address format",
+                    "value": {
+                      "message": "Failed to parse address"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error. A generic error occurred on the server."
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable - The balances service is temporarily in a retry state. Retry the request after a short delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "serviceUnavailable": {
+                    "value": {
+                      "message": "Try again later"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -570,13 +670,73 @@
             }
           },
           "400": {
-            "description": "Bad Request. The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Invalid wallet address or invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address format",
+                    "value": {
+                      "message": "Failed to parse address"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error. A generic error occurred on the server."
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable - The balances service is temporarily in a retry state. Retry the request after a short delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "serviceUnavailable": {
+                    "value": {
+                      "message": "Try again later"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -789,7 +949,7 @@
             }
           },
           "400": {
-            "description": "Bad Request - Malformed request.",
+            "description": "Bad Request - Invalid address or validation error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -798,7 +958,7 @@
                 "examples": {
                   "badRequest": {
                     "value": {
-                      "error": "Verify the address format and other parameters in your request"
+                      "error": "Invalid address format"
                     }
                   }
                 }
@@ -810,12 +970,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Collectibles_ErrorResponse"
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
                 },
                 "examples": {
                   "unauthorized": {
                     "value": {
-                      "error": "Invalid API Key"
+                      "error": "invalid API Key"
                     }
                   }
                 }
@@ -823,16 +983,16 @@
             }
           },
           "404": {
-            "description": "Not Found - Resource not found.",
+            "description": "Not Found - The requested chain is not supported.",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Collectibles_ErrorResponse"
                 },
                 "examples": {
-                  "notFound": {
+                  "chainNotSupported": {
                     "value": {
-                      "error": "URL Not Found"
+                      "error": "Chain not supported: 999999"
                     }
                   }
                 }
@@ -844,12 +1004,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Collectibles_ErrorResponse"
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
                 },
                 "examples": {
                   "rateLimitExceeded": {
                     "value": {
-                      "error": "Too many requests"
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
                     }
                   }
                 }
@@ -857,7 +1017,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error - Server-side error.",
+            "description": "Internal Server Error.",
             "content": {
               "application/json": {
                 "schema": {
@@ -866,7 +1026,7 @@
                 "examples": {
                   "internalServerError": {
                     "value": {
-                      "error": "Server-side error"
+                      "error": "Failed to bootstrap"
                     }
                   }
                 }
@@ -1404,42 +1564,50 @@
             }
           },
           "400": {
-            "description": "Bad request",
+            "description": "Bad Request - Invalid user address.",
             "content": {
-              "text/plain": {
+              "application/json": {
                 "schema": {
-                  "type": "string",
-                  "description": "Error message"
+                  "$ref": "#/components/schemas/Collectibles_ErrorResponse"
                 },
                 "examples": {
-                  "invalid_address": {
-                    "summary": "Invalid address format",
-                    "value": "Invalid URL: invalid length 39, expected a (both 0x-prefixed or not) hex string or byte array containing 20 bytes"
+                  "invalidAddress": {
+                    "value": {
+                      "error": "Invalid user address"
+                    }
                   }
                 }
               }
             }
           },
           "401": {
-            "description": "Unauthorized - missing or invalid API key",
+            "description": "Unauthorized - Invalid or missing API key.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "invalid API Key"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
                 },
                 "examples": {
-                  "invalid_api_key": {
+                  "invalidApiKey": {
                     "value": {
                       "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Collectibles_ErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "error": "Internal error: unexpected failure"
                     }
                   }
                 }
@@ -1616,13 +1784,73 @@
             }
           },
           "400": {
-            "description": "Bad Request. The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Invalid wallet address or invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address format",
+                    "value": {
+                      "message": "Failed to parse address"
+                    }
+                  }
+                }
+              }
+            }
           },
-          "404": {
-            "description": "Not Found"
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error. A generic error occurred on the server."
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable - The balances service is temporarily in a retry state. Retry the request after a short delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "serviceUnavailable": {
+                    "value": {
+                      "message": "Try again later"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1822,15 +2050,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenHolders_ErrorResponse"
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
                 },
                 "examples": {
-                  "unauthorized": {
+                  "invalidApiKey": {
                     "value": {
-                      "error": {
-                        "message": "Invalid or missing API key",
-                        "code": "UNAUTHORIZED"
-                      }
+                      "error": "invalid API Key"
                     }
                   }
                 }
@@ -1862,15 +2087,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenHolders_ErrorResponse"
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
                 },
                 "examples": {
                   "rateLimitExceeded": {
                     "value": {
-                      "error": {
-                        "message": "Too many requests",
-                        "code": "RATE_LIMIT_EXCEEDED"
-                      }
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
                     }
                   }
                 }
@@ -2002,13 +2224,77 @@
             }
           },
           "400": {
-            "description": "Bad Request - The request could not be understood by the server due to malformed data"
+            "description": "Bad Request - Invalid address, chain ID, token ID, or batch size exceeded.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address",
+                    "value": "Invalid address: expected a hex-encoded address"
+                  },
+                  "invalidChainId": {
+                    "summary": "Invalid chain ID",
+                    "value": "Invalid chain id: 999999"
+                  },
+                  "batchSizeExceeded": {
+                    "summary": "Batch size exceeded",
+                    "value": "Batch size exceeds maximum limit of 100 tokens"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Not Found"
+            "description": "Not Found - Token or resource not found.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "tokenNotFound": {
+                    "summary": "Token not found",
+                    "value": "Token not found"
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal Server Error - A generic error occurred on the server."
+            "description": "Internal Server Error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "storeError": {
+                    "summary": "Store read failure",
+                    "value": "Failed to read from store: connection timeout"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2211,6 +2497,55 @@
                       "response_time": "2025-12-16T10:31:56Z",
                       "wallet_address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341"
                     }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Invalid wallet address, invalid query parameter, or unknown sort/filter property.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address format",
+                    "value": "invalid length 39, expected a (both 0x-prefixed or not) hex string or byte array containing 20 bytes"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "examples": {
+                  "internalError": {
+                    "summary": "Internal server error",
+                    "value": "Internal server error"
                   }
                 }
               }
@@ -2955,13 +3290,73 @@
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad Request - Invalid wallet address or invalid query parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "invalidAddress": {
+                    "summary": "Invalid address format",
+                    "value": {
+                      "message": "Failed to parse address"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable - The balances service is temporarily in a retry state. Retry the request after a short delay.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceMessageErrorResponse"
+                },
+                "examples": {
+                  "serviceUnavailable": {
+                    "value": {
+                      "message": "Try again later"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3094,13 +3489,55 @@
             }
           },
           "400": {
-            "description": "Bad request"
+            "description": "Bad Request - Invalid address or request parameter.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SvmTransactions_ErrorResponse"
+                },
+                "examples": {
+                  "invalidRequest": {
+                    "value": {
+                      "message": "Invalid request"
+                    }
+                  }
+                }
+              }
+            }
           },
           "401": {
-            "description": "Unauthorized"
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Internal Server Error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SvmTransactions_ErrorResponse"
+                },
+                "examples": {
+                  "internalError": {
+                    "value": {
+                      "message": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -5536,12 +5973,38 @@
           }
         }
       },
+      "GatewayErrorResponse": {
+        "type": "object",
+        "description": "Error response from the API gateway. Returned for authentication, permissions, rate-limiting, and quota errors.",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message."
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "ServiceMessageErrorResponse": {
+        "type": "object",
+        "description": "Error response from backend services that use a message field.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
       "Collectibles_ErrorResponse": {
         "type": "object",
         "properties": {
           "error": {
             "type": "string",
-            "description": "Description of what went wrong.",
+            "description": "Error message.",
             "example": "invalid API Key"
           }
         },
@@ -5562,11 +6025,16 @@
       },
       "SvmTransactions_ErrorResponse": {
         "type": "object",
+        "description": "Error response from the SVM Transactions service.",
         "properties": {
-          "error": {
-            "type": "string"
+          "message": {
+            "type": "string",
+            "description": "Error message."
           }
-        }
+        },
+        "required": [
+          "message"
+        ]
       }
     }
   }

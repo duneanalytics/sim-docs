@@ -45,28 +45,43 @@ Each warning includes:
 
 ## Error Response Format
 
-When an error occurs, Sim APIs return a JSON response with error information:
+Authentication, rate limiting, and quota enforcement errors return JSON with an `error` field:
 
 ```json
 {
-  "error": "Description of what went wrong"
+  "error": "invalid API Key"
 }
 ```
 
+All other errors return JSON with a `message` field:
+
+```json
+{
+  "message": "Internal server error"
+}
+```
+
+A few endpoints (EVM Transactions, Activity, Token Info) return errors as plain text with no JSON wrapper.
+Check the error responses documented on each endpoint's page for the exact format.
+
 <Note>
-The error property can be either `"error"` or `"message"` depending on the type of error.
+When handling errors programmatically, check for both `"error"` and `"message"` fields in the response body.
 </Note>
 
 ## Common Error Codes
 
 | HTTP Status | Description | Troubleshooting |
 | ----------- | ----------- | --------------- |
+| 400 | Bad request | Verify the address format and other parameters in your request |
 | 401 | Invalid or missing API key | Check that you're including the correct API key in the `X-Sim-Api-Key` header |
-| 400 | Malformed request | Verify the address format and other parameters in your request |
-| 402 | Compute units quota exceeded | You are out of compute units. Please contact sales to upgrade your plan: sales@dune.com |
+| 402 | Quota limit exceeded | Your request would exceed your compute unit quota. Contact sales@dune.com to upgrade your plan |
+| 403 | Forbidden | Your API key does not have Sim API permissions. Check your key's assigned permissions |
 | 404 | Resource not found | Verify the endpoint URL and resource identifiers |
+| 405 | Method not allowed | The URL path is valid but the HTTP method is not supported. Use the correct method (e.g. GET) |
 | 429 | Too many requests | Implement backoff strategies and consider upgrading your plan if you consistently hit limits |
-| 500 | Server-side error | Retry the request after a short delay; if persistent, contact support |
+| 500 | Internal server error | Retry the request after a short delay; if persistent, contact support |
+| 502 | Bad gateway | The service is temporarily unreachable. Retry the request after a short delay |
+| 503 | Service unavailable | The service is temporarily in a retry state. Retry after a short delay |
 
 ## Handling Warnings in Code
 
@@ -131,23 +146,27 @@ fetch('https://api.sim.dune.com/v1/evm/balances/0xd8da6bf26964af9d7eed9e03e53415
   method: 'GET', 
   headers: {'X-Sim-Api-Key': 'YOUR_API_KEY'}
 })
-  .then(response => {
+  .then(async response => {
     if (!response.ok) {
-      return response.json().then(err => {
-        const errorMessage = err.error || err.message || response.statusText;
-        throw new Error(`API error: ${errorMessage}`);
-      });
+      // Read response as text first, then try to parse as JSON.
+      // Some endpoints return JSON errors, others return plain text.
+      const text = await response.text();
+      let errorMessage;
+      try {
+        const err = JSON.parse(text);
+        errorMessage = err.error || err.message;
+      } catch {
+        errorMessage = text;
+      }
+      throw new Error(`API error (${response.status}): ${errorMessage || response.statusText}`);
     }
     return response.json();
   })
   .then(data => {
     console.log('Success:', data);
-    // Process your data here
   })
   .catch(err => {
-    console.error('Error fetching balances:', err);
-    // Handle error appropriately in your application
-    // e.g., show user-friendly message, retry, or fallback behavior
+    console.error('Error:', err);
   });
 ```
 </Tab>
@@ -170,13 +189,12 @@ def get_balances(address, api_key, max_retries=3):
             status_code = err.response.status_code
             error_data = {}
             
+            # Parse error body. Some endpoints return JSON, others plain text.
             try:
                 error_data = err.response.json()
-            except:
-                pass
-                
-            # Get error message from either 'error' or 'message' property
-            error_message = error_data.get('error') or error_data.get('message', 'Unknown error')
+                error_message = error_data.get('error') or error_data.get('message', 'Unknown error')
+            except ValueError:
+                error_message = err.response.text or 'Unknown error'
             
             print(f"HTTP Error {status_code}: {error_message}")
             
