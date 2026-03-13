@@ -76,19 +76,27 @@
             "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "description": "Optional list of chain IDs to limit the query."
+            "type": "string",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string (e.g. \"1\", \"1,8453,mainnet\"). If omitted, results include balances from chains with the default tag."
+          },
+          "filters": {
+            "type": "string",
+            "enum": ["erc20", "native"],
+            "description": "Specify erc20 or native to get only ERC20 tokens or native assets, respectively."
+          },
+          "exclude_spam_tokens": {
+            "type": "boolean",
+            "description": "When true, excludes tokens with less than 100 USD liquidity."
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 1000
+            "maximum": 1000,
+            "description": "Maximum number of balances to return. Default is 1000."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -106,7 +114,7 @@
     {
       "name": "get_evm_wallet_activity",
       "title": "Get EVM wallet activity",
-      "description": "Return semantically decoded onchain activity for an EVM wallet, such as swaps, sends, receives, approvals, mints, and burns. Prefer this over raw transactions when the user asks what happened or wants human-readable actions.",
+      "description": "Return semantically decoded onchain activity for an EVM wallet, such as swaps, sends, receives, approvals, mints, and burns. Prefer this over raw transactions when the user asks what happened or wants decoded actions.",
       "method": "GET",
       "path": "/v1/evm/activity/{address}",
       "source": {
@@ -117,29 +125,34 @@
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
-          "from_timestamp": {
             "type": "string",
-            "description": "RFC3339 timestamp."
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string (e.g. \"1\", \"1,8453,mainnet\"). If omitted, results include activity from chains with the default tag."
           },
-          "to_timestamp": {
+          "token_address": {
             "type": "string",
-            "description": "RFC3339 timestamp."
+            "description": "Filter by token contract address. Provide a single address or comma-separated list. Swap and call activities are excluded when set."
+          },
+          "activity_type": {
+            "type": "string",
+            "description": "Filter by activity type. Provide a single value or comma-separated list (e.g. \"send\", \"send,receive\")."
+          },
+          "asset_type": {
+            "type": "string",
+            "description": "Filter by asset standard. Accepts native, erc20, erc721 as single value or comma-separated list."
           },
           "limit": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 500
+            "maximum": 100,
+            "description": "Maximum number of activity items to return. Default is 20."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -159,7 +172,7 @@
       "title": "Get raw EVM transactions",
       "description": "Return transaction history for an EVM wallet. Use this when the user explicitly wants raw transaction-level detail, hashes, or low-level transfer history rather than semantic activity.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/transactions/{address}",
       "source": {
         "openapiOperationId": "getEvmTransactions"
       },
@@ -167,19 +180,26 @@
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
+            "type": "string",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string. If omitted, results include transactions from chains with the default tag."
+          },
+          "decode": {
+            "type": "boolean",
+            "description": "When true, includes decoded transaction logs in the response."
           },
           "limit": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Maximum number of results to return. Default is 100."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -187,6 +207,11 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "transactions",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     },
     {
@@ -194,7 +219,7 @@
       "title": "Get NFT holdings",
       "description": "Return NFT and collectible holdings for an EVM wallet. Use this for NFT ownership, collection exposure, and wallet inventory questions.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/collectibles/{address}",
       "source": {
         "openapiOperationId": "getEvmCollectibles"
       },
@@ -202,19 +227,26 @@
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
+            "type": "string",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string. If omitted, results include collectibles from chains with the default tag."
+          },
+          "filter_spam": {
+            "type": "boolean",
+            "description": "When true, hide collectibles identified as spam. Default is true."
           },
           "limit": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2500,
+            "description": "Maximum entries per page. Default is 250."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -222,6 +254,11 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "entries",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     },
     {
@@ -229,9 +266,9 @@
       "title": "Get supported chains",
       "description": "Return the set of chains supported by Sim. Use this for discovery, chain-name resolution, and to validate user-supplied chain filters before making other calls.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/supported-chains",
       "source": {
-        "openapiOperationId": "getSupportedChains"
+        "openapiOperationId": "getEvmSupportedChains"
       },
       "inputSchema": {
         "type": "object",
@@ -240,40 +277,58 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "chains",
+        "structuredOutput": true
       }
     },
     {
       "name": "get_token_info",
       "title": "Get token metadata",
-      "description": "Return token metadata such as symbol, decimals, logo, and project details. Use this when balances or activity need enrichment or token identity is ambiguous.",
+      "description": "Return token metadata such as symbol, decimals, logo, and project details for a given contract address on a specific chain. Use this when balances or activity need enrichment or token identity is ambiguous.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/token-info/{address}",
       "source": {
-        "openapiOperationId": "getTokenInfo"
+        "openapiOperationId": "getEvmTokenInfo"
       },
       "inputSchema": {
         "type": "object",
         "properties": {
-          "chain_id": {
-            "type": "integer"
+          "address": {
+            "type": "string",
+            "description": "The contract address of the token, or \"native\" for the chain's native token."
           },
-          "token_address": {
-            "type": "string"
+          "chain_ids": {
+            "type": "string",
+            "description": "Specify exactly one chain as a numeric chain ID (e.g. \"1\" for Ethereum, \"8453\" for Base)."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of results to return."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
-        "required": ["chain_id", "token_address"]
+        "required": ["address", "chain_ids"]
       },
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "tokens",
+        "structuredOutput": true
       }
     },
     {
       "name": "get_token_holders",
       "title": "Get token holders",
-      "description": "Return holder distribution data for a token. Use this for concentration analysis, whale checks, and holder-based token research.",
+      "description": "Return holder distribution data for a token on a specific chain. Use this for concentration analysis, whale checks, and holder-based token research.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/token-holders/{chain_id}/{address}",
       "source": {
         "openapiOperationId": "getTokenHolders"
       },
@@ -281,23 +336,34 @@
         "type": "object",
         "properties": {
           "chain_id": {
-            "type": "integer"
+            "type": "integer",
+            "description": "The chain ID of the blockchain (e.g. 8453 for Base)."
           },
-          "token_address": {
-            "type": "string"
+          "address": {
+            "type": "string",
+            "description": "The token contract address."
           },
           "limit": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 500,
+            "description": "Maximum number of token holders to return. Default is 500."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
-        "required": ["chain_id", "token_address"]
+        "required": ["chain_id", "address"]
       },
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "holders",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     },
     {
@@ -305,21 +371,20 @@
       "title": "Get DeFi positions",
       "description": "Return DeFi positions for a wallet. Use this for protocol exposure, LP positions, and wallet portfolio decomposition beyond spot token balances.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/beta/evm/defi/positions/{address}",
       "source": {
-        "openapiOperationId": "getDefiPositions"
+        "openapiOperationId": "getEvmDefiPositions"
       },
       "inputSchema": {
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
+            "type": "string",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string. If omitted, results include positions from chains with the default tag."
           }
         },
         "required": ["address"]
@@ -327,6 +392,10 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "positions",
+        "structuredOutput": true
       }
     },
     {
@@ -334,21 +403,35 @@
       "title": "Get stablecoin balances",
       "description": "Return stablecoin balances for a wallet. Use this for treasury checks, settlement balances, and cash-like asset exposure.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/v1/evm/balances/{address}/stablecoins",
       "source": {
-        "openapiOperationId": "getStablecoinBalances"
+        "openapiOperationId": "getEvmStablecoinBalances"
       },
       "inputSchema": {
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "EVM wallet address."
           },
           "chain_ids": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
+            "type": "string",
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags as a comma-separated string. If omitted, results include balances from chains with the default tag."
+          },
+          "filters": {
+            "type": "string",
+            "enum": ["erc20", "native"],
+            "description": "Specify erc20 or native to get only ERC20 stablecoins or native stablecoins (e.g. xDAI on Gnosis)."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Maximum number of balances to return. Default is 1000."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -356,6 +439,11 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "balances",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     },
     {
@@ -363,7 +451,7 @@
       "title": "Get Solana wallet balances",
       "description": "Return balances for a Solana wallet. Use this for SVM wallet inventory and chain-specific balance questions.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/beta/svm/balances/{address}",
       "source": {
         "openapiOperationId": "getSvmBalances"
       },
@@ -371,7 +459,22 @@
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "SVM wallet address."
+          },
+          "chains": {
+            "type": "string",
+            "description": "Comma-separated list of chains to include (solana, eclipse). Defaults to solana if omitted."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Maximum number of results to return. Default is 1000."
+          },
+          "offset": {
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -379,6 +482,11 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "balances",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     },
     {
@@ -386,7 +494,7 @@
       "title": "Get Solana transactions",
       "description": "Return Solana transaction history for a wallet. Use this when the user asks for raw Solana transaction history rather than balances.",
       "method": "GET",
-      "path": "TBD_FROM_OPENAPI",
+      "path": "/beta/svm/transactions/{address}",
       "source": {
         "openapiOperationId": "getSvmTransactions"
       },
@@ -394,13 +502,18 @@
         "type": "object",
         "properties": {
           "address": {
-            "type": "string"
+            "type": "string",
+            "description": "SVM wallet address."
           },
           "limit": {
-            "type": "integer"
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Maximum number of results to return. Default is 100."
           },
           "offset": {
-            "type": "string"
+            "type": "string",
+            "description": "Pagination cursor from the previous response's next_offset field."
           }
         },
         "required": ["address"]
@@ -408,6 +521,11 @@
       "annotations": {
         "readOnlyHint": true,
         "idempotentHint": true
+      },
+      "responseHints": {
+        "primaryField": "transactions",
+        "expectPagination": true,
+        "structuredOutput": true
       }
     }
   ]
