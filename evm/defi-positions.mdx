@@ -21,15 +21,15 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 
 <Accordion title="Protocol Chain Coverage Table" icon="table">
 
-| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | BNB (56) | Avalanche (43114) | Optimism (10) | Polygon (137) | Unichain (130) | HyperEVM (999) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Aave v2 | ✓ |  |  |  |  |  |  |  |  |
-| Aave v3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) |
+| --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ |
+| Uniswap V3 | ✓ | ✓ | ✓ |
+| Uniswap V4 | ✓ | ✓ | ✓ |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ |
+| Aave v2 | ✓ |  |  |
+| Aave v3 | ✓ | ✓ | ✓ |
 
 </Accordion>
 
@@ -40,7 +40,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 <AccordionGroup>
   <Accordion title="Uniswap V2 (and Forks)" icon="droplet">
   **Type:** `UniswapV2`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
   **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
   **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value. Both Uniswap V2 and its forks are detected by factory address and returned under the same `UniswapV2` type, with the specific protocol name indicated in the `protocol` field.
   
@@ -121,7 +121,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 
   <Accordion title="Uniswap V3 (and Forks)" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
   **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations. Both Uniswap V3 and its forks are detected by factory address and returned under the same `Nft` type, with the specific protocol name indicated in the `protocol` field.
   
   **Example Response (Uniswap V3):**
@@ -168,56 +168,11 @@ Liquidity pool positions represent token pairs deposited into automated market m
     }
   }
   ```
-  
-  **Example Response (PancakeSwap V3):**
-  
-  ```json [expandable]
-  {
-    "wallet_address": "0x5dd596c901987a2b28c38a9c1dfbf86fffc15d77",
-    "positions": [
-      {
-        "type": "Nft",
-        "chain_id": 56,
-        "protocol": "PancakeSwapV3",
-        "pool": "0x36696169c63e42cd08ce11f5deeabbceb5d86d25",
-        "token0": "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
-        "token0_name": "Wrapped BNB",
-        "token0_symbol": "WBNB",
-        "token0_decimals": 18,
-        "token1": "0x55d398326f99059ff775485246999027b3197955",
-        "token1_name": "Tether USD",
-        "token1_symbol": "USDT",
-        "token1_decimals": 18,
-        "positions": [
-          {
-            "tick_lower": -20450,
-            "tick_upper": -18450,
-            "token_id": "0x3ab0",
-            "token0_price": 580.20,
-            "token0_holdings": 1.25,
-            "token0_rewards": 0.002,
-            "token1_price": 1.00,
-            "token1_holdings": 450.50,
-            "token1_rewards": 1.50
-          }
-        ],
-        "logo": "https://api.sim.dune.com/beta/token/logo/56/0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
-        "usd_value": 1175.75
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 1175.75,
-      "total_by_chain": {
-        "56": 1175.75
-      }
-    }
-  }
-  ```
   </Accordion>
 
   <Accordion title="Uniswap V4" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
   **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
   </Accordion>
 </AccordionGroup>
@@ -265,7 +220,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   <Accordion title="Aave v3" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
   **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
   
   **Example Response:**
@@ -305,7 +260,7 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 <AccordionGroup>
   <Accordion title="ERC-4626 Vaults" icon="vault">
   **Type:** `Erc4626`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), BNB (56), Avalanche (43114), Optimism (10), Polygon (137), Unichain (130), HyperEVM (999)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
   **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
   
   **Example Response:**
