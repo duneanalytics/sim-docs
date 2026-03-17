@@ -3600,8 +3600,7 @@
         "required": [
           "pool_type",
           "address",
-          "token0",
-          "token1"
+          "tokens"
         ],
         "properties": {
           "pool_type": {
@@ -3612,13 +3611,12 @@
             "type": "string",
             "description": "The contract address of the liquidity pool"
           },
-          "token0": {
-            "type": "string",
-            "description": "The contract address of the first token in the pool pair"
-          },
-          "token1": {
-            "type": "string",
-            "description": "The contract address of the second token in the pool pair"
+          "tokens": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of contract addresses for the tokens in the pool"
           }
         }
       },
