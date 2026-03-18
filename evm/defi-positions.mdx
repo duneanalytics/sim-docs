@@ -9,10 +9,6 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Defi Positions API](/images/evm/defi-positions.svg)
 
-<Warning>
-**Preview Endpoint**: The DeFi Positions API is currently in preview while we validate data accuracy across protocols and chains. Response schemas and coverage may change. If you encounter any data discrepancies, please report them through our [support channels](/support).
-</Warning>
-
 The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets. The endpoint is available at the beta path (`/beta/evm/defi/positions`). Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
 
 ## Supported Protocols
@@ -21,15 +17,15 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 
 <Accordion title="Protocol Chain Coverage Table" icon="table">
 
-| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) |
-| --- | --- | --- | --- |
-| Uniswap V2 | ✓ | ✓ | ✓ |
-| Uniswap V2 Forks | ✓ | ✓ | ✓ |
-| Uniswap V3 | ✓ | ✓ | ✓ |
-| Uniswap V4 | ✓ | ✓ | ✓ |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ |
-| Aave v2 | ✓ |  |  |
-| Aave v3 | ✓ | ✓ | ✓ |
+| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | Unichain (130) | Optimism (10) | Polygon (137) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Aave v2 | ✓ |  |  |  |  | ✓ |
+| Aave v3 | ✓ | ✓ | ✓ |  | ✓ | ✓ |
 
 </Accordion>
 
@@ -40,7 +36,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 <AccordionGroup>
   <Accordion title="Uniswap V2 (and Forks)" icon="droplet">
   **Type:** `UniswapV2`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
   **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
   **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value. Both Uniswap V2 and its forks are detected by factory address and returned under the same `UniswapV2` type, with the specific protocol name indicated in the `protocol` field.
   
@@ -121,7 +117,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 
   <Accordion title="Uniswap V3 (and Forks)" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
   **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations. Both Uniswap V3 and its forks are detected by factory address and returned under the same `Nft` type, with the specific protocol name indicated in the `protocol` field.
   
   **Example Response (Uniswap V3):**
@@ -172,7 +168,7 @@ Liquidity pool positions represent token pairs deposited into automated market m
 
   <Accordion title="Uniswap V4" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
   **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
   </Accordion>
 </AccordionGroup>
@@ -185,7 +181,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   <Accordion title="Aave v2" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV2`, `AaveV2VariableDebt`  
-  **Chains:** Ethereum (1)  
+  **Chains:** Ethereum (1), Polygon (137)  
   **Description:** Supply positions (aTokens) and variable debt positions on Aave v2. Each position includes the underlying asset, calculated balance, and USD value.
   
   **Example Response:**
@@ -220,7 +216,7 @@ Lending positions include supplied collateral (e.g., aTokens, cTokens) and outst
   <Accordion title="Aave v3" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Optimism (10), Polygon (137)  
   **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
   
   **Example Response:**
@@ -260,7 +256,7 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 <AccordionGroup>
   <Accordion title="ERC-4626 Vaults" icon="vault">
   **Type:** `Erc4626`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
   **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
   
   **Example Response:**
@@ -298,7 +294,7 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 
 ## Compute Units
 
-Each request consumes **two Compute Units per processed chain ID**. Filtering to fewer chains lowers usage. Aggregations are calculated server-side and included in the same response.
+Each request consumes **10 Compute Units per processed chain ID**. Filtering to fewer chains lowers usage. Aggregations are calculated server-side and included in the same response.
 
 <Note>
 To learn more specifics, please visit the [Compute Units](/compute-units) page.
