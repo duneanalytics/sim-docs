@@ -6,6 +6,11 @@
     "version": "1.0.0",
     "license": {
       "name": ""
+    },
+    "contact": {
+      "name": "Dune Support",
+      "url": "https://docs.sim.dune.com",
+      "email": "support@dune.com"
     }
   },
   "servers": [
@@ -15,50 +20,55 @@
   ],
   "tags": [
     {
+      "name": "evm",
+      "description": "EVM-compatible blockchain endpoints."
+    },
+    {
+      "name": "svm",
+      "description": "Solana/SVM blockchain endpoints."
+    },
+    {
       "name": "activity",
-      "description": "Activity API"
+      "description": "On-chain activity feed."
     },
     {
       "name": "balances",
-      "description": "Balances API"
+      "description": "Token balances (EVM and SVM)."
     },
     {
-      "name": "EVM",
-      "description": "Endpoints related to EVM compatible blockchains."
+      "name": "transactions",
+      "description": "Transaction history (EVM and SVM)."
     },
     {
-      "name": "defi-positions",
-      "description": "DeFi Positions API"
+      "name": "collectibles",
+      "description": "NFT and ERC721/ERC1155 holdings."
     },
     {
-      "name": "stablecoins",
-      "description": "Stablecoin Balances API"
+      "name": "defi",
+      "description": "DeFi protocol positions."
     },
     {
       "name": "supported-chains",
-      "description": "Supported Chains API"
+      "description": "Supported blockchain networks."
     },
     {
       "name": "token-info",
-      "description": "Token Info API"
+      "description": "Token metadata and pricing."
     },
     {
-      "name": "evm-transactions",
-      "description": "EVM Transactions API"
+      "name": "token-holders",
+      "description": "Token holder distribution."
     },
     {
-      "name": "svm-balances",
-      "description": "SVM Balances API"
-    },
-    {
-      "name": "svm-transactions",
-      "description": "SVM Transactions API"
+      "name": "subscriptions",
+      "description": "Webhook subscription management for real-time on-chain event notifications."
     }
   ],
   "paths": {
     "/v1/evm/activity/{address}": {
       "get": {
         "tags": [
+          "evm",
           "activity"
         ],
         "summary": "Get EVM activity for a given address",
@@ -66,21 +76,14 @@
         "operationId": "getEvmActivity",
         "parameters": [
           {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "address",
             "in": "path",
             "description": "Wallet address to get activity for",
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             },
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
@@ -132,9 +135,27 @@
             "description": "Filter activities by type. Provide a single value (e.g. `?activity_type=send`) or a comma-separated list (e.g. `?activity_type=send,receive`). Only activities matching one of the specified types will be returned.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "approve",
+                  "burn",
+                  "call",
+                  "mint",
+                  "receive",
+                  "send",
+                  "swap",
+                  "transfer"
+                ]
+              }
             },
-            "example": "send,receive"
+            "example": [
+              "send",
+              "receive"
+            ],
+            "style": "form",
+            "explode": false
           },
           {
             "name": "asset_type",
@@ -142,9 +163,22 @@
             "description": "Filter activities by asset standard. Provide a single value (e.g. `?asset_type=native`) or a comma-separated list (e.g. `?asset_type=erc20,erc721`). Use `native` to include native token transfers (e.g. ETH). Contract call activities have no asset type and are excluded when this filter is set.",
             "required": false,
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "native",
+                  "erc20",
+                  "erc721",
+                  "erc1155"
+                ]
+              }
             },
-            "example": "erc20"
+            "example": [
+              "erc20"
+            ],
+            "style": "form",
+            "explode": false
           }
         ],
         "responses": {
@@ -255,6 +289,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -277,6 +328,7 @@
     "/v1/evm/balances/{address}": {
       "get": {
         "tags": [
+          "evm",
           "balances"
         ],
         "summary": "Get EVM token balances for a given address",
@@ -284,21 +336,14 @@
         "operationId": "getEvmBalances",
         "parameters": [
           {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "address",
             "in": "path",
             "description": "Wallet address to get balances for",
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             }
           },
@@ -522,6 +567,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -562,6 +624,7 @@
     "/v1/evm/balances/{address}/token/{token_address}": {
       "get": {
         "tags": [
+          "evm",
           "balances"
         ],
         "summary": "Get a single token balance for a given address",
@@ -569,21 +632,14 @@
         "operationId": "getEvmSingleTokenBalance",
         "parameters": [
           {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "address",
             "in": "path",
             "description": "Wallet address to get the token balance for",
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             }
           },
@@ -593,7 +649,9 @@
             "description": "Token contract address or `native` for the chain's native asset",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$"
             }
           },
           {
@@ -704,6 +762,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -747,18 +822,10 @@
         "description": "Retrieves a list of EVM compatible collectibles (NFTs) for a given wallet address.",
         "operationId": "getEvmCollectibles",
         "tags": [
-          "EVM"
+          "evm",
+          "collectibles"
         ],
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "required": true,
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -900,7 +967,8 @@
                           "chain_id": 56,
                           "name": "launchspx org",
                           "balance": "1",
-                          "last_acquired": "2025-08-11T04:22:52Z"
+                          "last_acquired": "2025-08-11T04:22:52Z",
+                          "is_spam": false
                         },
                         {
                           "contract_address": "0x3c020f2124b84bd079985c77f93d4a750512448c",
@@ -927,7 +995,8 @@
                             ]
                           },
                           "balance": "1",
-                          "last_acquired": "2025-08-09T23:07:47Z"
+                          "last_acquired": "2025-08-09T23:07:47Z",
+                          "is_spam": false
                         },
                         {
                           "contract_address": "0xa18cf489cf710759f13ac6c8596823dba85354e2",
@@ -936,7 +1005,8 @@
                           "chain": "optimism",
                           "chain_id": 10,
                           "balance": "1",
-                          "last_acquired": "2025-08-07T14:51:57Z"
+                          "last_acquired": "2025-08-07T14:51:57Z",
+                          "is_spam": false
                         }
                       ],
                       "next_offset": "opaque-pagination-token",
@@ -1039,21 +1109,13 @@
     "/beta/evm/defi/positions/{address}": {
       "get": {
         "tags": [
-          "defi-positions"
+          "evm",
+          "defi"
         ],
         "summary": "Get DeFi positions for an address",
         "description": "Returns a wallet's DeFi positions including USD values, position-specific metadata, and aggregation summaries across supported protocols.",
         "operationId": "getEvmDefiPositions",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -1121,7 +1183,7 @@
                           "token": "0x9ff58f4ffb29fa2266ab25e75e2a8b3503311656",
                           "token_name": "Aave interest bearing WBTC",
                           "token_symbol": "aWBTC",
-                          "calculated_balance": 0.00007234,
+                          "calculated_balance": 7.234e-05,
                           "price_in_usd": 29.6320132187639,
                           "usd_value": 0.00214357983624538,
                           "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
@@ -1162,7 +1224,7 @@
                           "token1_decimals": 18,
                           "lp_balance": "0x141c5f09864c3968",
                           "token0_price": 3553.20946160682,
-                          "token1_price": 6.93033022151853e-7,
+                          "token1_price": 6.93033022151853e-07,
                           "calculated_balance": 1.44913767461894,
                           "price_in_usd": 0.0993233873678346,
                           "usd_value": 0.1439332626055,
@@ -1182,7 +1244,7 @@
                           "token1_symbol": "WETH",
                           "token1_decimals": 18,
                           "lp_balance": "0xf7436a7c1ea8ae82",
-                          "token0_price": 6.71694037048083e-9,
+                          "token0_price": 6.71694037048083e-09,
                           "token1_price": 3553.20946160682,
                           "calculated_balance": 17.8172016321307,
                           "price_in_usd": 310.047164921547,
@@ -1205,7 +1267,7 @@
                           "lp_balance": "0x425eb51b908b",
                           "token0_price": 1.20461416147608,
                           "token1_price": 3553.20946160682,
-                          "calculated_balance": 0.000072974532841611,
+                          "calculated_balance": 7.2974532841611e-05,
                           "price_in_usd": 13300248.4891253,
                           "usd_value": 970.579420171264,
                           "logo": null
@@ -1245,7 +1307,7 @@
                           "token1_symbol": "WETH",
                           "token1_decimals": 18,
                           "lp_balance": "0x1bc16d674ec80000",
-                          "token0_price": 7.73273307706922e-9,
+                          "token0_price": 7.73273307706922e-09,
                           "token1_price": 3553.20946160682,
                           "calculated_balance": 2,
                           "price_in_usd": 337.500909089399,
@@ -1266,7 +1328,7 @@
                           "token1_symbol": "WETH",
                           "token1_decimals": 18,
                           "lp_balance": "0x2386f26fc100000",
-                          "token0_price": 0.00005223622125649,
+                          "token0_price": 5.223622125649e-05,
                           "token1_price": 3553.20946160682,
                           "calculated_balance": 0.16,
                           "price_in_usd": 27834.7019989285,
@@ -1354,12 +1416,12 @@
                               "tick_lower": -887272,
                               "tick_upper": 887272,
                               "token_id": "0x132c81",
-                              "token0_price": 9.48452516697798e-7,
+                              "token0_price": 9.48452516697798e-07,
                               "token0_holdings": 613763253.0586,
                               "token0_rewards": 21676.3984019538,
                               "token1_price": 3570.25944039075,
                               "token1_holdings": 0.162913339628563,
-                              "token1_rewards": 0.000010452682406464
+                              "token1_rewards": 1.0452682406464e-05
                             }
                           ],
                           "logo": null,
@@ -1539,9 +1601,9 @@
                               "tick_upper": 207220,
                               "token_id": "0x2118",
                               "token0_price": 3553.20946160682,
-                              "token0_holdings": 0.000047749999999999,
-                              "token0_rewards": 0.000008749999999999,
-                              "token1_price": 0.000003581798534713,
+                              "token0_holdings": 4.7749999999999e-05,
+                              "token0_rewards": 8.749999999999e-06,
+                              "token1_price": 3.581798534713e-06,
                               "token1_holdings": 479952364.515627,
                               "token1_rewards": 8399.79998597393
                             }
@@ -1597,6 +1659,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -1620,21 +1699,13 @@
     "/v1/evm/balances/{address}/stablecoins": {
       "get": {
         "tags": [
-          "stablecoins"
+          "evm",
+          "balances"
         ],
         "summary": "Get stablecoin balances for a given address",
         "description": "This endpoint returns stablecoin balances for an address across supported EVM chains. It filters the standard balances response to include only configured stablecoins (USD-pegged, yield-bearing, and euro-pegged).",
         "operationId": "getEvmStablecoinBalances",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -1642,6 +1713,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             }
           },
@@ -1818,6 +1891,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -1858,22 +1948,12 @@
     "/v1/evm/supported-chains": {
       "get": {
         "tags": [
+          "evm",
           "supported-chains"
         ],
         "summary": "Get a list of supported chains for EVM endpoints",
         "description": "This endpoint returns a list of chains that are supported by the EVM endpoints. This is a unified endpoint that replaces the individual chains endpoints for each service.",
         "operationId": "getEvmSupportedChains",
-        "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful response",
@@ -1919,6 +1999,23 @@
           "404": {
             "description": "Not Found"
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error - A generic error occurred on the server"
           }
@@ -1931,18 +2028,10 @@
         "description": "Retrieves a list of token holders for a given token contract address on a specified blockchain.",
         "operationId": "getTokenHolders",
         "tags": [
-          "EVM"
+          "evm",
+          "token-holders"
         ],
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "required": true,
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "chain_id",
             "in": "path",
@@ -2125,20 +2214,12 @@
     "/v1/evm/token-info/{address}": {
       "get": {
         "tags": [
+          "evm",
           "token-info"
         ],
         "summary": "Get EVM token information for a specified contract address (or the native token), on any chain.",
         "operationId": "getEvmTokenInfo",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -2146,6 +2227,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
             },
             "example": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
@@ -2189,7 +2272,7 @@
               "type": "integer",
               "minimum": 0
             },
-            "example": "100"
+            "example": 100
           },
           {
             "name": "offset",
@@ -2280,6 +2363,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -2296,27 +2396,20 @@
               }
             }
           }
-        }
+        },
+        "description": "Returns metadata and pricing information for a specific EVM token. Includes token name, symbol, decimals, current price in USD, and optionally historical price data when the `historical_prices` parameter is set."
       }
     },
     "/v1/evm/transactions/{address}": {
       "get": {
         "tags": [
-          "evm-transactions"
+          "evm",
+          "transactions"
         ],
         "summary": "Get EVM transactions",
         "description": "Get transactions for a given EVM address",
         "operationId": "getEvmTransactions",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -2324,6 +2417,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "address",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
               "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
             },
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
@@ -2535,6 +2630,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -2557,21 +2669,13 @@
     "/beta/evm/subscriptions/webhooks": {
       "get": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "List all webhooks",
         "description": "Returns a list of all webhook subscriptions for the authenticated team.",
         "operationId": "listWebhooks",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "in": "query",
             "name": "limit",
@@ -2650,27 +2754,34 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "post": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Create a webhook",
         "description": "Creates a new webhook subscription.",
         "operationId": "createWebhook",
-        "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2731,6 +2842,23 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2738,21 +2866,13 @@
     "/beta/evm/subscriptions/webhooks/{webhookId}": {
       "get": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Get a webhook",
         "description": "Retrieves the details of a specific webhook subscription by its ID.",
         "operationId": "getWebhook",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -2800,26 +2920,35 @@
                 "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "patch": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Update a webhook",
         "description": "Partially updates a webhook subscription's configuration (name, URL, status, chain filters, etc.). To manage addresses, use the PATCH /webhooks/{webhookId}/addresses endpoint instead.",
         "operationId": "updateWebhook",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -2885,26 +3014,35 @@
                 "example": "Webhook type balances cannot have activity_type"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "delete": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Delete a webhook",
         "description": "Deletes a specific webhook subscription.",
         "operationId": "deleteWebhook",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -2930,6 +3068,23 @@
                 "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2937,21 +3092,13 @@
     "/beta/evm/subscriptions/webhooks/{webhookId}/addresses": {
       "get": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Get webhook addresses",
         "description": "Retrieves the list of subscribed addresses for a specific webhook.",
         "operationId": "getWebhookAddresses",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -3007,26 +3154,35 @@
                 "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "put": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Replace webhook addresses",
         "description": "Replaces the entire list of subscribed addresses for a webhook with a new list.",
         "operationId": "replaceWebhookAddresses",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -3068,26 +3224,35 @@
                 "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       },
       "patch": {
         "tags": [
-          "Subscriptions"
+          "evm",
+          "subscriptions"
         ],
         "summary": "Update webhook addresses",
         "description": "Add or remove individual addresses from a webhook subscription without replacing the entire list.",
         "operationId": "updateWebhookAddresses",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "webhookId",
             "in": "path",
@@ -3153,6 +3318,23 @@
                 "example": "Invalid URL: UUID parsing failed: invalid group length in group 4: expected 12, found 11"
               }
             }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -3160,21 +3342,13 @@
     "/beta/svm/balances/{address}": {
       "get": {
         "tags": [
-          "svm-balances"
+          "svm",
+          "balances"
         ],
         "summary": "Get SVM token balances",
         "description": "Get token balances for a given SVM address",
         "operationId": "getSvmBalances",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -3324,6 +3498,23 @@
               }
             }
           },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error.",
             "content": {
@@ -3364,21 +3555,13 @@
     "/beta/svm/transactions/{address}": {
       "get": {
         "tags": [
-          "svm-transactions"
+          "svm",
+          "transactions"
         ],
         "summary": "Get SVM transactions",
         "description": "Get transactions for a given SVM address",
         "operationId": "getSvmTransactions",
         "parameters": [
-          {
-            "name": "X-Sim-Api-Key",
-            "in": "header",
-            "description": "Used for authenticating requests. Visit [Authentication](/#authentication) to learn how to create your API key.",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
           {
             "name": "address",
             "in": "path",
@@ -3516,6 +3699,23 @@
                   "invalidApiKey": {
                     "value": {
                       "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
                     }
                   }
                 }
@@ -3677,11 +3877,27 @@
           },
           "type": {
             "type": "string",
-            "description": "Activity type: 'transfer', 'call', 'mint', 'receive', 'send', 'swap', 'approve', etc."
+            "description": "Activity type.",
+            "enum": [
+              "approve",
+              "burn",
+              "call",
+              "mint",
+              "receive",
+              "send",
+              "swap",
+              "transfer"
+            ]
           },
           "asset_type": {
             "type": "string",
-            "description": "Asset type: 'native', 'erc20', 'erc721', 'erc1155'"
+            "description": "Asset standard of the activity.",
+            "enum": [
+              "native",
+              "erc20",
+              "erc721",
+              "erc1155"
+            ]
           },
           "token_address": {
             "type": "string",
@@ -4130,7 +4346,7 @@
             "format": "int32",
             "minimum": 0,
             "maximum": 100,
-            "description": "0–100 confidence score that the collection is spam. Included only when `show_spam_scores=true`. May be omitted when scores are unavailable. See the [Spam Filtering](#spam-filtering) section for more details."
+            "description": "0\u2013100 confidence score that the collection is spam. Included only when `show_spam_scores=true`. May be omitted when scores are unavailable. See the [Spam Filtering](#spam-filtering) section for more details."
           },
           "explanations": {
             "type": "array",
@@ -4172,7 +4388,7 @@
                   "format": "int32",
                   "minimum": 0,
                   "maximum": 100,
-                  "description": "0–100 contribution of this feature to the spam score."
+                  "description": "0\u2013100 contribution of this feature to the spam score."
                 },
                 "feature_weight": {
                   "type": "number",
@@ -4331,7 +4547,7 @@
           },
           "pool_id": {
             "type": "array",
-            "description": "Byte-encoded pool identifier as an array of integers (0–255). Present only when `type=NftV4`.",
+            "description": "Byte-encoded pool identifier as an array of integers (0\u2013255). Present only when `type=NftV4`.",
             "items": {
               "type": "integer",
               "format": "int32"
@@ -4343,7 +4559,7 @@
           },
           "salt": {
             "type": "array",
-            "description": "Salt used in Uniswap V4 pool address derivation as an array of integers (0–255). Present only when `type=NftV4`.",
+            "description": "Salt used in Uniswap V4 pool address derivation as an array of integers (0\u2013255). Present only when `type=NftV4`.",
             "items": {
               "type": "integer",
               "format": "int32"
@@ -4822,7 +5038,7 @@
           },
           "pool_id": {
             "type": "array",
-            "description": "Byte-encoded pool identifier, represented as an array of integers (0–255).",
+            "description": "Byte-encoded pool identifier, represented as an array of integers (0\u2013255).",
             "items": {
               "type": "integer",
               "format": "int32"
@@ -4834,7 +5050,7 @@
           },
           "salt": {
             "type": "array",
-            "description": "Salt used in pool address derivation, represented as an array of integers (0–255).",
+            "description": "Salt used in pool address derivation, represented as an array of integers (0\u2013255).",
             "items": {
               "type": "integer",
               "format": "int32"
@@ -4842,7 +5058,7 @@
           },
           "token0": {
             "type": "string",
-            "description": "Token0 contract address. `0x000…000` denotes the chain's native asset."
+            "description": "Token0 contract address. `0x000\u2026000` denotes the chain's native asset."
           },
           "token0_name": {
             "type": "string",
@@ -5428,7 +5644,18 @@
             "type": "string"
           },
           "value": {
-            "type": "string"
+            "description": "Decoded parameter value. Scalar values are strings; array-type ABI parameters (e.g. bytes[], address[]) are arrays of strings.",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
           }
         }
       },
@@ -5595,9 +5822,14 @@
             "description": "Filter events to specific chain IDs. If null, all supported chains are included."
           },
           "transaction_type": {
-            "$ref": "#/components/schemas/TransactionType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionType"
+              }
+            ],
             "nullable": true,
-            "description": "For transaction webhooks, filter by sender or receiver."
+            "description": "For transaction webhooks, filter by sender or receiver.",
+            "type": "string"
           },
           "counterparty": {
             "type": "string",
@@ -5606,14 +5838,24 @@
             "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
           },
           "activity_type": {
-            "$ref": "#/components/schemas/ActivityType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityType"
+              }
+            ],
             "nullable": true,
-            "description": "For activity webhooks, filter by specific activity type."
+            "description": "For activity webhooks, filter by specific activity type.",
+            "type": "string"
           },
           "asset_type": {
-            "$ref": "#/components/schemas/AssetType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssetType"
+              }
+            ],
             "nullable": true,
-            "description": "Filter by asset type."
+            "description": "Filter by asset type.",
+            "type": "string"
           },
           "token_address": {
             "type": "string",
@@ -5677,9 +5919,14 @@
             "description": "Filter events to specific chain IDs. If omitted, all supported chains are included."
           },
           "transaction_type": {
-            "$ref": "#/components/schemas/TransactionType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionType"
+              }
+            ],
             "nullable": true,
-            "description": "ONLY for 'transactions' type webhooks. Filter by sender or receiver. Cannot be used with other webhook types."
+            "description": "ONLY for 'transactions' type webhooks. Filter by sender or receiver. Cannot be used with other webhook types.",
+            "type": "string"
           },
           "counterparty": {
             "type": "string",
@@ -5687,14 +5934,24 @@
             "description": "ONLY for 'transactions' type webhooks. Filter transactions by counterparty address."
           },
           "activity_type": {
-            "$ref": "#/components/schemas/ActivityType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityType"
+              }
+            ],
             "nullable": true,
-            "description": "ONLY for 'activities' type webhooks. Filter by specific activity type. Cannot be used with other webhook types."
+            "description": "ONLY for 'activities' type webhooks. Filter by specific activity type. Cannot be used with other webhook types.",
+            "type": "string"
           },
           "asset_type": {
-            "$ref": "#/components/schemas/AssetType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssetType"
+              }
+            ],
             "nullable": true,
-            "description": "Filter by asset type."
+            "description": "Filter by asset type.",
+            "type": "string"
           },
           "token_address": {
             "type": "string",
@@ -5732,9 +5989,14 @@
             "description": "Update the chain filter."
           },
           "transaction_type": {
-            "$ref": "#/components/schemas/TransactionType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionType"
+              }
+            ],
             "nullable": true,
-            "description": "ONLY for 'transactions' type webhooks. Update transaction type filter. Cannot be used with other webhook types."
+            "description": "ONLY for 'transactions' type webhooks. Update transaction type filter. Cannot be used with other webhook types.",
+            "type": "string"
           },
           "counterparty": {
             "type": "string",
@@ -5742,14 +6004,24 @@
             "description": "ONLY for 'transactions' type webhooks. Update counterparty filter."
           },
           "activity_type": {
-            "$ref": "#/components/schemas/ActivityType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActivityType"
+              }
+            ],
             "nullable": true,
-            "description": "ONLY for 'activities' type webhooks. Update activity type filter. Cannot be used with other webhook types."
+            "description": "ONLY for 'activities' type webhooks. Update activity type filter. Cannot be used with other webhook types.",
+            "type": "string"
           },
           "asset_type": {
-            "$ref": "#/components/schemas/AssetType",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssetType"
+              }
+            ],
             "nullable": true,
-            "description": "Update asset type filter."
+            "description": "Update asset type filter.",
+            "type": "string"
           },
           "token_address": {
             "type": "string",
@@ -5845,7 +6117,8 @@
           },
           "program_id": {
             "type": "string",
-            "description": "Program ID of the token (for SPL tokens)"
+            "description": "Program ID of the token (for SPL tokens)",
+            "nullable": true
           },
           "decimals": {
             "type": "number",
@@ -5865,7 +6138,8 @@
           },
           "uri": {
             "type": "string",
-            "description": "URI to token metadata"
+            "description": "URI to token metadata",
+            "nullable": true
           },
           "price_usd": {
             "type": "number",
@@ -5877,15 +6151,18 @@
           },
           "pool_type": {
             "type": "string",
-            "description": "Type of liquidity pool, if available"
+            "description": "Type of liquidity pool, if available",
+            "nullable": true
           },
           "pool_address": {
             "type": "string",
-            "description": "Address of liquidity pool, if available"
+            "description": "Address of liquidity pool, if available",
+            "nullable": true
           },
           "mint_authority": {
             "type": "string",
-            "description": "Mint authority address, if available"
+            "description": "Mint authority address, if available",
+            "nullable": true
           }
         }
       },
@@ -6034,6 +6311,19 @@
           "message"
         ]
       }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Sim-Api-Key",
+        "description": "API key for authentication. Obtain your key from the Dune dashboard at sim.dune.com."
+      }
     }
-  }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ]
 }
