@@ -14,6 +14,10 @@ import { SupportedChains } from "/snippets/supported-chains.mdx";
   See: https://duneanalytics.slack.com/archives/C04AD72E0FL/p1766158048815119
 */}
 
+<Note>
+The Subscriptions API currently supports EVM chains only.
+</Note>
+
 The Subscriptions API allows you to receive realtime onchain data through webhooks. Instead of repeatedly polling endpoints to check for new data, the Subscriptions API pushes data directly to your app as soon as events occur. This makes it a great way to build reactive apps that respond instantly to onchain activity.
 
 Essentially, the Subscriptions API provides a webhook-based version of our existing [Balances](/evm/balances), [Activity](/evm/activity), and [Transactions](/evm/transactions) endpoints. Supported chains vary by subscription type.
