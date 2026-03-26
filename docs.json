@@ -56,6 +56,87 @@
                 ]
               },
               "evm/supported-chains",
+              {
+                "group": "Chains",
+                "pages": [
+                  {
+                    "group": "Mainnets",
+                    "pages": [
+                      "evm/chains/abstract",
+                      "evm/chains/ancient8",
+                      "evm/chains/ape_chain",
+                      "evm/chains/arbitrum",
+                      "evm/chains/arbitrum_nova",
+                      "evm/chains/avalanche_c",
+                      "evm/chains/b3",
+                      "evm/chains/base",
+                      "evm/chains/berachain",
+                      "evm/chains/blast",
+                      "evm/chains/bnb",
+                      "evm/chains/bob",
+                      "evm/chains/boba",
+                      "evm/chains/celo",
+                      "evm/chains/corn",
+                      "evm/chains/cyber",
+                      "evm/chains/degen",
+                      "evm/chains/ethereum",
+                      "evm/chains/fantom",
+                      "evm/chains/flare",
+                      "evm/chains/fraxtal",
+                      "evm/chains/gnosis",
+                      "evm/chains/hyper_evm",
+                      "evm/chains/ink",
+                      "evm/chains/kaia",
+                      "evm/chains/katana",
+                      "evm/chains/linea",
+                      "evm/chains/lisk",
+                      "evm/chains/mantle",
+                      "evm/chains/metis",
+                      "evm/chains/mode",
+                      "evm/chains/monad",
+                      "evm/chains/omni",
+                      "evm/chains/opbnb",
+                      "evm/chains/optimism",
+                      "evm/chains/peaq",
+                      "evm/chains/plasma",
+                      "evm/chains/polygon",
+                      "evm/chains/rari",
+                      "evm/chains/redstone",
+                      "evm/chains/ronin",
+                      "evm/chains/rootstock",
+                      "evm/chains/scroll",
+                      "evm/chains/sei",
+                      "evm/chains/shape",
+                      "evm/chains/soneium",
+                      "evm/chains/sonic",
+                      "evm/chains/stable",
+                      "evm/chains/superposition",
+                      "evm/chains/superseed",
+                      "evm/chains/swellchain",
+                      "evm/chains/tempo",
+                      "evm/chains/tempo_mainnet",
+                      "evm/chains/unichain",
+                      "evm/chains/wemix",
+                      "evm/chains/world",
+                      "evm/chains/xai",
+                      "evm/chains/zero_network",
+                      "evm/chains/zkevm",
+                      "evm/chains/zksync",
+                      "evm/chains/zora"
+                    ]
+                  },
+                  {
+                    "group": "Testnets",
+                    "pages": [
+                      "evm/chains/avalanche_fuji",
+                      "evm/chains/base_sepolia",
+                      "evm/chains/monad_testnet",
+                      "evm/chains/polygon_amoy",
+                      "evm/chains/sepolia"
+                    ]
+                  }
+                ]
+              },
               "evm/balances",
               "evm/stablecoins",
               "evm/activity",
@@ -84,6 +165,13 @@
             "group": "Solana",
             "pages": [
               "svm/overview",
+              {
+                "group": "Chains",
+                "pages": [
+                  "svm/chains/solana",
+                  "svm/chains/eclipse"
+                ]
+              },
               "svm/balances",
               "svm/transactions"
             ]
@@ -111,7 +199,11 @@
   "redirects": [],
   "api": {
     "examples": {
-      "languages": ["curl", "javascript", "python"]
+      "languages": [
+        "curl",
+        "javascript",
+        "python"
+      ]
     }
   },
   "openapi": [
@@ -122,7 +214,7 @@
   ],
   "navbar": {
     "links": [],
-      "primary": {
+    "primary": {
       "type": "button",
       "label": "Start Building",
       "href": "https://sim.dune.com"
