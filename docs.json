@@ -63,21 +63,21 @@
               "evm/defi-positions",
               "evm/transactions",
               "evm/token-info",
-              "evm/token-holders",
-              {
-                "group": "Subscriptions",
-                "pages": [
-                  "evm/subscriptions",
-                  "evm/subscriptions/list-webhooks",
-                  "evm/subscriptions/create-webhook",
-                  "evm/subscriptions/get-webhook",
-                  "evm/subscriptions/update-webhook",
-                  "evm/subscriptions/delete-webhook",
-                  "evm/subscriptions/get-webhook-addresses",
-                  "evm/subscriptions/update-webhook-addresses",
-                  "evm/subscriptions/replace-webhook-addresses"
-                ]
-              }
+              "evm/token-holders"
+            ]
+          },
+          {
+            "group": "Subscriptions",
+            "pages": [
+              "evm/subscriptions",
+              "evm/subscriptions/list-webhooks",
+              "evm/subscriptions/create-webhook",
+              "evm/subscriptions/get-webhook",
+              "evm/subscriptions/update-webhook",
+              "evm/subscriptions/delete-webhook",
+              "evm/subscriptions/get-webhook-addresses",
+              "evm/subscriptions/update-webhook-addresses",
+              "evm/subscriptions/replace-webhook-addresses"
             ]
           },
           {
