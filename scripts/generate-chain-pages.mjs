@@ -232,7 +232,7 @@ async function main() {
   // Generate .mdx files
   for (const chain of chains) {
     const content = generatePage(chain);
-    const filePath = join(ROOT, "chains", "evm", `${chain.name}.mdx`);
+    const filePath = join(ROOT, "chains", `${chain.name}.mdx`);
     writeFileSync(filePath, content);
     console.log(`  Created ${chain.name}.mdx`);
   }
@@ -244,37 +244,35 @@ async function main() {
   const mainnets = chains
     .filter((c) => !isTestnet(c))
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => `chains/evm/${c.name}`);
+    .map((c) => `chains/${c.name}`);
 
   const testnets = chains
     .filter((c) => isTestnet(c))
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => `chains/evm/${c.name}`);
+    .map((c) => `chains/${c.name}`);
 
-  const chainsGroup = {
-    group: "Chains",
+  const blockchainsGroup = {
+    group: "Blockchains",
     pages: [
-      { group: "Mainnets", pages: mainnets },
-      ...(testnets.length > 0 ? [{ group: "Testnets", pages: testnets }] : []),
+      { group: "EVM Mainnets", pages: mainnets },
+      ...(testnets.length > 0 ? [{ group: "EVM Testnets", pages: testnets }] : []),
     ],
   };
 
-  // Find the "Ethereum & EVM Chains" group and insert/replace the Chains sub-group
-  const evmGroup = docsJson.navigation.tabs[0].groups.find(
-    (g) => g.group === "Ethereum & EVM Chains"
-  );
+  const groups = docsJson.navigation.tabs[0].groups;
 
-  if (evmGroup) {
-    // Remove existing Chains group if present
-    const existingIdx = evmGroup.pages.findIndex(
-      (p) => typeof p === "object" && p.group === "Chains"
-    );
-    if (existingIdx !== -1) {
-      evmGroup.pages.splice(existingIdx, 1);
-    }
+  // Remove existing Blockchains group if present
+  const existingIdx = groups.findIndex((g) => g.group === "Blockchains");
+  if (existingIdx !== -1) {
+    groups.splice(existingIdx, 1);
+  }
 
-    // Append at the end of the EVM group
-    evmGroup.pages.push(chainsGroup);
+  // Insert before "Resources"
+  const resourcesIdx = groups.findIndex((g) => g.group === "Resources");
+  if (resourcesIdx !== -1) {
+    groups.splice(resourcesIdx, 0, blockchainsGroup);
+  } else {
+    groups.push(blockchainsGroup);
   }
 
   writeFileSync(docsJsonPath, JSON.stringify(docsJson, null, 2) + "\n");

@@ -77,87 +77,6 @@
                   "evm/subscriptions/update-webhook-addresses",
                   "evm/subscriptions/replace-webhook-addresses"
                 ]
-              },
-              {
-                "group": "Chains",
-                "pages": [
-                  {
-                    "group": "Mainnets",
-                    "pages": [
-                      "chains/evm/abstract",
-                      "chains/evm/ancient8",
-                      "chains/evm/ape_chain",
-                      "chains/evm/arbitrum",
-                      "chains/evm/arbitrum_nova",
-                      "chains/evm/avalanche_c",
-                      "chains/evm/b3",
-                      "chains/evm/base",
-                      "chains/evm/berachain",
-                      "chains/evm/blast",
-                      "chains/evm/bnb",
-                      "chains/evm/bob",
-                      "chains/evm/boba",
-                      "chains/evm/celo",
-                      "chains/evm/corn",
-                      "chains/evm/cyber",
-                      "chains/evm/degen",
-                      "chains/evm/ethereum",
-                      "chains/evm/fantom",
-                      "chains/evm/flare",
-                      "chains/evm/fraxtal",
-                      "chains/evm/gnosis",
-                      "chains/evm/hyper_evm",
-                      "chains/evm/ink",
-                      "chains/evm/kaia",
-                      "chains/evm/katana",
-                      "chains/evm/linea",
-                      "chains/evm/lisk",
-                      "chains/evm/mantle",
-                      "chains/evm/metis",
-                      "chains/evm/mode",
-                      "chains/evm/monad",
-                      "chains/evm/omni",
-                      "chains/evm/opbnb",
-                      "chains/evm/optimism",
-                      "chains/evm/peaq",
-                      "chains/evm/plasma",
-                      "chains/evm/polygon",
-                      "chains/evm/rari",
-                      "chains/evm/redstone",
-                      "chains/evm/ronin",
-                      "chains/evm/rootstock",
-                      "chains/evm/scroll",
-                      "chains/evm/sei",
-                      "chains/evm/shape",
-                      "chains/evm/soneium",
-                      "chains/evm/sonic",
-                      "chains/evm/stable",
-                      "chains/evm/superposition",
-                      "chains/evm/superseed",
-                      "chains/evm/swellchain",
-                      "chains/evm/tempo",
-                      "chains/evm/tempo_mainnet",
-                      "chains/evm/unichain",
-                      "chains/evm/wemix",
-                      "chains/evm/world",
-                      "chains/evm/xai",
-                      "chains/evm/zero_network",
-                      "chains/evm/zkevm",
-                      "chains/evm/zksync",
-                      "chains/evm/zora"
-                    ]
-                  },
-                  {
-                    "group": "Testnets",
-                    "pages": [
-                      "chains/evm/avalanche_fuji",
-                      "chains/evm/base_sepolia",
-                      "chains/evm/monad_testnet",
-                      "chains/evm/polygon_amoy",
-                      "chains/evm/sepolia"
-                    ]
-                  }
-                ]
               }
             ]
           },
@@ -165,15 +84,96 @@
             "group": "Solana",
             "pages": [
               "svm/overview",
-              {
-                "group": "Chains",
-                "pages": [
-                  "chains/svm/solana",
-                  "chains/svm/eclipse"
-                ]
-              },
               "svm/balances",
               "svm/transactions"
+            ]
+          },
+          {
+            "group": "Blockchains",
+            "pages": [
+              {
+                "group": "EVM Mainnets",
+                "pages": [
+                  "chains/abstract",
+                  "chains/ancient8",
+                  "chains/ape_chain",
+                  "chains/arbitrum",
+                  "chains/arbitrum_nova",
+                  "chains/avalanche_c",
+                  "chains/b3",
+                  "chains/base",
+                  "chains/berachain",
+                  "chains/blast",
+                  "chains/bnb",
+                  "chains/bob",
+                  "chains/boba",
+                  "chains/celo",
+                  "chains/corn",
+                  "chains/cyber",
+                  "chains/degen",
+                  "chains/ethereum",
+                  "chains/fantom",
+                  "chains/flare",
+                  "chains/fraxtal",
+                  "chains/gnosis",
+                  "chains/hyper_evm",
+                  "chains/ink",
+                  "chains/kaia",
+                  "chains/katana",
+                  "chains/linea",
+                  "chains/lisk",
+                  "chains/mantle",
+                  "chains/metis",
+                  "chains/mode",
+                  "chains/monad",
+                  "chains/omni",
+                  "chains/opbnb",
+                  "chains/optimism",
+                  "chains/peaq",
+                  "chains/plasma",
+                  "chains/polygon",
+                  "chains/rari",
+                  "chains/redstone",
+                  "chains/ronin",
+                  "chains/rootstock",
+                  "chains/scroll",
+                  "chains/sei",
+                  "chains/shape",
+                  "chains/soneium",
+                  "chains/sonic",
+                  "chains/stable",
+                  "chains/superposition",
+                  "chains/superseed",
+                  "chains/swellchain",
+                  "chains/tempo",
+                  "chains/tempo_mainnet",
+                  "chains/unichain",
+                  "chains/wemix",
+                  "chains/world",
+                  "chains/xai",
+                  "chains/zero_network",
+                  "chains/zkevm",
+                  "chains/zksync",
+                  "chains/zora"
+                ]
+              },
+              {
+                "group": "EVM Testnets",
+                "pages": [
+                  "chains/avalanche_fuji",
+                  "chains/base_sepolia",
+                  "chains/monad_testnet",
+                  "chains/polygon_amoy",
+                  "chains/sepolia"
+                ]
+              },
+              {
+                "group": "SVM",
+                "pages": [
+                  "chains/solana",
+                  "chains/eclipse"
+                ]
+              }
             ]
           },
           {
