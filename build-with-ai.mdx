@@ -6,6 +6,23 @@ description: "Use Sim API documentation with LLMs, ChatGPT, Cursor, and other AI
 
 We provide several resources to help you use LLMs and AI tools to build faster with Sim APIs.
 
+## Quick Endpoint Guide for Agents
+
+| I want to... | Use this endpoint |
+|---|---|
+| Get a wallet's token balances | [Balances](/evm/balances) (EVM) or [Balances](/svm/balances) (Solana) |
+| See a wallet's recent transfers and swaps | [Activity](/evm/activity) |
+| Get raw transaction data with logs | [Transactions](/evm/transactions) (EVM) or [Transactions](/svm/transactions) (Solana) |
+| Look up token price and metadata | [Token Info](/evm/token-info) |
+| See who holds a token | [Token Holders](/evm/token-holders) |
+| Get a wallet's NFTs | [Collectibles](/evm/collectibles) |
+| Get a wallet's DeFi positions | [DeFi Positions](/evm/defi-positions) |
+| Get real-time notifications | [Subscriptions](/evm/subscriptions) (webhooks) |
+
+<Note>
+  **EVM vs Solana:** EVM endpoints use `chain_ids` with numeric IDs (e.g., `1` for Ethereum, `8453` for Base). Solana endpoints use `chains` with string values (`solana`, `eclipse`, `all`).
+</Note>
+
 ## Use with LLMs
 
 ### Complete Documentation for LLMs

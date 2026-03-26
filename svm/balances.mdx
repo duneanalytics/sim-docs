@@ -1,15 +1,50 @@
 ---
-title: 'Balances'
-sidebarTitle: 'Balances'
-openapi: '/openapi.json GET /beta/svm/balances/{address}'
+title: ‘Solana Balances’
+sidebarTitle: ‘Balances’
+openapi: ‘/openapi.json GET /beta/svm/balances/{address}’
 ---
 
-The Token Balances API provides accurate and fast real time balances of the native, SPL and SPL-2022 tokens of accounts on supported SVM blockchains.
-We currently support Solana and Eclipse.
+The Solana Balances API provides accurate and fast real-time balances of native SOL, SPL, and SPL-2022 tokens on supported Solana Virtual Machine (SVM) blockchains.
+We currently support **Solana** and **Eclipse**.
 
-# Pagination
+- **SPL tokens** are the standard Solana token format (similar to ERC-20 on Ethereum).
+- **SPL-2022** is the newer token standard with extended features like transfer fees and confidential transfers.
 
-This endpoint is using cursor based pagination. You can use the `limit` parameter to define the maximum page size.
+<Note>
+  This endpoint uses the `chains` parameter (not `chain_ids` like EVM endpoints). Accepted values: `solana`, `eclipse`, or `all`.
+</Note>
+
+## Example Request
+
+<CodeGroup>
+```bash cURL
+curl -X GET "https://api.sim.dune.com/beta/svm/balances/vitalik.sol" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const options = {method: ‘GET’, headers: {‘X-Sim-Api-Key’: ‘YOUR_API_KEY’}};
+
+fetch(‘https://api.sim.dune.com/beta/svm/balances/vitalik.sol’, options)
+  .then(response => response.json())
+  .then(response => console.log(response))
+  .catch(err => console.error(err));
+```
+
+```python Python
+import requests
+
+url = "https://api.sim.dune.com/beta/svm/balances/vitalik.sol"
+headers = {"X-Sim-Api-Key": "YOUR_API_KEY"}
+
+response = requests.get(url, headers=headers)
+print(response.json())
+```
+</CodeGroup>
+
+## Pagination
+
+This endpoint uses cursor-based pagination. You can use the `limit` parameter to define the maximum page size.
 Results might at times be less than the maximum page size.
 The `next_offset` value is passed back by the initial response and can be used to fetch the next page of results, by passing it as the `offset` query parameter in the next request.
 
@@ -17,4 +52,4 @@ The `next_offset` value is passed back by the initial response and can be used t
 
 ## Compute Unit Cost
 
-The SVM Balances endpoint’s CU cost equals the number of chains you include via the `chains` query parameter. If you omit `chains`, the endpoint uses its default chain set, which is currently Solana only (**1 CU**). We currently support two SVM chains (Solana and Eclipse). See the [Compute Units](/compute-units) page for detailed information.
+The Solana Balances endpoint’s CU cost equals the number of chains you include via the `chains` query parameter. If you omit `chains`, the endpoint uses its default chain set, which is currently Solana only (**1 CU**). We currently support two SVM chains (Solana and Eclipse). See the [Compute Units](/compute-units) page for detailed information.

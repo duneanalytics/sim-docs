@@ -4,7 +4,15 @@ description: Learn how to set up a Cloudflare Worker to securely proxy your Sim 
 ---
 
 Protect your Sim API key when making requests from client-side apps by using a Cloudflare Worker as a proxy.
-This worker receives requests from you app, securely adds your `SIM_API_KEY` on the server, and then forwards the requests to the Sim API endpoints.
+This worker receives requests from your app, securely adds your `SIM_API_KEY` on the server, and then forwards the requests to the Sim API endpoints.
+
+**When to use a proxy:**
+- Your app makes Sim API calls from the browser (React, Next.js client components, etc.)
+- You need to avoid exposing your API key in client-side JavaScript
+- You need to handle CORS for browser-based requests
+
+**When you don't need a proxy:**
+- Server-to-server calls (Node.js backends, Python scripts, etc.) can call the Sim API directly
 
 We provide a one-click-deploy Cloudflare Worker to simplify this setup.
 Find detailed instructions in our GitHub repo:
