@@ -92,7 +92,7 @@
             "group": "Blockchains",
             "pages": [
               {
-                "group": "EVM Mainnets",
+                "group": "Mainnets",
                 "pages": [
                   "chains/abstract",
                   "chains/ancient8",
@@ -154,24 +154,19 @@
                   "chains/zero_network",
                   "chains/zkevm",
                   "chains/zksync",
-                  "chains/zora"
+                  "chains/zora",
+                  "chains/solana",
+                  "chains/eclipse"
                 ]
               },
               {
-                "group": "EVM Testnets",
+                "group": "Testnets",
                 "pages": [
                   "chains/avalanche_fuji",
                   "chains/base_sepolia",
                   "chains/monad_testnet",
                   "chains/polygon_amoy",
                   "chains/sepolia"
-                ]
-              },
-              {
-                "group": "SVM",
-                "pages": [
-                  "chains/solana",
-                  "chains/eclipse"
                 ]
               }
             ]
