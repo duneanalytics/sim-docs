@@ -89,6 +89,89 @@
             ]
           },
           {
+            "group": "Blockchains",
+            "pages": [
+              {
+                "group": "Mainnets",
+                "pages": [
+                  "chains/abstract",
+                  "chains/ancient8",
+                  "chains/ape_chain",
+                  "chains/arbitrum",
+                  "chains/arbitrum_nova",
+                  "chains/avalanche_c",
+                  "chains/b3",
+                  "chains/base",
+                  "chains/berachain",
+                  "chains/blast",
+                  "chains/bnb",
+                  "chains/bob",
+                  "chains/boba",
+                  "chains/celo",
+                  "chains/corn",
+                  "chains/cyber",
+                  "chains/degen",
+                  "chains/ethereum",
+                  "chains/fantom",
+                  "chains/flare",
+                  "chains/fraxtal",
+                  "chains/gnosis",
+                  "chains/hyper_evm",
+                  "chains/ink",
+                  "chains/kaia",
+                  "chains/katana",
+                  "chains/linea",
+                  "chains/lisk",
+                  "chains/mantle",
+                  "chains/metis",
+                  "chains/mode",
+                  "chains/monad",
+                  "chains/omni",
+                  "chains/opbnb",
+                  "chains/optimism",
+                  "chains/peaq",
+                  "chains/plasma",
+                  "chains/polygon",
+                  "chains/rari",
+                  "chains/redstone",
+                  "chains/ronin",
+                  "chains/rootstock",
+                  "chains/scroll",
+                  "chains/sei",
+                  "chains/shape",
+                  "chains/soneium",
+                  "chains/sonic",
+                  "chains/stable",
+                  "chains/superposition",
+                  "chains/superseed",
+                  "chains/swellchain",
+                  "chains/tempo",
+                  "chains/tempo_mainnet",
+                  "chains/unichain",
+                  "chains/wemix",
+                  "chains/world",
+                  "chains/xai",
+                  "chains/zero_network",
+                  "chains/zkevm",
+                  "chains/zksync",
+                  "chains/zora",
+                  "chains/solana",
+                  "chains/eclipse"
+                ]
+              },
+              {
+                "group": "Testnets",
+                "pages": [
+                  "chains/avalanche_fuji",
+                  "chains/base_sepolia",
+                  "chains/monad_testnet",
+                  "chains/polygon_amoy",
+                  "chains/sepolia"
+                ]
+              }
+            ]
+          },
+          {
             "group": "Resources",
             "pages": [
               "token-filtering",
@@ -111,7 +194,11 @@
   "redirects": [],
   "api": {
     "examples": {
-      "languages": ["curl", "javascript", "python"]
+      "languages": [
+        "curl",
+        "javascript",
+        "python"
+      ]
     }
   },
   "openapi": [
@@ -122,7 +209,7 @@
   ],
   "navbar": {
     "links": [],
-      "primary": {
+    "primary": {
       "type": "button",
       "label": "Start Building",
       "href": "https://sim.dune.com"
