@@ -232,7 +232,7 @@ async function main() {
   // Generate .mdx files
   for (const chain of chains) {
     const content = generatePage(chain);
-    const filePath = join(ROOT, "evm", "chains", `${chain.name}.mdx`);
+    const filePath = join(ROOT, "chains", "evm", `${chain.name}.mdx`);
     writeFileSync(filePath, content);
     console.log(`  Created ${chain.name}.mdx`);
   }
@@ -244,12 +244,12 @@ async function main() {
   const mainnets = chains
     .filter((c) => !isTestnet(c))
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => `evm/chains/${c.name}`);
+    .map((c) => `chains/evm/${c.name}`);
 
   const testnets = chains
     .filter((c) => isTestnet(c))
     .sort((a, b) => a.name.localeCompare(b.name))
-    .map((c) => `evm/chains/${c.name}`);
+    .map((c) => `chains/evm/${c.name}`);
 
   const chainsGroup = {
     group: "Chains",
