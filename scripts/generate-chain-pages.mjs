@@ -273,14 +273,8 @@ async function main() {
       evmGroup.pages.splice(existingIdx, 1);
     }
 
-    // Insert after "evm/supported-chains"
-    const supportedChainsIdx = evmGroup.pages.indexOf("evm/supported-chains");
-    if (supportedChainsIdx !== -1) {
-      evmGroup.pages.splice(supportedChainsIdx + 1, 0, chainsGroup);
-    } else {
-      // Fallback: insert after overview
-      evmGroup.pages.splice(1, 0, chainsGroup);
-    }
+    // Append at the end of the EVM group
+    evmGroup.pages.push(chainsGroup);
   }
 
   writeFileSync(docsJsonPath, JSON.stringify(docsJson, null, 2) + "\n");
