@@ -6,7 +6,11 @@ description: "Understand how Sim bills API usage using Compute Units (CUs) and h
 
 import { DefaultChainCount } from "/snippets/default-chain-count.mdx";
 
-Compute Units (CUs) are how we measure API usage in Sim. CUs reflect the actual computational work of each API call. For example, querying Balances across 30 chains uses more CUs than querying just two chains.
+Every API call costs Compute Units (CUs). Simple queries cost 1 CU. Multi-chain queries multiply by the number of chains. For example, fetching balances for 1 wallet on 3 chains = 3 CUs.
+
+<Warning>
+If you omit the `chain_ids` parameter, the request uses the `default` chain set, which currently includes {<DefaultChainCount endpoint="balances" />}+ chains and may grow as Sim adds networks. Always pass explicit `chain_ids` to keep costs predictable.
+</Warning>
 
 | Endpoint | Type | Compute Units | Default Chains (no chain_ids) |
 | --- | --- | --- | --- |

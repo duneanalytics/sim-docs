@@ -37,7 +37,7 @@
             ]
           },
           {
-            "group": "EVM",
+            "group": "Ethereum & EVM Chains",
             "pages": [
               "evm/overview",
               {
@@ -81,7 +81,7 @@
             ]
           },
           {
-            "group": "SVM",
+            "group": "Solana",
             "pages": [
               "svm/overview",
               "svm/balances",

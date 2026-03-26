@@ -9,14 +9,47 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Type=holders Sv](/images/type=holders.svg)
 
-The Token Holders API provides information about accounts holding a specific ERC20 token on supported EVM blockchains.
+The Token Holders API returns accounts holding a specific ERC20 token, ranked by balance descending. Use it for whale tracking, governance analysis, airdrop eligibility checks, or understanding token distribution.
 
 <SupportedChains endpoint="token_holders" />
+
+## Example Request
+
+```bash
+curl -X GET "https://api.sim.dune.com/v1/evm/token-holders/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48?limit=5" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+The response returns holders sorted by balance, with each holder's share of total supply:
+
+```json Response (JSON) [expandable]
+{
+  "holders": [
+    {
+      "address": "0x37305b1cd40574e4c5ce33f8e8306be057fd7341",
+      "balance": "2500000000000",
+      "share": 0.025
+    },
+    {
+      "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045",
+      "balance": "1000000000000",
+      "share": 0.01
+    }
+  ],
+  "next_offset": "eyJsYXN0X2JhbGFuY2UiOiIxMDAwMDAwMDAwMDAwIn0"
+}
+```
+
+| Field | Description |
+|---|---|
+| `address` | Holder's wallet address |
+| `balance` | Raw token balance (divide by token's `decimals` for human-readable amount) |
+| `share` | Proportion of total supply held (0.025 = 2.5%) |
 
 ## Pagination
 
 This endpoint uses cursor-based pagination.
-You can use the `limit` query parameter to define the maximum page size.
+You can use the `limit` query parameter to define the maximum page size (up to 500).
 Results might at times be less than the maximum page size.
 The `next_offset` value is included in the initial response and can be used to fetch the next page of results by passing it as the `offset` query parameter in the next request.
 
