@@ -1106,7 +1106,7 @@
         }
       }
     },
-    "/beta/evm/defi/positions/{address}": {
+    "/v1/evm/defi/positions/{address}": {
       "get": {
         "tags": [
           "evm",
