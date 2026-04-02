@@ -371,7 +371,7 @@
       "title": "Get DeFi positions",
       "description": "Return DeFi positions for a wallet. Use this for protocol exposure, LP positions, and wallet portfolio decomposition beyond spot token balances.",
       "method": "GET",
-      "path": "/beta/evm/defi/positions/{address}",
+      "path": "/v1/evm/defi/positions/{address}",
       "source": {
         "openapiOperationId": "getEvmDefiPositions"
       },

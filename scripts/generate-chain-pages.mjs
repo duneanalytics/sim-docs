@@ -89,7 +89,7 @@ const ENDPOINTS = [
   {
     key: "defi_positions",
     label: "DeFi Positions",
-    path: `/beta/evm/defi/positions/${SAMPLE_ADDRESS}`,
+    path: `/v1/evm/defi/positions/${SAMPLE_ADDRESS}`,
     docLink: "/evm/defi-positions",
     usesChainQuery: true,
   },

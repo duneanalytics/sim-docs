@@ -1,7 +1,7 @@
 ---
 title: "DeFi Positions"
 description: "Access a wallet's DeFi positions along with USD values and metadata across supported EVM chains."
-openapi: "/openapi.json GET /beta/evm/defi/positions/{address}"
+openapi: "/openapi.json GET /v1/evm/defi/positions/{address}"
 sidebarTitle: "DeFi Positions"
 ---
 
@@ -9,7 +9,26 @@ import { SupportedChains } from '/snippets/supported-chains.mdx';
 
 ![Defi Positions API](/images/evm/defi-positions.svg)
 
-The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets. The endpoint is available at the beta path (`/beta/evm/defi/positions`). Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
+The DeFi Positions API returns a wallet's active positions across liquidity pools, lending protocols, yield strategies, and tokenized DeFi assets. The endpoint is available at the beta path (`/v1/evm/defi/positions`). Each position includes token holdings, USD valuations, underlying asset metadata, and protocol-specific details such as tick ranges, collateral status, or reward accruals.
+
+## Response Structure
+
+Every response contains a `positions` array and an `aggregations` object:
+
+```json
+{
+  "positions": [...],
+  "aggregations": {
+    "total_value_usd": 4201.34,
+    "total_by_chain": {
+      "1": 3800.00,
+      "8453": 401.34
+    }
+  }
+}
+```
+
+Each entry in `positions` has a `type` discriminator field that determines its shape. All positions also include `chain` (string name, e.g. `"ethereum"`) and `chain_id` (numeric). Token metadata is returned as **nested objects** — not flat fields.
 
 ## Supported Protocols
 
@@ -17,15 +36,20 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 
 <Accordion title="Protocol Chain Coverage Table" icon="table">
 
-| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | Unichain (130) | Optimism (10) | Polygon (137) |
-| --- | --- | --- | --- | --- | --- | --- |
-| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Aave v2 | ✓ | — | — | — | — | ✓ |
-| Aave v3 | ✓ | ✓ | ✓ | — | ✓ | ✓ |
+| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | Unichain (130) | Optimism (10) | Polygon (137) | Avalanche (43114) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Uniswap V2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V2 Forks | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Aave v2 | ✓ | — | — | — | — | ✓ | ✓ |
+| Aave v3 | ✓ | ✓ | ✓ | — | ✓ | ✓ | ✓ |
+| Compound V2 | ✓ | — | — | — | — | — | — |
+| Morpho | ✓ | ✓ | — | — | — | — | — |
+| Fluid Vault | ✓ | ✓ | ✓ | — | — | — | — |
+| Pendle | ✓ | ✓ | ✓ | — | — | — | ✓ |
+| VeNFT | ✓ | ✓ | — | — | ✓ | — | — |
 
 **Legend:** ✓ = Supported | — = Protocol not deployed on this chain
 
@@ -33,222 +57,280 @@ Protocol coverage is organized by position type. Each protocol specifies its sup
 
 ### Liquidity Pool Positions
 
-Liquidity pool positions represent token pairs deposited into automated market makers (AMMs). These positions may be fungible ERC-20 LP tokens or non-fungible NFT-based positions for concentrated liquidity.
+Liquidity pool positions represent token pairs deposited into automated market makers (AMMs).
 
 <AccordionGroup>
   <Accordion title="Uniswap V2 (and Forks)" icon="droplet">
   **Type:** `UniswapV2`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137), Avalanche (43114)  
   **Recognized Forks:** SushiSwapV2, PancakeSwapV2, ShibaSwapV2, RingSwap, CroDefiSwap, DXSwap, SquadSwap, TrebleSwapV2, BaseSwap, SharkSwap, RocketSwap, Aerodrome, Infusion, GammaSwap  
-  **Description:** Fungible LP tokens representing constant-product AMM positions. Includes balances of both tokens in the pair and total USD value. Both Uniswap V2 and its forks are detected by factory address and returned under the same `UniswapV2` type, with the specific protocol name indicated in the `protocol` field.
-  
-  **Example Response (Uniswap V2):**
-  
+  **Description:** Fungible LP tokens representing constant-product AMM positions. Token metadata is returned as nested `token0`/`token1` objects each containing `address`, `name`, `symbol`, `decimals`, `price_usd`, and `holdings`. The `balance` field is the normalized LP token balance; `value_usd` is the total position value. The specific protocol is identified in the `protocol` field.
+
   ```json [expandable]
   {
-    "wallet_address": "0x3ddfa8ec3052539b6c9549f12cea2c295cff5296",
-    "positions": [
-      {
-        "type": "UniswapV2",
-        "chain_id": 1,
-        "protocol": "UniswapV2",
-        "pool": "0x2d0ba902badaa82592f0e1c04c71d66cea21d921",
-        "token0": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "token0_name": "Wrapped Ether",
-        "token0_symbol": "WETH",
-        "token0_decimals": 18,
-        "token1": "0xc669928185dbce49d2230cc9b0979be6dc797957",
-        "token1_name": "BitTorrent",
-        "token1_symbol": "BTT",
-        "token1_decimals": 18,
-        "lp_balance": "0x9fb1af75d00c86824442",
-        "token0_price": 3604.8860123436993,
-        "token1_price": 4.791346462915666e-07,
-        "calculated_balance": 7500.0,
-        "price_in_usd": 0.499768653034215,
-        "usd_value": 3748.26,
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 3748.26,
-      "total_by_chain": {
-        "1": 3748.26
-      }
-    }
-  }
-  ```
-  
-  **Example Response (SushiSwap V2):**
-  
-  ```json [expandable]
-  {
-    "wallet_address": "0x5dd596c901987a2b28c38a9c1dfbf86fffc15d77",
-    "positions": [
-      {
-        "type": "UniswapV2",
-        "chain_id": 1,
-        "protocol": "SushiSwapV2",
-        "pool": "0x54bcf4948e32a8706c286416e3ced37284f17fc9",
-        "token0": "0x66c0dded8433c9ea86c8cf91237b14e10b4d70b7",
-        "token0_name": "MarsToken",
-        "token0_symbol": "Mars",
-        "token0_decimals": 18,
-        "token1": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-        "token1_name": "Tether USD",
-        "token1_symbol": "USDT",
-        "token1_decimals": 6,
-        "lp_balance": "0x2",
-        "token0_price": 7.981024983046692e-06,
-        "token1_price": 0.9976281228808364,
-        "calculated_balance": 2e-18,
-        "price_in_usd": 6009.914272265951,
-        "usd_value": 1.2019828544531902e-14,
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0x66c0dded8433c9ea86c8cf91237b14e10b4d70b7"
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 1.2019828544531902e-14,
-      "total_by_chain": {
-        "1": 1.2019828544531902e-14
-      }
-    }
+    "type": "UniswapV2",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "protocol": "ShibaSwapV2",
+    "pool": "0x76ec974feaf0293f64cf8643e0f42dea5b71689b",
+    "token0": {
+      "address": "0x198065e69a86cb8a9154b333aad8efe7a3c256f8",
+      "name": "KOYO",
+      "symbol": "KOY",
+      "decimals": 18,
+      "price_usd": 7.653804983179183e-05,
+      "holdings": 75856.43
+    },
+    "token1": {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "decimals": 18,
+      "price_usd": 2035.61,
+      "holdings": 0.00283
+    },
+    "lp_balance": "0x8ac7230489e80000",
+    "balance": 10.0,
+    "price_usd": 1.1576502680432037,
+    "value_usd": 11.576502680432037,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0x198065e69a86cb8a9154b333aad8efe7a3c256f8"
   }
   ```
   </Accordion>
 
   <Accordion title="Uniswap V3 (and Forks)" icon="layer-group">
   **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
-  **Description:** NFT-based concentrated liquidity positions. Each position includes tick ranges, token holdings, unclaimed fees, and per-position USD valuations. Both Uniswap V3 and its forks are detected by factory address and returned under the same `Nft` type, with the specific protocol name indicated in the `protocol` field.
-  
-  **Example Response (Uniswap V3):**
-  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137), Avalanche (43114)  
+  **Description:** NFT-based concentrated liquidity positions grouped by pool. The pool-level `token0`/`token1` objects contain token metadata (`address`, `name`, `symbol`, `decimals`). Each entry in the `positions` array represents one NFT with its tick range, token ID, and per-token holdings, rewards, and optional price. Multiple tick positions in the same pool are merged into one response entry.
+
   ```json [expandable]
   {
-    "wallet_address": "0x020ca66c30bec2c4fe3861a94e4db4a498a35872",
+    "type": "Nft",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "protocol": "UniswapV3",
+    "pool": "0x24a3ab2a20f5e903b5bb3efc3b4a60fcda17b496",
+    "token0": {
+      "address": "0x6793655c396eaee311fb4d3596b88fd7d195c79e",
+      "name": "degeneratorv2",
+      "symbol": "DGENV2",
+      "decimals": 8
+    },
+    "token1": {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "decimals": 18
+    },
     "positions": [
       {
-        "type": "Nft",
-        "chain_id": 1,
-        "protocol": "UniswapV3",
-        "pool": "0x286431024acfab509d5d6beb64066c52e205f460",
-        "token0": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "token0_name": "Wrapped Ether",
-        "token0_symbol": "WETH",
-        "token0_decimals": 18,
-        "token1": "0xe957ea0b072910f508dd2009f4acb7238c308e29",
-        "token1_name": "Ethcoin",
-        "token1_symbol": "ETHC",
-        "token1_decimals": 18,
-        "positions": [
-          {
-            "tick_lower": -887200,
-            "tick_upper": 887200,
-            "token_id": "0xd28a4",
-            "token0_price": 3604.962479958635,
-            "token0_holdings": 0.8508188676223404,
-            "token0_rewards": 0.0,
-            "token1_price": 0.045373374904882045,
-            "token1_holdings": 68599.0469105992,
-            "token1_rewards": 0.0
-          }
-        ],
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-        "usd_value": 6179.740368611638
+        "tick_lower": -887270,
+        "tick_upper": 230270,
+        "token_id": "0x1b621",
+        "token0": {
+          "holdings": 4349.16,
+          "rewards": 6.29
+        },
+        "token1": {
+          "price_usd": 2035.61,
+          "holdings": 0.04325,
+          "rewards": 0.03198
+        }
       }
     ],
-    "aggregations": {
-      "total_usd_value": 6179.740368611638,
-      "total_by_chain": {
-        "1": 6179.740368611638
-      }
-    }
+    "logo": null,
+    "value_usd": 176.34
   }
   ```
   </Accordion>
 
   <Accordion title="Uniswap V4" icon="layer-group">
-  **Type:** `Nft`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
-  **Description:** Next-generation concentrated liquidity positions with hook support. Similar structure to V3 with additional metadata for pool hooks and custom logic.
+  **Type:** `NftV4`
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)
+  **Description:** Next-generation concentrated liquidity positions with hook support. Uses the same nested `positions` array structure as V3, with additional pool metadata: `pool_id` (32-byte hex string), `pool_manager` (V4 pool manager contract address), and `salt`. The `value_usd` is summed across all positions in the group.
+
+  ```json [expandable]
+  {
+    "type": "NftV4",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "protocol": "UniswapV4",
+    "pool_id": "0x9b12b3178fc669bfdb323817678bd93e1248def252c75dbf37395f3260f98148",
+    "pool_manager": "0x000000000004444c5dc75cb358380d2e3de08a90",
+    "salt": "0x000000000000000000000000000000000000000000000000000000000001ac85",
+    "token0": {
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "decimals": 6
+    },
+    "token1": {
+      "address": "0xbd4b6f3b2278d727ae740c5449aaed6a09788e7c",
+      "name": "APXCOIN",
+      "symbol": "APX",
+      "decimals": 18
+    },
+    "positions": [
+      {
+        "tick_lower": -887220,
+        "tick_upper": 887220,
+        "token_id": "0x1ac85",
+        "token0": {
+          "price_usd": 0.9999,
+          "holdings": 59.26,
+          "rewards": 0.67
+        },
+        "token1": {
+          "price_usd": 5.12,
+          "holdings": 10.55,
+          "rewards": 1.27
+        }
+      }
+    ],
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "value_usd": 120.41
+  }
+  ```
   </Accordion>
 </AccordionGroup>
 
 ### Lending Positions
 
-Lending positions include supplied collateral (e.g., aTokens, cTokens) and outstanding debt across major lending protocols.
+Lending positions include supplied collateral and outstanding debt across major lending protocols.
 
 <AccordionGroup>
   <Accordion title="Aave v2" icon="coins">
   **Type:** `Tokenized`  
   **Token Types:** `AtokenV2`, `AaveV2VariableDebt`  
-  **Chains:** Ethereum (1), Polygon (137)  
-  **Description:** Supply positions (aTokens) and variable debt positions on Aave v2. Each position includes the underlying asset, calculated balance, and USD value.
-  
-  **Example Response:**
-  
+  **Chains:** Ethereum (1), Polygon (137), Avalanche (43114)  
+  **Description:** Supply positions (aTokens) and variable debt positions on Aave v2. The `token` object is the protocol token (e.g. `aWETH`). The `underlying_token` object contains the asset address and `holdings` (actual underlying amount from the DAMP contract). The optional `lending_pool` field is the Aave pool contract address.
+
   ```json [expandable]
   {
-    "wallet_address": "0x8b529ef78046008f9d1fbc91c7407030de96ee32",
-    "positions": [
-      {
-        "type": "Tokenized",
-        "chain_id": 1,
-        "token_type": "AaveV2VariableDebt",
-        "token": "0x619beb58998ed2278e08620f97007e1116d5d25b",
-        "token_name": "Aave variable debt bearing USDC",
-        "token_symbol": "variableDebtUSDC",
-        "calculated_balance": 4.565517,
-        "price_in_usd": 0.00042242904592455,
-        "usd_value": 0.0019286069904623138,
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 0.0019286069904623138,
-      "total_by_chain": {
-        "1": 0.0019286069904623138
-      }
-    }
+    "type": "Tokenized",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "token_type": "AtokenV2",
+    "token": {
+      "address": "0x030ba81f1c18d280636f32af80b9aad02cf0854e",
+      "name": "Aave interest bearing WETH",
+      "symbol": "aWETH"
+    },
+    "underlying_token": {
+      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "holdings": 0.05158
+    },
+    "lending_pool": "0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9",
+    "balance": 0.04962,
+    "price_usd": 2116.32,
+    "value_usd": 105.01,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
   }
   ```
   </Accordion>
 
   <Accordion title="Aave v3" icon="coins">
-  **Type:** `Tokenized`  
-  **Token Types:** `AtokenV3`, `AaveV3VariableDebt`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Optimism (10), Polygon (137)  
-  **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Includes underlying token metadata and USD valuations.
-  
-  **Example Response:**
-  
+  **Type:** `Tokenized`
+  **Token Types:** `AtokenV3`, `AaveV3VariableDebt`
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Optimism (10), Polygon (137), Avalanche (43114)
+  **Description:** Supply positions (aTokens) and variable debt positions on Aave v3. Same structure as Aave v2 — distinguished by `token_type`.
+
   ```json [expandable]
   {
-    "wallet_address": "0xc0979af67786f30dea9335665592d6813b21b819",
-    "positions": [
-      {
-        "type": "Tokenized",
-        "chain_id": 1,
-        "token_type": "AtokenV3",
-        "token": "0xbdfa7b7893081b35fb54027489e2bc7a38275129",
-        "token_name": "Aave Ethereum weETH",
-        "token_symbol": "aEthweETH",
-        "calculated_balance": 2.045,
-        "price_in_usd": 3911.29585515,
-        "usd_value": 7998.60,
-        "logo": null
-      }
-    ],
-    "aggregations": {
-      "total_usd_value": 7998.60,
-      "total_by_chain": {
-        "1": 7998.60
-      }
-    }
+    "type": "Tokenized",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "token_type": "AtokenV3",
+    "token": {
+      "address": "0xbdfa7b7893081b35fb54027489e2bc7a38275129",
+      "name": "Aave Ethereum weETH",
+      "symbol": "aEthweETH"
+    },
+    "underlying_token": {
+      "address": "0xcd5fe23c85820f7b72d0926fc9b05b43e359b7ee",
+      "holdings": 2.045
+    },
+    "lending_pool": "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+    "balance": 2.045,
+    "price_usd": 3911.30,
+    "value_usd": 7998.61,
+    "logo": null
   }
   ```
   </Accordion>
+
+  <Accordion title="Compound V2" icon="coins">
+  **Type:** `CompoundV2`
+  **Chains:** Ethereum (1)
+  **Description:** Supply and borrow positions on Compound V2. The supply and borrow legs for the same cToken are merged into a single position object. `supply` and `borrow` are optional nested objects each containing `balance` (normalized cToken balance), `price_usd`, `value_usd`, and `underlying_holdings` (actual underlying asset amount). The top-level `value_usd` is the net value (supply minus borrow). The `comptroller` field is the Compound comptroller contract.
+
+  ```json [expandable]
+  {
+    "type": "CompoundV2",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "token": {
+      "address": "0x4ddc2d193948926d02f9b1fe9e1daa0718270ed5",
+      "name": "Compound Ether",
+      "symbol": "cETH"
+    },
+    "underlying_token": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "holdings": 0.01291
+    },
+    "comptroller": "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b",
+    "protocol": "Compound",
+    "supply": {
+      "balance": 0.64218463,
+      "price_usd": 40.93,
+      "value_usd": 26.28,
+      "underlying_holdings": 0.01291
+    },
+    "value_usd": 26.28,
+    "logo": null
+  }
+  ```
+  </Accordion>
+
+  <Accordion title="Morpho" icon="coins">
+  **Type:** `Morpho`
+  **Chains:** Ethereum (1), Base (8453)
+  **Description:** Isolated lending market positions on Morpho Blue. Each position is scoped to a specific market identified by `market_id`. The `morpho` field is the Morpho contract address. `loan_token` and `collateral_token` are full token info objects. Three optional nested legs — `supply`, `borrow`, and `collateral_quote` — each contain `balance`, `price_usd`, `value_usd`, and `underlying_holdings`. The top-level `value_usd` equals supply value minus borrow value.
+
+  ```json [expandable]
+  {
+    "type": "Morpho",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "morpho": "0xbbbbbbbbbb9cc5e90e3b3af64bdaf62c37eeffcb",
+    "market_id": "0x00edbb2e2de487431e8be432f8f51215b01bcda10503617e2ee9c7d674492b47",
+    "loan_token": {
+      "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "decimals": 6
+    },
+    "collateral_token": {
+      "address": "0xcd9f5907f92818bc06c9ad70217f089e190d2a32",
+      "name": "Senior Royco USDC",
+      "symbol": "srRoyUSDC",
+      "decimals": 6
+    },
+    "supply": {
+      "balance": 0.00103,
+      "price_usd": 0.9999,
+      "value_usd": 0.00103,
+      "underlying_holdings": 0.00103
+    },
+    "value_usd": 0.00103,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+  }
+  ```
+  </Accordion>
+
 </AccordionGroup>
 
 ### Yield Positions
@@ -258,37 +340,146 @@ Yield positions represent deposits into vaults, structured products, or yield-ge
 <AccordionGroup>
   <Accordion title="ERC-4626 Vaults" icon="vault">
   **Type:** `Erc4626`  
-  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137)  
-  **Description:** Tokenized vaults conforming to the ERC-4626 standard. Includes vault share balances, underlying asset metadata, and USD valuations. Examples include Yearn v3 vaults and Pendle Yield Principal Tokens (PTs) when wrapped as ERC-4626.
-  
-  **Example Response:**
-  
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Unichain (130), Optimism (10), Polygon (137), Avalanche (43114)  
+  **Description:** Tokenized vaults conforming to the ERC-4626 standard. The `token` object is the vault share token; `underlying_token` contains the deposited asset with `holdings` (actual underlying amount). `preview_redeem` and `convert_to_assets` reflect the current vault exchange rate.
+
   ```json [expandable]
   {
-    "wallet_address": "0x9cb21ce0ff81e55db73bbb36d5a9eac9d50a938b",
-    "positions": [
-      {
-        "type": "Erc4626",
-        "chain_id": 1,
-        "token": "0xbc65ad17c5c0a2a4d159fa5a503f4992c7b545fe",
-        "token_name": "Spark USDC Vault",
-        "token_symbol": "sUSDC",
-        "underlying_token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-        "underlying_token_name": "USD Coin",
-        "underlying_token_symbol": "USDC",
-        "underlying_token_decimals": 6,
-        "calculated_balance": 948.1633593101873,
-        "price_in_usd": 1.0690361554703132,
-        "usd_value": 1013.6209123947798,
-        "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    "type": "Erc4626",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "protocol": "Unknown",
+    "token": {
+      "address": "0xa3931d71877c0e7a3148cb7eb4463524fec27fbd",
+      "name": "Savings USDS",
+      "symbol": "sUSDS"
+    },
+    "underlying_token": {
+      "address": "0xdc035d45d973e3ec169d2276ddab16f1e407384f",
+      "name": "USDS Stablecoin",
+      "symbol": "USDS",
+      "decimals": 18,
+      "holdings": 47.05
+    },
+    "balance": 43.09,
+    "price_usd": 1.0920,
+    "value_usd": 47.06,
+    "preview_redeem": 47.05,
+    "convert_to_assets": 47.05,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0xdc035d45d973e3ec169d2276ddab16f1e407384f"
+  }
+  ```
+  </Accordion>
+
+  <Accordion title="Fluid Vault" icon="vault">
+  **Type:** `FluidVault`
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161)
+  **Description:** Positions in Fluid Protocol smart vaults. The `nft_id` is the vault position NFT identifier (hex). `vault_type` indicates the vault configuration (e.g. `T1` for single-token collateral/borrow). `supply0` and `borrow0` are required legs; `supply1` and `borrow1` are present for dual-token vaults. Each leg contains a `token` object and an optional `quote` with `balance`, `price_usd`, and `value_usd`. `is_liquidated` indicates whether the position has been liquidated.
+
+  ```json [expandable]
+  {
+    "type": "FluidVault",
+    "chain": "base",
+    "chain_id": 8453,
+    "vault_address": "0xa0f83fc5885cebc0420ce7c7b139adc80c4f4d91",
+    "nft_id": "0xfd8",
+    "vault_type": "T1",
+    "is_liquidated": false,
+    "supply0": {
+      "token": {
+        "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
+        "name": "Wrapped liquid staked Ether 2.0",
+        "symbol": "wstETH",
+        "decimals": 18
+      },
+      "quote": {
+        "balance": 1.5,
+        "price_usd": 2400.00,
+        "value_usd": 3600.00
       }
-    ],
-    "aggregations": {
-      "total_usd_value": 1013.6209123947798,
-      "total_by_chain": {
-        "1": 1013.6209123947798
+    },
+    "borrow0": {
+      "token": {
+        "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "name": "Ether",
+        "symbol": "ETH",
+        "decimals": 18
+      },
+      "quote": {
+        "balance": 0.5,
+        "price_usd": 2000.00,
+        "value_usd": 1000.00
       }
-    }
+    },
+    "value_usd": 2600.00,
+    "logo": null
+  }
+  ```
+  </Accordion>
+
+  <Accordion title="Pendle" icon="vault">
+  **Type:** `Pendle`
+  **Chains:** Ethereum (1), Base (8453), Arbitrum (42161), Avalanche (43114)
+  **Token Types:** `Principal` (Principal Token), `Yield` (Yield Token), `Lp` (Liquidity Pool share)
+  **Description:** Positions in Pendle yield markets. The `token_type` field identifies whether the position is a Principal Token (fixed-yield, redeemable at maturity), a Yield Token (receives all yield until maturity), or an LP share. The `token` object is the Pendle token itself; `asset` is the underlying asset. The `market` field is the Pendle market contract address.
+
+  ```json [expandable]
+  {
+    "type": "Pendle",
+    "chain": "ethereum",
+    "chain_id": 1,
+    "token_type": "Principal",
+    "token": {
+      "address": "0x917459337caac939d41d7493b3999f571d20d667",
+      "name": "PT Ethena USDe 31JUL2025",
+      "symbol": "PT-USDe-31JUL2025",
+      "decimals": 18
+    },
+    "asset": {
+      "address": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
+      "name": "USDe",
+      "symbol": "USDe",
+      "decimals": 18
+    },
+    "market": "0x9df192d13d61609d1852461c4850595e1f56e714",
+    "balance": 1000.0,
+    "price_usd": 0.9995,
+    "value_usd": 999.50,
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0x4c9edd5852cd905f086c759e8383e09bff1e68b3"
+  }
+  ```
+  </Accordion>
+</AccordionGroup>
+
+### Governance Positions
+
+Governance positions represent tokens locked in vote-escrow contracts for protocol governance participation.
+
+<AccordionGroup>
+  <Accordion title="VeNFT (Vote-Escrow)" icon="lock">
+  **Type:** `VeNft`
+  **Chains:** Ethereum (1), Base (8453), Optimism (10)
+  **Description:** Vote-escrow NFT positions for governance tokens (e.g. veAERO on Base, veVELO on Optimism, veCRV on Ethereum). The `ve_contract` is the vote-escrow contract; `token_id` is the NFT identifier (hex). `underlying_token` is a full token info object. `locked_amount` is the escrowed token balance; `lock_end` is the unlock timestamp (Unix seconds); `is_permanent` indicates a perpetual lock. The `protocol` field names the specific protocol (e.g. `"AerodromeVeNFT"`).
+
+  ```json [expandable]
+  {
+    "type": "VeNft",
+    "chain": "base",
+    "chain_id": 8453,
+    "ve_contract": "0xebf418fe2512e7e6bd9b87a8f0f294acdc67e6b4",
+    "token_id": "0x62ff",
+    "underlying_token": {
+      "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+      "name": "Aerodrome",
+      "symbol": "AERO",
+      "decimals": 18
+    },
+    "locked_amount": 3.5276,
+    "lock_end": 1751500800,
+    "is_permanent": false,
+    "value_usd": 1.11,
+    "logo": "https://api.sim.dune.com/beta/token/logo/8453/0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+    "protocol": "AerodromeVeNFT"
   }
   ```
   </Accordion>
