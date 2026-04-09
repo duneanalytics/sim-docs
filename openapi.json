@@ -3620,6 +3620,7 @@
         "required": [
           "pool_type",
           "address",
+          "chain_id",
           "tokens"
         ],
         "properties": {
@@ -3630,6 +3631,11 @@
           "address": {
             "type": "string",
             "description": "The contract address of the liquidity pool"
+          },
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The chain ID where the liquidity pool exists"
           },
           "tokens": {
             "type": "array",
