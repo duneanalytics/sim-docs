@@ -69,10 +69,10 @@ The following examples demonstrate how to use this data to create robust filteri
 
 Use the optional `exclude_spam_tokens` query parameter on the EVM Balances API to automatically filter out tokens with less than 100 USD of liquidity. Include `exclude_spam_tokens=true` to have those tokens excluded from the response entirely.
 
-By default, balances for tokens without available pricing data are also excluded. Set `include_unpriced=true` if you want those unpriced token balances returned.
+By default, balances for tokens without available pricing data are included. Set `exclude_unpriced=true` if you want those unpriced token balances filtered out.
 
 ```bash
-curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?exclude_spam_tokens=true&include_unpriced=true' \
+curl -s -X GET 'https://api.sim.dune.com/v1/evm/balances/0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045?exclude_spam_tokens=true&exclude_unpriced=true' \
   -H 'X-Sim-Api-Key: YOUR_API_KEY'
 ```
 

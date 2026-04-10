@@ -32,9 +32,9 @@ You can include `metadata=pools` in your request to see which liquidity pool was
 
 We also include the `pool_size` field in all responses, allowing you to implement custom filtering logic based on your specific requirements. For a detailed explanation of our approach, see our [Token Filtering](/token-filtering) guide.
 
-### Include unpriced balances
+### Exclude unpriced balances
 
-By default, balances for tokens without available pricing data are excluded from responses. To include them, pass `include_unpriced=true`.
+By default, balances for tokens without available pricing data are included in responses. To filter them out, pass `exclude_unpriced=true`.
 
 ### Exclude tokens with less than 100 USD liquidity
 

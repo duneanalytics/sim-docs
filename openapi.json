@@ -401,9 +401,9 @@
             }
           },
           {
-            "name": "include_unpriced",
+            "name": "exclude_unpriced",
             "in": "query",
-            "description": "When true, includes balances for tokens without available pricing data. By default, unpriced token balances are excluded.",
+            "description": "When true, excludes balances for tokens without available pricing data. By default, unpriced token balances are included.",
             "required": false,
             "schema": {
               "type": "boolean",
@@ -1590,9 +1590,9 @@
             }
           },
           {
-            "name": "include_unpriced",
+            "name": "exclude_unpriced",
             "in": "query",
-            "description": "When true, includes balances for tokens without available pricing data. By default, unpriced token balances are excluded.",
+            "description": "When true, excludes balances for tokens without available pricing data. By default, unpriced token balances are included.",
             "required": false,
             "schema": {
               "type": "boolean",
