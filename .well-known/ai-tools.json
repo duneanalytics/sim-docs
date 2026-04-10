@@ -88,6 +88,10 @@
             "type": "boolean",
             "description": "When true, excludes tokens with less than 100 USD liquidity."
           },
+          "include_unpriced": {
+            "type": "boolean",
+            "description": "When true, includes token balances without available USD pricing. Default is false."
+          },
           "limit": {
             "type": "integer",
             "minimum": 1,
@@ -422,6 +426,10 @@
             "type": "string",
             "enum": ["erc20", "native"],
             "description": "Specify erc20 or native to get only ERC20 stablecoins or native stablecoins (e.g. xDAI on Gnosis)."
+          },
+          "include_unpriced": {
+            "type": "boolean",
+            "description": "When true, includes token balances without available USD pricing. Default is false."
           },
           "limit": {
             "type": "integer",
