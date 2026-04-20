@@ -1,0 +1,22 @@
+---
+title: "DeFi Supported Protocols"
+sidebarTitle: "DeFi Protocol Coverage"
+description: "Returns the list of DeFi protocol families supported by the DeFi Positions API, with per-chain availability and stability status."
+openapi: "/openapi.json GET /v1/evm/defi/supported-protocols"
+---
+
+The Supported Protocols endpoint lists every DeFi protocol family available through the [DeFi Positions API](/evm/defi-positions), along with the chains each protocol is active on and whether it is in stable or preview status.
+
+Use this endpoint to build dynamic UI filters, check coverage before querying positions, or discover which sub-protocols (e.g. specific AMM forks) are grouped under each family.
+
+## Response Structure
+
+Each entry in `protocol_families` represents one protocol group:
+
+- **`family`** — Snake-case protocol identifier (e.g. `uniswap_v2`, `aave_v3`, `lido`). The four Lido protocol kinds are merged into a single `lido` family.
+- **`chains`** — Array of chains the protocol is deployed on. Each entry includes `chain_id`, `chain_name`, and `status` (`stable` or `preview`).
+- **`sub_protocols`** — Named forks or variants under this family (e.g. `["SushiSwapV2", "PancakeSwapV2"]` under `uniswap_v2`). Empty array if no named sub-protocols exist.
+
+## Compute Units
+
+This endpoint costs **1 Compute Unit** per request.

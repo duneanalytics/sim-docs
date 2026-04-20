@@ -1526,6 +1526,165 @@
         }
       }
     },
+    "/v1/evm/defi/supported-protocols": {
+      "get": {
+        "tags": [
+          "evm",
+          "defi"
+        ],
+        "summary": "Get supported DeFi protocols",
+        "description": "Returns the full list of DeFi protocol families supported by the DeFi Positions API, along with the chains each is available on and their stability status.",
+        "operationId": "getEvmDefiSupportedProtocols",
+        "parameters": [
+          {
+            "name": "include_preview_chains",
+            "in": "query",
+            "required": false,
+            "description": "When true, includes chains in preview status. Defaults to false.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "include_preview_protocols",
+            "in": "query",
+            "required": false,
+            "description": "When true, includes protocols marked as preview for the requested chains. Defaults to false.",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "protocol_families": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "family": {
+                            "type": "string",
+                            "example": "aave_v3"
+                          },
+                          "chains": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "chain_id": {
+                                  "type": "integer",
+                                  "example": 1,
+                                  "description": "Numeric EVM chain ID."
+                                },
+                                "chain_name": {
+                                  "type": "string",
+                                  "example": "ethereum",
+                                  "description": "Human-readable chain name (e.g. \"ethereum\", \"base\", \"arbitrum\")."
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "stable",
+                                    "preview"
+                                  ],
+                                  "description": "Availability status of this protocol on this chain. `stable` means the protocol is fully supported; `preview` means it is available but may have limited coverage or change without notice.",
+                                  "example": "stable"
+                                }
+                              }
+                            }
+                          },
+                          "sub_protocols": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "example": [
+                              "AerodromeVeNFT",
+                              "VelodromeVeNFT"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "protocol_families": [
+                        {
+                          "family": "uniswap_v2",
+                          "chains": [
+                            {
+                              "chain_id": 1,
+                              "chain_name": "ethereum",
+                              "status": "stable"
+                            },
+                            {
+                              "chain_id": 8453,
+                              "chain_name": "base",
+                              "status": "stable"
+                            }
+                          ],
+                          "sub_protocols": [
+                            "UniswapV2",
+                            "SushiSwapV2",
+                            "PancakeSwapV2",
+                            "Aerodrome"
+                          ]
+                        },
+                        {
+                          "family": "aave_v3",
+                          "chains": [
+                            {
+                              "chain_id": 1,
+                              "chain_name": "ethereum",
+                              "status": "stable"
+                            },
+                            {
+                              "chain_id": 8453,
+                              "chain_name": "base",
+                              "status": "stable"
+                            }
+                          ],
+                          "sub_protocols": [
+                            "Aave"
+                          ]
+                        },
+                        {
+                          "family": "lido",
+                          "chains": [
+                            {
+                              "chain_id": 1,
+                              "chain_name": "ethereum",
+                              "status": "stable"
+                            }
+                          ],
+                          "sub_protocols": []
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/v1/evm/balances/{address}/stablecoins": {
       "get": {
         "tags": [
@@ -4462,7 +4621,11 @@
       "NftPositionDetails": {
         "type": "object",
         "description": "A single concentrated liquidity position within a Uniswap V3 or V4 pool.",
-        "required": ["tick_lower", "tick_upper", "token_id"],
+        "required": [
+          "tick_lower",
+          "tick_upper",
+          "token_id"
+        ],
         "properties": {
           "tick_lower": {
             "type": "integer",
@@ -4490,11 +4653,19 @@
       },
       "Erc4626Position": {
         "type": "object",
-        "required": ["type", "chain_id", "token", "balance", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "token",
+          "balance",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Erc4626"],
+            "enum": [
+              "Erc4626"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4518,11 +4689,24 @@
             "type": "object",
             "description": "Underlying token with redeemable holdings.",
             "properties": {
-              "address": { "type": "string" },
-              "name": { "type": "string" },
-              "symbol": { "type": "string" },
-              "decimals": { "type": "integer", "format": "int32" },
-              "holdings": { "type": "number", "format": "double", "description": "Underlying token amount redeemable from this position." }
+              "address": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": "string"
+              },
+              "decimals": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "holdings": {
+                "type": "number",
+                "format": "double",
+                "description": "Underlying token amount redeemable from this position."
+              }
             }
           },
           "balance": {
@@ -4559,11 +4743,19 @@
       },
       "TokenizedPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "token", "balance", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "token",
+          "balance",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Tokenized"],
+            "enum": [
+              "Tokenized"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4587,8 +4779,14 @@
             "type": "object",
             "description": "Underlying token with optional holdings.",
             "properties": {
-              "address": { "type": "string" },
-              "holdings": { "type": "number", "format": "double", "description": "Underlying token amount this position represents." }
+              "address": {
+                "type": "string"
+              },
+              "holdings": {
+                "type": "number",
+                "format": "double",
+                "description": "Underlying token amount this position represents."
+              }
             }
           },
           "lending_pool": {
@@ -4619,11 +4817,21 @@
       },
       "UniswapV2Position": {
         "type": "object",
-        "required": ["type", "chain_id", "protocol", "pool", "token0", "token1", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "protocol",
+          "pool",
+          "token0",
+          "token1",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["UniswapV2"],
+            "enum": [
+              "UniswapV2"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4680,11 +4888,22 @@
       },
       "UniswapV3NftPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "protocol", "pool", "token0", "token1", "positions", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "protocol",
+          "pool",
+          "token0",
+          "token1",
+          "positions",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Nft"],
+            "enum": [
+              "Nft"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4734,11 +4953,24 @@
       },
       "UniswapV4NftPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "protocol", "pool_id", "pool_manager", "salt", "token0", "token1", "positions", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "protocol",
+          "pool_id",
+          "pool_manager",
+          "salt",
+          "token0",
+          "token1",
+          "positions",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["NftV4"],
+            "enum": [
+              "NftV4"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4796,11 +5028,18 @@
       },
       "CompoundV2Position": {
         "type": "object",
-        "required": ["type", "chain_id", "token", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "token",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["CompoundV2"],
+            "enum": [
+              "CompoundV2"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4828,11 +5067,24 @@
             "type": "object",
             "description": "Underlying token with holdings.",
             "properties": {
-              "address": { "type": "string" },
-              "name": { "type": "string" },
-              "symbol": { "type": "string" },
-              "decimals": { "type": "integer", "format": "int32" },
-              "holdings": { "type": "number", "format": "double", "description": "Underlying token amount represented by this position." }
+              "address": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": "string"
+              },
+              "decimals": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "holdings": {
+                "type": "number",
+                "format": "double",
+                "description": "Underlying token amount represented by this position."
+              }
             }
           },
           "supply": {
@@ -4857,11 +5109,20 @@
       },
       "MorphoPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "morpho", "market_id", "loan_token", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "morpho",
+          "market_id",
+          "loan_token",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Morpho"],
+            "enum": [
+              "Morpho"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4915,11 +5176,20 @@
       },
       "PendlePosition": {
         "type": "object",
-        "required": ["type", "chain_id", "token_type", "token", "balance", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "token_type",
+          "token",
+          "balance",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["Pendle"],
+            "enum": [
+              "Pendle"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -4933,7 +5203,11 @@
           },
           "token_type": {
             "type": "string",
-            "enum": ["Principal", "Yield", "Lp"],
+            "enum": [
+              "Principal",
+              "Yield",
+              "Lp"
+            ],
             "description": "Pendle token category: `Principal` (PT), `Yield` (YT), or `Lp` (LP share)."
           },
           "token": {
@@ -4972,11 +5246,21 @@
       },
       "FluidVaultPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "vault_address", "nft_id", "vault_type", "is_liquidated", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "vault_address",
+          "nft_id",
+          "vault_type",
+          "is_liquidated",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["FluidVault"],
+            "enum": [
+              "FluidVault"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -5034,11 +5318,20 @@
       },
       "VeNftPosition": {
         "type": "object",
-        "required": ["type", "chain_id", "ve_contract", "token_id", "underlying_token", "value_usd"],
+        "required": [
+          "type",
+          "chain_id",
+          "ve_contract",
+          "token_id",
+          "underlying_token",
+          "value_usd"
+        ],
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["VeNft"],
+            "enum": [
+              "VeNft"
+            ],
             "description": "Position type discriminator."
           },
           "chain": {
@@ -5094,16 +5387,36 @@
       },
       "DefiPosition": {
         "oneOf": [
-          { "$ref": "#/components/schemas/Erc4626Position" },
-          { "$ref": "#/components/schemas/TokenizedPosition" },
-          { "$ref": "#/components/schemas/UniswapV2Position" },
-          { "$ref": "#/components/schemas/UniswapV3NftPosition" },
-          { "$ref": "#/components/schemas/UniswapV4NftPosition" },
-          { "$ref": "#/components/schemas/CompoundV2Position" },
-          { "$ref": "#/components/schemas/MorphoPosition" },
-          { "$ref": "#/components/schemas/PendlePosition" },
-          { "$ref": "#/components/schemas/FluidVaultPosition" },
-          { "$ref": "#/components/schemas/VeNftPosition" }
+          {
+            "$ref": "#/components/schemas/Erc4626Position"
+          },
+          {
+            "$ref": "#/components/schemas/TokenizedPosition"
+          },
+          {
+            "$ref": "#/components/schemas/UniswapV2Position"
+          },
+          {
+            "$ref": "#/components/schemas/UniswapV3NftPosition"
+          },
+          {
+            "$ref": "#/components/schemas/UniswapV4NftPosition"
+          },
+          {
+            "$ref": "#/components/schemas/CompoundV2Position"
+          },
+          {
+            "$ref": "#/components/schemas/MorphoPosition"
+          },
+          {
+            "$ref": "#/components/schemas/PendlePosition"
+          },
+          {
+            "$ref": "#/components/schemas/FluidVaultPosition"
+          },
+          {
+            "$ref": "#/components/schemas/VeNftPosition"
+          }
         ],
         "discriminator": {
           "propertyName": "type"
