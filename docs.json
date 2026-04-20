@@ -61,6 +61,7 @@
               "evm/activity",
               "evm/collectibles",
               "evm/defi-positions",
+              "evm/defi/supported-protocols",
               "evm/transactions",
               "evm/token-info",
               "evm/token-holders"
