@@ -6,6 +6,7 @@ sidebarTitle: "DeFi Positions"
 ---
 
 import { SupportedChains } from '/snippets/supported-chains.mdx';
+import { DefiProtocolsList } from '/snippets/defi-protocols-table.mdx';
 
 ![Defi Positions API](/images/evm/defi-positions.svg)
 
@@ -30,34 +31,15 @@ Every response contains a `positions` array and an `aggregations` object:
 
 Each entry in `positions` has a `type` discriminator field that determines its shape. All positions also include `chain` (string name, e.g. `"ethereum"`) and `chain_id` (numeric). Token metadata is returned as **nested objects** — not flat fields.
 
+## Supported Chains
+
+<SupportedChains endpoint="defi_positions" title="Supported Chains" />
+
 ## Supported Protocols
 
 Protocol coverage is organized by position type. Each protocol specifies its supported chains and the API response type under which it appears.
 
-<Accordion title="Protocol Chain Coverage Table" icon="table">
-
-| Protocol / Standard | Ethereum (1) | Base (8453) | Arbitrum (42161) | BNB (56) | Avalanche (43114) | HyperEVM (999) | Ink (57073) | Optimism (10) | Polygon (137) | Unichain (130) |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Uniswap V2 (and Forks) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V3 (and Forks) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Uniswap V4 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Balancer V3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| ERC‑4626 Vaults | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Aave v2 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Aave v3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Compound V2 (and Forks) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Compound V3 (Comet) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Moonwell | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Morpho | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Fluid Vault | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Pendle | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Liquity V2 Trove | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Liquity V2 Stability Pool | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| VeNFT | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-
-**Legend:** ✓ = Supported | — = Protocol not deployed on this chain
-
-</Accordion>
+<DefiProtocolsList />
 
 ## Compute Units
 

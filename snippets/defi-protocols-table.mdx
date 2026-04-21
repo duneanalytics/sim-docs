@@ -1,0 +1,47 @@
+export const DefiProtocolsList = () => {
+  const dataState = useState(null);
+  const data = dataState[0];
+  const setData = dataState[1];
+
+  const loadingState = useState(true);
+  const isLoading = loadingState[0];
+  const setIsLoading = loadingState[1];
+
+  useEffect(function() {
+    fetch("https://sim-proxy.dune-d2f.workers.dev/v1/evm/defi/supported-protocols")
+      .then(function(response) { return response.json(); })
+      .then(function(responseData) {
+        setData(responseData);
+        setIsLoading(false);
+      });
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading protocol information...</div>;
+  }
+
+  if (!data || !data.protocol_families) {
+    return <div>No data available</div>;
+  }
+
+  function formatFamily(family) {
+    return family.split('_').map(function(word) {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+  }
+
+  return (
+    <AccordionGroup>
+      {data.protocol_families.map(function(family) {
+        var hasSubs = family.sub_protocols && family.sub_protocols.length > 0;
+        return (
+          <Accordion title={formatFamily(family.family)} key={family.family}>
+            {hasSubs && (
+              <p>Recognized forks and variants: {family.sub_protocols.join(', ')}</p>
+            )}
+          </Accordion>
+        );
+      })}
+    </AccordionGroup>
+  );
+};
