@@ -65,7 +65,7 @@ Stable: `/v1/` · Beta: `/beta/`
 
 | Endpoint | Method | Path | CU | Key Parameters |
 |---|---|---|---|---|
-| DeFi Positions | GET | /v1/evm/defi/positions/{address} | 10N per chain | chain_ids |
+| DeFi Positions | GET | /v1/evm/defi/positions/{address} | 4N per chain | chain_ids |
 
 ## SVM Endpoints (Beta — /beta)
 
@@ -123,7 +123,7 @@ Warning: 200 responses can include `warnings[]` array (e.g., UNSUPPORTED_CHAIN_I
 | Balances (single token) | Fixed | 1 |
 | Stablecoins | Chain-dependent | N |
 | Collectibles | Chain-dependent | N |
-| DeFi Positions | Chain-dependent | 10N |
+| DeFi Positions | Chain-dependent | 4N |
 | Activity | Fixed | 3 |
 | Transactions (EVM & SVM) | Fixed | 1 |
 | Token Info | Fixed | 2 |
