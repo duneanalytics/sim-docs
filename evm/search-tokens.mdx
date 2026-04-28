@@ -1,11 +1,11 @@
 ---
 title: "Search Tokens"
 sidebarTitle: "Search Tokens"
-description: "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name, with optional chain filters. ERC20 results are enriched with logo and decimals."
+description: "Search ERC20 tokens across supported EVM chains by symbol or name, with optional chain filters. Results are enriched with logo and decimals."
 openapi: "/openapi.json GET /v1/evm/search/tokens"
 ---
 
-The Search Tokens API lets you find ERC20 and ERC721 tokens by name or symbol across one or more supported EVM chains. Results are ranked by an internal score (where available) and returned with their canonical chain, address, symbol, and name. ERC20 results are additionally enriched with `logo` and `decimals` so they can be rendered immediately.
+The Search Tokens API lets you find ERC20 tokens by name or symbol across one or more supported EVM chains. Results are ranked by an internal score (where available) and returned with their canonical chain, address, symbol, name, `logo`, and `decimals` so they can be rendered immediately.
 
 Use it to power token-pickers, autocomplete inputs, and any UI flow where the user knows part of a token's name or symbol but not its contract address.
 
@@ -55,22 +55,18 @@ The endpoint returns a JSON array of token objects. Each object has:
 |---|---|---|
 | `chain_id` | integer | EVM chain ID where the token is deployed |
 | `address` | string | The token's contract address (lowercase, `0x`-prefixed) |
-| `token_type` | string | `"ERC20"` or `"ERC721"` |
-| `symbol` | string | Token symbol (e.g. `USDC`, `BAYC`) |
-| `name` | string | Token name (e.g. `USD Coin`, `Bored Ape Yacht Club`) |
-| `logo` | string \| null | Logo URL when available. Populated for ERC20s with metadata; `null` for ERC721s and ERC20s without a known logo. |
-| `decimals` | integer \| null | Token decimals. Populated for ERC20s with metadata; `null` for ERC721s and ERC20s without a known decimals value. |
-
-<Note>
-  Only ERC20 results are enriched with `logo` and `decimals`. ERC721 results always return `null` for both fields — collectible metadata is available via the [Collectibles](/evm/collectibles) endpoint.
-</Note>
+| `token_type` | string | `"ERC20"` |
+| `symbol` | string | Token symbol (e.g. `USDC`, `WETH`) |
+| `name` | string | Token name (e.g. `USD Coin`, `Wrapped Ether`) |
+| `logo` | string \| null | Logo URL when available; `null` for tokens without a known logo. |
+| `decimals` | integer \| null | Token decimals; `null` for tokens without a known decimals value. |
 
 ## How Search Works
 
 Search is powered by an in-memory **trigram index** built over each token's `symbol` and `name`. Properties:
 
 - **Case-insensitive.** `usdc` and `USDC` match the same set of tokens.
-- **Substring-friendly.** `BAY` matches `BAYC`, `Bored Ape Yacht Club`, and similar.
+- **Substring-friendly.** `Teth` matches `Tether`, `TetherUSD`, and similar.
 - **Three-character minimum.** Queries of fewer than 3 characters (after trimming) return an empty array — trigrams need at least 3 characters of input.
 - **Ranked.** Tokens with an internal ranking score (driven by activity / liquidity signals) appear first. Ties fall back to a deterministic `(chain_id ASC, address ASC)` ordering, so repeat queries return stable results.
 
