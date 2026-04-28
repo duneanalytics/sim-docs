@@ -2213,7 +2213,7 @@
     "/v1/evm/search/tokens": {
       "get": {
         "summary": "Search Tokens",
-        "description": "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name. Results are ranked by an internal score (where available) with deterministic `(chain_id ASC, address ASC)` tiebreak. ERC20 results are enriched with `logo` and `decimals`; ERC721 results return `null` for both fields. Search is case-insensitive and uses a trigram index — queries shorter than 3 characters (after trimming) return an empty array.",
+        "description": "Search ERC20 tokens across supported EVM chains by symbol or name. Results are ranked by an internal score (where available) with deterministic `(chain_id ASC, address ASC)` tiebreak, and are enriched with `logo` and `decimals`. Search is case-insensitive and uses a trigram index — queries shorter than 3 characters (after trimming) return an empty array.",
         "operationId": "searchEvmTokens",
         "tags": [
           "evm",
@@ -2240,20 +2240,6 @@
               "type": "string"
             },
             "example": "1,8453"
-          },
-          {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "description": "Restrict results to a single token type. When omitted, both types are returned. Unknown values are treated as no filter.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "erc20",
-                "erc721"
-              ]
-            },
-            "example": "erc20"
           },
           {
             "name": "limit",
@@ -5903,7 +5889,7 @@
       },
       "TokenSearchResult": {
         "type": "object",
-        "description": "A single token matched by the search index. ERC20 results include `logo` and `decimals`; ERC721 results return `null` for both.",
+        "description": "A single ERC20 token matched by the search index.",
         "properties": {
           "chain_id": {
             "type": "integer",
@@ -5921,32 +5907,31 @@
           "token_type": {
             "type": "string",
             "enum": [
-              "ERC20",
-              "ERC721"
+              "ERC20"
             ],
-            "description": "The token standard. Canonical uppercase form."
+            "description": "The token standard. Always `ERC20`."
           },
           "symbol": {
             "type": "string",
-            "description": "Token symbol (e.g. `USDC`, `BAYC`).",
+            "description": "Token symbol (e.g. `USDC`, `WETH`).",
             "example": "USDC"
           },
           "name": {
             "type": "string",
-            "description": "Token name (e.g. `USD Coin`, `Bored Ape Yacht Club`).",
+            "description": "Token name (e.g. `USD Coin`, `Wrapped Ether`).",
             "example": "USD Coin"
           },
           "logo": {
             "type": "string",
             "nullable": true,
-            "description": "Logo URL when available. Populated for ERC20s with metadata; `null` for ERC721s and for ERC20s without a known logo.",
+            "description": "Logo URL when available; `null` for tokens without a known logo.",
             "example": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
           },
           "decimals": {
             "type": "integer",
             "format": "int32",
             "nullable": true,
-            "description": "Token decimals. Populated for ERC20s with metadata; `null` for ERC721s and for ERC20s without a known decimals value.",
+            "description": "Token decimals; `null` for tokens without a known decimals value.",
             "example": 6
           }
         },
