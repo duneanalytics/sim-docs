@@ -2210,6 +2210,182 @@
         }
       }
     },
+    "/v1/evm/search/tokens": {
+      "get": {
+        "summary": "Search Tokens",
+        "description": "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name. Results are ranked by an internal score (where available) with deterministic `(chain_id ASC, address ASC)` tiebreak. ERC20 results are enriched with `logo` and `decimals`; ERC721 results return `null` for both fields. Search is case-insensitive and uses a trigram index — queries shorter than 3 characters (after trimming) return an empty array.",
+        "operationId": "searchEvmTokens",
+        "tags": [
+          "evm",
+          "search"
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "description": "Search term matched against the token's `symbol` and `name`. Case-insensitive. Minimum 3 characters after trimming whitespace; shorter queries return an empty result set.",
+            "schema": {
+              "type": "string",
+              "minLength": 3
+            },
+            "example": "USDC"
+          },
+          {
+            "name": "chain_ids",
+            "in": "query",
+            "required": false,
+            "description": "Filter by chain(s). Accepts numeric chain IDs and/or tags. Provide a single value (e.g. `?chain_ids=1` or `?chain_ids=mainnet`) or a comma-separated list (e.g. `?chain_ids=1,8453,testnet`). When omitted, all supported chains are searched. See the [Supported Chains Tags](/evm/supported-chains#tags) section.",
+            "schema": {
+              "type": "string"
+            },
+            "example": "1,8453"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Restrict results to a single token type. When omitted, both types are returned. Unknown values are treated as no filter.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "erc20",
+                "erc721"
+              ]
+            },
+            "example": "erc20"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum number of results to return. Default is 10 when not provided. Values above 50 are clamped to 50; values below 1 are clamped to 1.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 50,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "An array of matching tokens, ranked by relevance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenSearchResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": [
+                      {
+                        "chain_id": 1,
+                        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                        "token_type": "ERC20",
+                        "symbol": "USDC",
+                        "name": "USD Coin",
+                        "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+                        "decimals": 6
+                      },
+                      {
+                        "chain_id": 8453,
+                        "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+                        "token_type": "ERC20",
+                        "symbol": "USDC",
+                        "name": "USD Coin",
+                        "logo": "https://api.sim.dune.com/beta/token/logo/8453/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+                        "decimals": 6
+                      }
+                    ]
+                  },
+                  "empty": {
+                    "summary": "No matches",
+                    "value": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - Missing or empty `query` parameter, or unparseable query parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenHolders_ErrorResponse"
+                },
+                "examples": {
+                  "missingQuery": {
+                    "summary": "Missing query parameter",
+                    "value": {
+                      "error": {
+                        "message": "Missing required parameter: query",
+                        "code": "BAD_REQUEST"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing API key.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "invalidApiKey": {
+                    "value": {
+                      "error": "invalid API Key"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate Limit Exceeded - Too many requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GatewayErrorResponse"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "value": {
+                      "error": "Too many requests. Please contact sales@dune.com to increase your limit."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - Server-side error.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenHolders_ErrorResponse"
+                },
+                "examples": {
+                  "internalServerError": {
+                    "value": {
+                      "error": {
+                        "message": "Server-side error",
+                        "code": "INTERNAL_SERVER_ERROR"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/evm/token-info/{address}": {
       "get": {
         "tags": [
@@ -5723,6 +5899,70 @@
             "description": "An opaque token for fetching the next page of results. Null if no more results.",
             "example": "eyJvZmZzZXQiOjEwMH0="
           }
+        }
+      },
+      "TokenSearchResult": {
+        "type": "object",
+        "description": "A single token matched by the search index. ERC20 results include `logo` and `decimals`; ERC721 results return `null` for both.",
+        "properties": {
+          "chain_id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "EVM chain ID where the token is deployed.",
+            "example": 1
+          },
+          "address": {
+            "type": "string",
+            "format": "address",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The token's contract address (lowercase, 0x-prefixed).",
+            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "ERC20",
+              "ERC721"
+            ],
+            "description": "The token standard. Canonical uppercase form."
+          },
+          "symbol": {
+            "type": "string",
+            "description": "Token symbol (e.g. `USDC`, `BAYC`).",
+            "example": "USDC"
+          },
+          "name": {
+            "type": "string",
+            "description": "Token name (e.g. `USD Coin`, `Bored Ape Yacht Club`).",
+            "example": "USD Coin"
+          },
+          "logo": {
+            "type": "string",
+            "nullable": true,
+            "description": "Logo URL when available. Populated for ERC20s with metadata; `null` for ERC721s and for ERC20s without a known logo.",
+            "example": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          },
+          "decimals": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true,
+            "description": "Token decimals. Populated for ERC20s with metadata; `null` for ERC721s and for ERC20s without a known decimals value.",
+            "example": 6
+          }
+        },
+        "required": [
+          "chain_id",
+          "address",
+          "token_type",
+          "symbol",
+          "name"
+        ]
+      },
+      "TokenSearchResponse": {
+        "type": "array",
+        "description": "Search results, ranked by internal score then `(chain_id ASC, address ASC)` for stable ordering. May be empty.",
+        "items": {
+          "$ref": "#/components/schemas/TokenSearchResult"
         }
       },
       "TokenInfo": {

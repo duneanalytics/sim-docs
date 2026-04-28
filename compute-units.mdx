@@ -22,6 +22,7 @@ If you omit the `chain_ids` parameter, the request uses the `default` chain set,
 | Transactions (EVM & SVM) | Fixed | 1 compute unit per request | — |
 | Token Info | Fixed | 2 compute units per request, even though `chain_ids` is required | — |
 | Token Holders | Fixed | 2 compute units per request | — |
+| Search Tokens | Fixed | 2 compute units per request, regardless of how many `chain_ids` are included | — |
 | Subscriptions | Event-based | 2 compute units per event sent to your webhook. Note that a single webhook payload can contain multiple events. | All supported EVM chains (varies by subscription type) when chain_ids is omitted |
 
 ## How CUs work

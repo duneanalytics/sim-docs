@@ -1,0 +1,110 @@
+---
+title: "Search Tokens"
+sidebarTitle: "Search Tokens"
+description: "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name, with optional chain and token-type filters. ERC20 results are enriched with logo and decimals."
+openapi: "/openapi.json GET /v1/evm/search/tokens"
+---
+
+The Search Tokens API lets you find ERC20 and ERC721 tokens by name or symbol across one or more supported EVM chains. Results are ranked by an internal score (where available) and returned with their canonical chain, address, symbol, and name. ERC20 results are additionally enriched with `logo` and `decimals` so they can be rendered immediately.
+
+Use it to power token-pickers, autocomplete inputs, and any UI flow where the user knows part of a token's name or symbol but not its contract address.
+
+## Example Request
+
+```bash
+curl -X GET "https://api.sim.dune.com/v1/evm/search/tokens?query=USDC&chain_ids=1,8453&limit=5" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+```json Response (JSON) [expandable]
+[
+  {
+    "chain_id": 1,
+    "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "token_type": "ERC20",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "logo": "https://api.sim.dune.com/beta/token/logo/1/0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "decimals": 6
+  },
+  {
+    "chain_id": 8453,
+    "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "token_type": "ERC20",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "logo": "https://api.sim.dune.com/beta/token/logo/8453/0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "decimals": 6
+  }
+]
+```
+
+## Query Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `query` | string | yes | Search term matched against the token's `symbol` and `name`. Case-insensitive. **Minimum 3 characters** after trimming whitespace; shorter queries return an empty result set. |
+| `chain_ids` | string | no | Comma-separated chain IDs (`1,8453`) or a tag (`mainnet`, `default`). When omitted, all supported chains are searched. See the [Supported Chains](/evm/supported-chains#tags) page. |
+| `type` | string | no | Restrict results to a single token type. Accepted values: `erc20`, `erc721`. When omitted, both types are returned. Unknown values are treated as "no filter". |
+| `limit` | integer | no | Maximum number of results to return. Default `10`, maximum `50` — values above the maximum are clamped silently. Values below `1` are clamped to `1`. |
+
+## Response Fields
+
+The endpoint returns a JSON array of token objects. Each object has:
+
+| Field | Type | Description |
+|---|---|---|
+| `chain_id` | integer | EVM chain ID where the token is deployed |
+| `address` | string | The token's contract address (lowercase, `0x`-prefixed) |
+| `token_type` | string | `"ERC20"` or `"ERC721"` |
+| `symbol` | string | Token symbol (e.g. `USDC`, `BAYC`) |
+| `name` | string | Token name (e.g. `USD Coin`, `Bored Ape Yacht Club`) |
+| `logo` | string \| null | Logo URL when available. Populated for ERC20s with metadata; `null` for ERC721s and ERC20s without a known logo. |
+| `decimals` | integer \| null | Token decimals. Populated for ERC20s with metadata; `null` for ERC721s and ERC20s without a known decimals value. |
+
+<Note>
+  Only ERC20 results are enriched with `logo` and `decimals`. ERC721 results always return `null` for both fields — collectible metadata is available via the [Collectibles](/evm/collectibles) endpoint.
+</Note>
+
+## How Search Works
+
+Search is powered by an in-memory **trigram index** built over each token's `symbol` and `name`. Properties:
+
+- **Case-insensitive.** `usdc` and `USDC` match the same set of tokens.
+- **Substring-friendly.** `BAY` matches `BAYC`, `Bored Ape Yacht Club`, and similar.
+- **Three-character minimum.** Queries of fewer than 3 characters (after trimming) return an empty array — trigrams need at least 3 characters of input.
+- **Ranked.** Tokens with an internal ranking score (driven by activity / liquidity signals) appear first. Ties fall back to a deterministic `(chain_id ASC, address ASC)` ordering, so repeat queries return stable results.
+
+## Filtering Examples
+
+**Restrict to a single chain**
+
+```bash
+curl "https://api.sim.dune.com/v1/evm/search/tokens?query=USDC&chain_ids=8453" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+**Restrict to ERC721 collections only**
+
+```bash
+curl "https://api.sim.dune.com/v1/evm/search/tokens?query=BAYC&type=erc721" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+**Search across the default chain set**
+
+```bash
+curl "https://api.sim.dune.com/v1/evm/search/tokens?query=Tether&chain_ids=default" \
+     -H "X-Sim-Api-Key: YOUR_API_KEY"
+```
+
+## Error Responses
+
+| Status | Cause |
+|---|---|
+| `400 Bad Request` | `query` parameter is missing or empty after trimming, or a query parameter cannot be parsed |
+| `401 Unauthorized` | Missing or invalid `X-Sim-Api-Key` header |
+
+## Compute Unit Cost
+
+The Search Tokens endpoint has a fixed CU cost of **2** per request. The `chain_ids` query parameter does not change the CU cost. See the [Compute Units](/compute-units) page for detailed information.
