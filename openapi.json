@@ -2242,20 +2242,6 @@
             "example": "1,8453"
           },
           {
-            "name": "type",
-            "in": "query",
-            "required": false,
-            "description": "Restrict results to a single token type. When omitted, both types are returned. Unknown values are treated as no filter.",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "erc20",
-                "erc721"
-              ]
-            },
-            "example": "erc20"
-          },
-          {
             "name": "limit",
             "in": "query",
             "required": false,

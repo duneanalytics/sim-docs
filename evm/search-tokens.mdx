@@ -1,7 +1,7 @@
 ---
 title: "Search Tokens"
 sidebarTitle: "Search Tokens"
-description: "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name, with optional chain and token-type filters. ERC20 results are enriched with logo and decimals."
+description: "Search ERC20 and ERC721 tokens across supported EVM chains by symbol or name, with optional chain filters. ERC20 results are enriched with logo and decimals."
 openapi: "/openapi.json GET /v1/evm/search/tokens"
 ---
 
@@ -45,7 +45,6 @@ curl -X GET "https://api.sim.dune.com/v1/evm/search/tokens?query=USDC&chain_ids=
 |---|---|---|---|
 | `query` | string | yes | Search term matched against the token's `symbol` and `name`. Case-insensitive. **Minimum 3 characters** after trimming whitespace; shorter queries return an empty result set. |
 | `chain_ids` | string | no | Comma-separated chain IDs (`1,8453`) or a tag (`mainnet`, `default`). When omitted, all supported chains are searched. See the [Supported Chains](/evm/supported-chains#tags) page. |
-| `type` | string | no | Restrict results to a single token type. Accepted values: `erc20`, `erc721`. When omitted, both types are returned. Unknown values are treated as "no filter". |
 | `limit` | integer | no | Maximum number of results to return. Default `10`, maximum `50` — values above the maximum are clamped silently. Values below `1` are clamped to `1`. |
 
 ## Response Fields
@@ -81,13 +80,6 @@ Search is powered by an in-memory **trigram index** built over each token's `sym
 
 ```bash
 curl "https://api.sim.dune.com/v1/evm/search/tokens?query=USDC&chain_ids=8453" \
-     -H "X-Sim-Api-Key: YOUR_API_KEY"
-```
-
-**Restrict to ERC721 collections only**
-
-```bash
-curl "https://api.sim.dune.com/v1/evm/search/tokens?query=BAYC&type=erc721" \
      -H "X-Sim-Api-Key: YOUR_API_KEY"
 ```
 
