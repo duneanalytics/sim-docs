@@ -64,7 +64,8 @@
               "evm/defi/supported-protocols",
               "evm/transactions",
               "evm/token-info",
-              "evm/token-holders"
+              "evm/token-holders",
+              "evm/search-tokens"
             ]
           },
           {
